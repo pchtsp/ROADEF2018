@@ -255,7 +255,7 @@ void statisticsLog (void)
     double waste, total_waste_percentage = 0.0;
     string temp;
     total_waste = 0.0;
-    string statisticsPath = "logs\\" + file_idx + "_statistics.csv";
+    string statisticsPath = "logs/" + file_idx + "_statistics.csv";
     statistics_file.open (statisticsPath.c_str());
     statistics_file << "instanceId;validSolution;nPlates;totalGeoLoss;widthResidual" << endl;
 
