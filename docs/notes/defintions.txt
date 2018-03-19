@@ -1,0 +1,38 @@
+## A node has
+
+* a type: [-3, -2, -1] or [NODE_IDs]
+    - -3: reused residual lead
+    - -2: not a leaf
+    - -1: wasted leaf
+* a parent node
+    * or children.
+* global position: (x, y)
+* size: (W, H)
+* global id
+* a level cut where it was generated
+
+## Resources
+
+use one of these libraries:
+
+* https://pypi.python.org/pypi/ete2
+* http://networkx.github.io/
+    * https://networkx.github.io/documentation/latest/reference/algorithms/tree.html
+
+## A cut has
+
+* a node that originate it.
+* a level in [1, 2, 3].
+* a position in H or W depending on level.
+
+## A cut level has
+
+* id / position: [1, 2, 3]
+* orientation: W or H.
+
+## Graph constraints
+
+* leafs need to sum the total area of the PLATE.
+* leafs can not overlap.
+* leafs need to sum the parent.
+* 
