@@ -15,7 +15,7 @@
 
 use one of these libraries:
 
-* https://pypi.python.org/pypi/ete2
+* https://pypi.python.org/pypi/ete3
 * http://networkx.github.io/
     * https://networkx.github.io/documentation/latest/reference/algorithms/tree.html
 
