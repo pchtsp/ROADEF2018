@@ -1,3 +1,5 @@
+import package.params as pm
+import package.data_input as di
 
 
 class Instance(object):
@@ -25,3 +27,7 @@ class Instance(object):
         if plate not in defects_plate:
             raise IndexError('PLATE_ID={} was not found in defects'.format(plate))
         return defects_plate[plate]
+
+    @classmethod
+    def from_files(cls, case_name, path=pm.PATHS['data']):
+        return cls(di.get_model_data(case_name, path))

@@ -54,6 +54,6 @@ Check: https://stackoverflow.com/a/32064281
 * cx_freeze in github version, not pip.
 * specific configuration for windows?
 
-### Configuration
+## Configuration
 
 It's important to edit the params.py file to get the absolute path correctly. We could potentially solve this in the future by using relative paths correctly...

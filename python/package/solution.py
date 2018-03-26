@@ -31,14 +31,9 @@ class Solution(inst.Instance):
         return self.tree.show()
 
     @classmethod
-    def from_dir(cls, path, format='json', prefix="data_"):
-        return
-        # files = [os.path.join(path, prefix + f + "." + format) for f in ['in', 'out']]
-        # if not np.all([os.path.exists(f) for f in files]):
-        #     return None
-        # instance = di.load_data(files[0])
-        # solution = di.load_data(files[1])
-        # return cls(inst.Instance(instance), sol.Solution(solution))
+    def from_files(cls, case_name, path=pm.PATHS['checker_data']):
+        return cls(di.get_model_data(case_name, path),
+                   di.get_model_solution(case_name, path))
 
     @staticmethod
     def point_in_square(point, square, strict=True):
@@ -58,10 +53,14 @@ class Solution(inst.Instance):
                 square[0]['X'] <= point['X'] <= square[1]['X'] and\
                 square[0]['Y'] <= point['Y'] <= square[1]['Y']
 
-
     def square_inside_square(self, square1, square2):
-        # TODO: this should check if the whole square is inside of square.
-        pass
+        if self.point_in_square(square1[0], square2, strict=False):
+            if self.point_in_square(square1[1], square2, strict=False):
+                return 1
+        if self.point_in_square(square2[0], square1, strict=False):
+            if self.point_in_square(square2[1], square1, strict=False):
+                return 2
+        return False
 
     @staticmethod
     def piece_to_square(piece):
@@ -72,6 +71,13 @@ class Solution(inst.Instance):
         """
         return [{'X': piece.X, 'Y': piece.Y},
                 {'X': piece.X + piece.WIDTH, 'Y': piece.Y + piece.HEIGHT}]
+
+    def get_cuts(self):
+        # for each node, we get the cut that made it.
+        # there's always one of the children that has no cut
+        # each cut wll have as property the first and second piece
+
+        pass
 
     def get_pieces(self, by_plate=False):
         """
@@ -105,12 +111,13 @@ class Solution(inst.Instance):
                         overlapped.append((leaf1, leaf2))
         return overlapped
 
-    def parent_of_children(self):
+    def parent_of_children(self, parent):
         """
         We want to check if each node is inside its parent.
         Also: if the parent sums the area of all children.
         :return:
         """
+
         # TODO
         pass
 
@@ -144,6 +151,11 @@ class Solution(inst.Instance):
                         pieces_with_defects.append((piece, defect))
         return pieces_with_defects
 
+    def check_siblings(self):
+        # siblings must share a dimension of size and a point dimension
+        # for example: W and X or H and Y
+        pass
+
     def check_cuts_number(self):
         # TODO: this should check if there are no more than 3 cuts.
         return True
@@ -151,6 +163,14 @@ class Solution(inst.Instance):
     def check_cuts_guillotine(self):
         # TODO: this should check that the cuts are guillotine-type
         return True
+
+    def check_distance_limits(self):
+        # TODO: check the min waste, min size of piece.
+        pass
+
+    def check_pieces_fit_in_plate(self):
+        # TODO: depending on the size, pieces can enter or not in the plate
+        pass
 
     def check_demand_satisfied(self):
         demand = self.input_data['batch']
