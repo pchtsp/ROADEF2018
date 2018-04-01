@@ -6,14 +6,14 @@ import copy
 import json
 import pickle
 import package.params as pm
-import package.auxiliar as aux
+import package.superdict as sd
 
 
 def read_files_into_tables(filenames):
     for file, path in filenames.items():
         if not os.path.exists(path):
             raise FileNotFoundError('Path {} does not exist'.format(path))
-    return {file: pd.read_csv(path, sep=';') for file, path in filenames.items()}
+    return sd.SuperDict({file: pd.read_csv(path, sep=';') for file, path in filenames.items()})
 
 
 def get_model_data(case_name, path=pm.PATHS['data']):
@@ -33,7 +33,9 @@ def get_model_data(case_name, path=pm.PATHS['data']):
 
     parameters = {'plate_width': 6000, 'plate_height': 3210}
 
-    return {'batch': batch, 'defects': defects, 'parameters': parameters}
+    return sd.SuperDict({'batch': sd.SuperDict.from_dict(batch),
+                         'defects': sd.SuperDict.from_dict(defects),
+                         'parameters': sd.SuperDict.from_dict(parameters)})
 
 
 def get_model_solution(case_name, path=pm.PATHS['checker_data']):

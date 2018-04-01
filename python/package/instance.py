@@ -1,5 +1,7 @@
 import package.params as pm
 import package.data_input as di
+import package.tuplist as tl
+import package.superdict as sd
 
 
 class Instance(object):
@@ -27,6 +29,14 @@ class Instance(object):
         if plate not in defects_plate:
             raise IndexError('PLATE_ID={} was not found in defects'.format(plate))
         return defects_plate[plate]
+
+    def get_param(self, name=None):
+        params = self.input_data['parameters']
+        if name is not None:
+            if name not in params:
+                raise ValueError("param named {} does not exist in parameters".format(name))
+            return params[name]
+        return params
 
     @classmethod
     def from_files(cls, case_name, path=pm.PATHS['data']):

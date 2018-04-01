@@ -4,6 +4,9 @@ import math
 import package.instance as inst
 import package.params as pm
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import palettable as pal
 import pprint as pp
 
 
@@ -183,11 +186,46 @@ class Solution(inst.Instance):
                 produced.append(leaf.name)
         return np.setdiff1d([*demand], produced)
 
+    def graph_solution(self):
+        colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
+        width, height = self.get_param('plate_width'), self.get_param('plate_height')
+        for plate, leafs in self    .get_pieces(True).items():
+            fig1 = plt.figure(figsize=(width/100, height/100))
+            ax1 = fig1.add_subplot(111, aspect='equal')
+            ax1.set_xlim([0, width])
+            ax1.set_ylim([0, height])
+            ax1.tick_params(axis='both', which='major', labelsize=50)
+            for pos, leaf in enumerate(leafs.values()):
+                ax1.add_patch(
+                    patches.Rectangle(
+                        (leaf.X, leaf.Y),  # (x,y)
+                        leaf.WIDTH,  # width
+                        leaf.HEIGHT,  # height
+                        facecolor=colors[pos],
+                        linewidth=3
+                    )
+                )
+                ax1.text(leaf.X + leaf.WIDTH/2, leaf.Y + leaf.HEIGHT/2,
+                         '{} x {}'.format(leaf.WIDTH, leaf.HEIGHT),
+                         horizontalalignment='center', fontsize=30)
+            for defect in self.get_defects_per_plate(plate).values():
+                ax1.add_patch(
+                    patches.Rectangle(
+                        (defect['X'], defect['Y']),  # (x,y)
+                        defect['WIDTH'],  # width
+                        defect['HEIGHT'],  # height
+                        facecolor='red',
+                        linewidth=10
+                    )
+                )
+            fig1.savefig('rect1.png', dpi=90, bbox_inches='tight')
+
 
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])
     solution_data = di.get_model_solution('A0')
     self = Solution(input_data, solution_data)
+    self.graph_solution()
 
 
 
