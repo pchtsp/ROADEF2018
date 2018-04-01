@@ -19,6 +19,7 @@ def read_files_into_tables(filenames):
 def get_model_data(case_name, path=pm.PATHS['data']):
     # case_name = "A3"
     # path = pm.PATHS['data']
+    # TODO: maybe import parameters from file if exists?
     input_files = ['batch', 'defects']
     filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
     tables = read_files_into_tables(filenames)
@@ -31,7 +32,15 @@ def get_model_data(case_name, path=pm.PATHS['data']):
         tables['batch'].set_index('ITEM_ID').\
             to_dict(orient='index')
 
-    parameters = {'plate_width': 6000, 'plate_height': 3210}
+    parameters = {
+        'nPlates': 100
+        , 'widthPlates': 6000
+        , 'heightPlates': 3210
+        , 'minXX': 100
+        , 'maxXX': 3500
+        , 'minYY': 100
+        , 'minWaste': 20
+    }
 
     return sd.SuperDict({'batch': sd.SuperDict.from_dict(batch),
                          'defects': sd.SuperDict.from_dict(defects),

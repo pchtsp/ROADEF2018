@@ -9,10 +9,11 @@ class Instance(object):
     def __init__(self, model_data):
         self.input_data = model_data
 
-    def get_batch_per_stack(self, stack=None):
+    def get_items_per_stack(self, stack=None):
         batch_data = {v['STACK']: {} for v in self.input_data['batch'].values()}
         for k, v in self.input_data['batch'].items():
             batch_data[v['STACK']][k] = v
+        batch_data = sd.SuperDict.from_dict(batch_data)
         if stack is None:
             return batch_data
         if stack not in batch_data:
@@ -38,6 +39,10 @@ class Instance(object):
             return params[name]
         return params
 
+    def get_plate0(self):
+        return {'width': self.get_param('widthPlates'),
+                'height': self.get_param('heightPlates')}
+
     @classmethod
-    def from_files(cls, case_name, path=pm.PATHS['data']):
+    def from_input_files(cls, case_name, path=pm.PATHS['data']):
         return cls(di.get_model_data(case_name, path))

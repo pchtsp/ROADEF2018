@@ -34,9 +34,17 @@ class Solution(inst.Instance):
         return self.tree.show()
 
     @classmethod
-    def from_files(cls, case_name, path=pm.PATHS['checker_data']):
-        return cls(di.get_model_data(case_name, path),
-                   di.get_model_solution(case_name, path))
+    def from_io_files(cls, case_name, path=pm.PATHS['checker_data']):
+        input_data = di.get_model_data(case_name, path)
+        try:
+            solution = di.get_model_solution(case_name, path)
+        except FileNotFoundError:
+            solution = {}
+        return cls(input_data, solution)
+
+    @classmethod
+    def from_input_files(cls, case_name, path=pm.PATHS['data']):
+        return cls(di.get_model_data(case_name, path), {})
 
     @staticmethod
     def point_in_square(point, square, strict=True):
@@ -56,14 +64,23 @@ class Solution(inst.Instance):
                 square[0]['X'] <= point['X'] <= square[1]['X'] and\
                 square[0]['Y'] <= point['Y'] <= square[1]['Y']
 
-    def square_inside_square(self, square1, square2):
+    def square_inside_square(self, square1, square2, both_sides=True):
+        """
+        Checks if square1 is inside square2.
+        :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
+        :param square2: a list of two dictionaries of type: {'X': 0, 'Y': 0}
+        :param both_sides: if true, alseo check if square2 is inside square1
+        :return: number of square inside the other. or 0 if not
+        """
         if self.point_in_square(square1[0], square2, strict=False):
             if self.point_in_square(square1[1], square2, strict=False):
                 return 1
+        if not both_sides:
+            return 0
         if self.point_in_square(square2[0], square1, strict=False):
             if self.point_in_square(square2[1], square1, strict=False):
                 return 2
-        return False
+        return 0
 
     @staticmethod
     def piece_to_square(piece):
@@ -127,7 +144,7 @@ class Solution(inst.Instance):
     def check_sequence(self):
         code_leaf = self.get_pieces()
         wrong_order = []
-        for stack, nodes_dict in self.get_batch_per_stack().items():
+        for stack, nodes_dict in self.get_items_per_stack().items():
             last_node = last_cut = last_plate = 0
             nodes = sorted([*nodes_dict.items()], key=lambda x: x[1]['SEQUENCE'])
             for k, v in nodes:
@@ -188,7 +205,7 @@ class Solution(inst.Instance):
 
     def graph_solution(self):
         colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
-        width, height = self.get_param('plate_width'), self.get_param('plate_height')
+        width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
         for plate, leafs in self    .get_pieces(True).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')

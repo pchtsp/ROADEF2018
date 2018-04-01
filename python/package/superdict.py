@@ -6,13 +6,13 @@ class SuperDict(dict):
     def clean(self, default_value=0):
         return SuperDict({key: value for key, value in self.items() if value != default_value})
 
-    def filter(self, indeces):
-        if type(indeces) is not list:
-            indeces = [indeces]
-        bad_elem = np.setdiff1d(indeces, list(self.keys()))
+    def filter(self, indices):
+        if type(indices) is not list:
+            indices = [indices]
+        bad_elem = np.setdiff1d(indices, list(self.keys()))
         if len(bad_elem) > 0:
             raise KeyError("following elements not in keys: {}".format(bad_elem))
-        return SuperDict({k: self[k] for k in indeces})
+        return SuperDict({k: self[k] for k in indices})
 
     def to_dictdict(self):
         """
@@ -82,7 +82,7 @@ class SuperDict(dict):
                 tup_list.append(tuple([key, value]))
         return tup_list
 
-    def fill_dict_with_default(self, keys, default=0):
+    def fill_with_default(self, keys, default=0):
         return SuperDict({**{k: default for k in keys}, **self})
 
     def get_property(self, property):
