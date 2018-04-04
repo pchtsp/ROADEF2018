@@ -59,7 +59,7 @@ class TupList(list):
         :param args: any number of elements to append
         :return: nothing.
         """
-        self.append(tuple(*args))
+        self.append(tuple(args))
 
     def unique(self):
         TupList(np.unique(self))

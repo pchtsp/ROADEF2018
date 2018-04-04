@@ -10,6 +10,7 @@ class Instance(object):
         self.input_data = model_data
 
     def get_items_per_stack(self, stack=None):
+        # TODO: use SuperDict.index_by_property instead
         batch_data = {v['STACK']: {} for v in self.input_data['batch'].values()}
         for k, v in self.input_data['batch'].items():
             batch_data[v['STACK']][k] = v
@@ -21,6 +22,7 @@ class Instance(object):
         return batch_data[stack]
 
     def get_defects_per_plate(self, plate=None):
+        # TODO: use SuperDict.index_by_property instead
         defects = self.input_data['defects']
         defects_plate = {int(v['PLATE_ID']): {} for v in defects.values()}
         for k, v in defects.items():
@@ -39,7 +41,9 @@ class Instance(object):
             return params[name]
         return params
 
-    def get_plate0(self):
+    def get_plate0(self, get_dict=True):
+        if not get_dict:
+            return self.get_param('widthPlates'), self.get_param('heightPlates')
         return {'width': self.get_param('widthPlates'),
                 'height': self.get_param('heightPlates')}
 

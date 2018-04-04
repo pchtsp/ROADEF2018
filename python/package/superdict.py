@@ -3,6 +3,12 @@ import numpy as np
 
 class SuperDict(dict):
 
+    def keys_l(self):
+        return list(self.keys())
+
+    def values_l(self):
+        return list(self.values())
+
     def clean(self, default_value=0):
         return SuperDict({key: value for key, value in self.items() if value != default_value})
 
@@ -90,6 +96,21 @@ class SuperDict(dict):
 
     def to_lendict(self):
         return {k: len(v) for k, v in self.items()}
+
+    def index_by_property(self, property, get_list=False):
+        el = self.keys_l()[0]
+        if property not in self[el]:
+            raise IndexError('property {} is not present in el {} of dict {}'.
+                             format(property, el, self))
+
+        result = {v[property]: {} for v in self.values()}
+        for k, v in self.items():
+            result[v[property]][k] = v
+
+        result = SuperDict.from_dict(result)
+        if get_list:
+            return result.values_l()
+        return result
 
     @classmethod
     def from_dict(cls, dictionary):

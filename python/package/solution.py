@@ -15,23 +15,36 @@ class Solution(inst.Instance):
     def __init__(self, input_data, solution_data):
         super().__init__(input_data)
         self.sol_data = solution_data
+        if len(solution_data) == 0:
+            self.trees = [ete3.Tree(name=0)]
+            return
+
+        self.trees = []
+        data_byPlate = solution_data.index_by_property('PLATE_ID', get_list=True)
+        for plate in data_byPlate:
+            tree = self.get_tree_from_solution(plate)
+            self.trees.append(tree)
+
+    @staticmethod
+    def get_tree_from_solution(solution_data):
         parent_child = [(int(v['PARENT']), int(k), 1) for k, v in solution_data.items()
                         if not math.isnan(v['PARENT'])]
-        if len(parent_child) > 0:
-            self.tree = ete3.Tree.from_parent_child_table(parent_child)
-            # add info about each node
-            for node in self.tree.traverse():
-                for k, v in solution_data[node.name].items():
-                    node.add_feature(k, v)
-        else:
-            self.tree = ete3.Tree(name=0)
+        if len(parent_child) == 0:
+            return ete3.Tree(name=0)
 
-    def draw(self):
-        print(self.tree)
+        tree = ete3.Tree.from_parent_child_table(parent_child)
+        # add info about each node
+        for node in tree.traverse():
+            for k, v in solution_data[node.name].items():
+                node.add_feature(k, v)
+        return tree
+
+    def draw(self, pos=0):
+        print(self.trees[pos])
         return
 
-    def draw_interactive(self):
-        return self.tree.show()
+    def draw_interactive(self, pos=0):
+        return self.trees[pos].show()
 
     @classmethod
     def from_io_files(cls, case_name, path=pm.PATHS['checker_data']):
@@ -99,14 +112,14 @@ class Solution(inst.Instance):
 
         pass
 
-    def get_pieces(self, by_plate=False):
+    def get_pieces(self, by_plate=False, pos=0):
         """
         Gets the solution pieces indexed by the NODE_ID.
         :param by_plate: when active it returns a dictionary indexed
         by the plates. So it's {PLATE_0: {0: leaf0,  1: leaf1}, PLATE_1: {}}
         :return: {0: leaf0,  1: leaf1}
         """
-        leaves = self.tree.get_leaves()
+        leaves = self.trees[pos].get_leaves()
         if not by_plate:
             return {int(leaf.TYPE): leaf for leaf in leaves if leaf.TYPE >= 0}
         leaves_by_plate = {leaf.PLATE_ID: {} for leaf in leaves}
@@ -195,7 +208,7 @@ class Solution(inst.Instance):
     def check_demand_satisfied(self):
         demand = self.input_data['batch']
         produced = []
-        for leaf in self.tree.iter_leaves():
+        for leaf in self.trees.iter_leaves():
             if leaf.TYPE not in demand:
                 continue
             if leaf.WIDTH == demand[leaf.TYPE]['WIDTH_ITEM'] and\
@@ -203,10 +216,10 @@ class Solution(inst.Instance):
                 produced.append(leaf.name)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self):
+    def graph_solution(self, pos=0):
         colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
-        for plate, leafs in self    .get_pieces(True).items():
+        for plate, leafs in self.get_pieces(True, pos).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')
             ax1.set_xlim([0, width])
@@ -241,10 +254,12 @@ class Solution(inst.Instance):
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])
     solution_data = di.get_model_solution('A0')
+    solution_data_byPlate = solution_data.index_by_property('PLATE_ID', get_list=True)
     self = Solution(input_data, solution_data)
     self.graph_solution()
-
-
+    self.draw()
+    # pp.pprint(self.sol_data)
+    # self.trees = []
 
     # Useful functions:
 

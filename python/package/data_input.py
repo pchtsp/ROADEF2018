@@ -7,6 +7,7 @@ import json
 import pickle
 import package.params as pm
 import package.superdict as sd
+import pprint as pp
 
 
 def read_files_into_tables(filenames):
@@ -53,7 +54,8 @@ def get_model_solution(case_name, path=pm.PATHS['checker_data']):
     input_files = ['solution']
     filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
     tables = read_files_into_tables(filenames)
-    return tables['solution'].set_index('NODE_ID').to_dict(orient='index')
+    result = tables['solution'].set_index('NODE_ID').to_dict(orient='index')
+    return sd.SuperDict(result)
 
 
 if __name__ == "__main__":
@@ -64,6 +66,6 @@ if __name__ == "__main__":
     all_files = ['batch', 'defects']
     filenames = {file: checker_data_path + case_name + '_' + file + '.csv' for file in all_files}
     tables = {file: pd.read_csv(fn, sep=';') for file, fn in filenames.items()}
-
+    pp.pprint(get_model_data('A1'))
 
     width, height = (6000, 3210)
