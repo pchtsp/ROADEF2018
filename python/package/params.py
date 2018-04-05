@@ -10,6 +10,6 @@ PATHS = {
     ,'checker_data': path_root + "resources/checker/instances_checker/"
 }
 
-ORIENTATIONS = ['h', 'v']
-ORIENT_H = 'h'
-ORIENT_V = 'v'
+ORIENTATIONS = [0, 1]
+ORIENT_H = 0
+ORIENT_V = 1

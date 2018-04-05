@@ -42,8 +42,9 @@ class Instance(object):
         return params
 
     def get_plate0(self, get_dict=True):
+        # TODO: take out /10 from width
         if not get_dict:
-            return self.get_param('widthPlates'), self.get_param('heightPlates')
+            return self.get_param('widthPlates')/5, self.get_param('heightPlates')
         return {'width': self.get_param('widthPlates'),
                 'height': self.get_param('heightPlates')}
 

@@ -4,6 +4,7 @@ import package.tuplist as tl
 import package.superdict as sd
 import package.params as pm
 import numpy as np
+import package.config as conf
 import pprint as pp
 
 
@@ -37,7 +38,6 @@ class Model(sol.Solution):
         cutting_production = tl.TupList()  # (j, o, q, k)
         plate0 = self.get_plate0(get_dict=False)
         cut_level = 0
-        plate0 = plate0[0]/10, plate0[1]
         plates = set()
         plates.add((plate0, cut_level))
         non_processed = [(plate0, cut_level, list(self.flatten_stacks().values()))]
@@ -130,10 +130,23 @@ class Model(sol.Solution):
     def rotate_plate(plate):
         return plate[1], plate[0]
 
-    def plate_inside_plate(self, plate1, plate2):
+    @staticmethod
+    def vars_to_tups(var, binary=True):
+        # because of rounding approximations; we need to check if its bigger than half:
+        if binary:
+            return tl.TupList([tup for tup in var if var[tup].value() > 0.5])
+        return sd.SuperDict({tup: var[tup].value() for tup in var if var[tup].value() > 0.5})
+
+    def plate_inside_plate(self, plate1, plate2, turn=True):
         origin = {'X': 0, 'Y': 0}
-        return self.square_inside_square(
+        result = self.square_inside_square(
             [origin, {'X': plate1[0], 'Y': plate1[1]}],
+            [origin, {'X': plate2[0], 'Y': plate2[1]}],
+            both_sides=False
+        )
+        if not result and turn:
+            return self.square_inside_square(
+            [origin, {'X': plate1[1], 'Y': plate1[0]}],
             [origin, {'X': plate2[0], 'Y': plate2[1]}],
             both_sides=False
         )
@@ -160,12 +173,27 @@ class Model(sol.Solution):
         # (j, o, q, level, k)
         # cut "q" with orientation "o" on plate "j" produces plate "k"
 
-        plates = cutting_production.filter(0).unique()  # J
-        first_plate = 0
+        plates = \
+            cutting_production.filter(0).unique2() + \
+            cutting_production.filter(4).unique2()
+        plates = tl.TupList(plates).unique2()
+        # plates_dict = {k: p for k, p in enumerate(plates)}
+        # pd_inv = {p: k for k, p in plates_dict.items()}
+        # cutting_production_c = [(pd_inv[tup[0]], tup[1], tup[2], tup[3], pd_inv[tup[4]])
+        #                         for tup in cutting_production]
+        # cutting_production_c = tl.TupList(cutting_production_c)
+        # first_plate = pd_inv[self.get_plate0(get_dict=False)]
+        first_plate = self.get_plate0(get_dict=False)
         items = self.flatten_stacks()  # Ĵ in J
+        # items[-1] = first_plate
+        # plates_items = tl.TupList([(p, i) for p in plates for i in items.values_l()
+        #                 if self.plate_inside_plate(i, p) == 1])
 
-        cutting_options_tup = cutting_production.filter(range(3)).unique()
-        # (j, o, q)
+        # [i for i in items.values_l() if i in plates]
+        # np.intersect1d(items.values_l(), plates)
+
+        cutting_options_tup = cutting_production.filter([0, 1, 2, 3]).unique2()
+        # (j, o, q, level)
         # tuple of cut posibilities based on cutting_options
 
         # cutting_options = cutting_options_tup.to_dict(result_col=2)  # Q
@@ -173,35 +201,60 @@ class Model(sol.Solution):
         # set of cut positions we can cut plate j with orientation o.
         cutting_options_tup_0 = \
             tl.TupList([tup for tup in cutting_options_tup if tup[0] == first_plate])
+        # j: (o, q, level)
         cutting_production_j = \
-            cutting_production.to_dict(result_col=[1, 2, 3], is_list=False)
+            cutting_options_tup.to_dict(result_col=[1, 2, 3])
+        # k: (j, o, q, level)
         cutting_production_k = \
-            cutting_production.to_dict(result_col=[0, 1, 2], is_list=False)
+            cutting_production.to_dict(result_col=[0, 1, 2, 3])
 
         # {j: num}
         # for each j in Ĵ, it names the demand
-        max_plates = 100
+        max_plates = 10
 
         # model
         model = pl.LpProblem("ROADEF", pl.LpMinimize)
 
         # variables:
-        cuts = pl.LpVariableDict(name='cuts', data=cutting_options_tup,
-                                 lowBound=0, upBound=max_plates, cat='Integer')
-        # cut_items = pl.LpVariableDict(name='items', data=items,
-        #                          lowBound=0, upBound=demand, cat='Integer')
+        cuts = pl.LpVariable.dicts(name='cuts', indexs=cutting_options_tup,
+                                  lowBound=0, upBound=max_plates, cat='Integer')
+        # cut_items = pl.LpVariable.dicts(name='items', indexs=items.values_l(),
+        #                                 lowBound=0, upBound=1, cat='Integer')
 
         # objective function: (11)
         model += pl.lpSum(cuts[tup] for tup in cutting_options_tup_0)
 
         # constraints (2) + (3)
         for j in plates:
-            model += pl.lpSum(cuts[tup] for tup in cutting_production_j[j]) >= \
-                     pl.lpSum(cuts[tup] for tup in cutting_production_k[j]) + (j in items.values())
+            if j != first_plate:
+                model += pl.lpSum(cuts[tup] for tup in cutting_production_k[j]) >= \
+                         pl.lpSum(cuts[(j, o, q, l)] for (o, q, l) in cutting_production_j.get(j, [])) + (j in items.values_l())
 
-        # # constraints (12)
+        default_options = {
+            'timeLimit': 300
+            , 'gap': 0
+            , 'solver': "CPLEX"
+            , 'path': '/home/pchtsp/Documents/projects/ROADEF2018/python/log/'
+        }
+
+        config = conf.Config(default_options)
+        result = config.solve_model(model)
+
+        cuts_ = self.vars_to_tups(cuts, binary=False)
+        level = 0
+
+        cuts_.index_by_part_of_tuple(position=3, get_list=True)
+
+        cut = ((738, 1672), 0, 1550, 3)
+        plate, o, q, l = cut
+        ref_pos = 0, 0
+        # if o == pm.ORIENT_V:
+        #
+
+
+        # constraints (12)
         # for j in items:
-        #     model += cut_items[j] >= demand[j]
+        #     model += cut_items[j] >=
 
 
 if __name__ == "__main__":

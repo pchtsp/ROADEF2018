@@ -112,6 +112,21 @@ class SuperDict(dict):
             return result.values_l()
         return result
 
+    def index_by_part_of_tuple(self, position, get_list=False):
+        el = self.keys_l()[0]
+        if len(el) <= position:
+            raise IndexError('length of dict {} keys is smaller than position {}'.
+                             format(self, position))
+
+        result = {k[position]: {} for k in self.keys()}
+        for k, v in self.items():
+            result[k[position]][k] = v
+
+        result = SuperDict.from_dict(result)
+        if get_list:
+            return result.values_l()
+        return result
+
     @classmethod
     def from_dict(cls, dictionary):
         if type(dictionary) is not dict:

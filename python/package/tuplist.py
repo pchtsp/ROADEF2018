@@ -11,7 +11,7 @@ class TupList(list):
         :return: a new TuplList with the modifications
         """
         if type(indices) is not list:
-            indices = [indices]
+            # indices = [indices]
             return TupList([np.take(tup, indices) for tup in self])
         return TupList([tuple(np.take(tup, indices)) for tup in self])
 
@@ -62,4 +62,7 @@ class TupList(list):
         self.append(tuple(args))
 
     def unique(self):
-        TupList(np.unique(self))
+        return TupList(np.unique(self))
+
+    def unique2(self):
+        return TupList(set(self))
