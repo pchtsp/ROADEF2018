@@ -16,17 +16,17 @@ class Solution(inst.Instance):
         super().__init__(input_data)
         self.sol_data = solution_data
         if len(solution_data) == 0:
-            self.trees = [ete3.Tree(name=0)]
+            self.trees = []
             return
 
         self.trees = []
         data_byPlate = solution_data.index_by_property('PLATE_ID', get_list=True)
         for plate in data_byPlate:
-            tree = self.get_tree_from_solution(plate)
+            tree = self.get_tree_from_solution_data(plate)
             self.trees.append(tree)
 
     @staticmethod
-    def get_tree_from_solution(solution_data):
+    def get_tree_from_solution_data(solution_data):
         parent_child = [(int(v['PARENT']), int(k), 1) for k, v in solution_data.items()
                         if not math.isnan(v['PARENT'])]
         if len(parent_child) == 0:

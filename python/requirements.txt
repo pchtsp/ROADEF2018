@@ -1,8 +1,14 @@
+cycler==0.10.0
 ete3==3.1.1
+kiwisolver==1.0.1
+matplotlib==2.2.2
 numpy==1.14.2
+palettable==3.1.0
 pandas==0.22.0
--e git+git@github.com:coin-or/pulp.git@14141aba67eb9452498ee728f40861ded94963a0#egg=PuLP
+-e git+git@github.com:coin-or/pulp.git@963de82e9226dcacedf34fc5b4b87e443c10f78a#egg=PuLP
 pyparsing==2.2.0
+PyQt5==5.10.1
 python-dateutil==2.7.0
 pytz==2018.3
+sip==4.19.8
 six==1.11.0
