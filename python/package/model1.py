@@ -16,15 +16,8 @@ class Model(sol.Solution):
 
     def flatten_stacks(self):
         # self
-        batch = self.get_items_per_stack()
-        all_batches = {}
-        carry = 0
-        for stack, contents in batch.items():
-            for key, desc in contents.items():
-                all_batches[carry + key] = desc
-            carry += len(contents)
         items = {k: (v['WIDTH_ITEM'], v['LENGTH_ITEM'])
-                 for k, v in all_batches.items()}
+                 for k, v in self.input_data['batch'].items()}
         return sd.SuperDict.from_dict(items)
 
     def plate_generation(self):
@@ -38,9 +31,9 @@ class Model(sol.Solution):
         # cutting_options = sd.SuperDict()
         cut_level_next_o = {
             0: pm.ORIENT_V
-            ,1: pm.ORIENT_H
-            ,2: pm.ORIENT_V
-            ,3: pm.ORIENT_H
+            , 1: pm.ORIENT_H
+            , 2: pm.ORIENT_V
+            , 3: pm.ORIENT_H
         }
         cutting_production = tl.TupList()  # (j, o, q, k)
         plate0 = self.get_plate0(get_dict=False)
@@ -111,7 +104,7 @@ class Model(sol.Solution):
             for cut in cuts:
                 size = item + cut
                 if size < max_size and size not in cuts and \
-                    (size <= max_size//2 or (max_size-size) not in cuts):
+                    (size <= max_size // 2 or (max_size - size) not in cuts):
                     new_cuts.append(size)
             cuts.extend(np.unique(new_cuts))
         return cuts, total_items
@@ -160,9 +153,9 @@ class Model(sol.Solution):
         )
         if not result and turn:
             return self.square_inside_square(
-            [origin, {'X': plate1[1], 'Y': plate1[0]}],
-            [origin, {'X': plate2[0], 'Y': plate2[1]}],
-            both_sides=False
+                [origin, {'X': plate1[1], 'Y': plate1[0]}],
+                [origin, {'X': plate2[0], 'Y': plate2[1]}],
+                both_sides=False
         )
 
     def check_plate_can_fit_some_item(self, plate):
@@ -206,7 +199,7 @@ class Model(sol.Solution):
         return zip([p1, p2], [pos1, pos2])
 
     @staticmethod
-    def get_tree_from_solution(tree, cut_by_level, plate, ref_pos, is_sibling, cut_level):
+    def get_tree_from_solution(tree, cut_by_level, plate, ref_pos, is_sibling, cut_level, plate_id):
         # if the cut has a different orientation as the parent:
             # add a child to the tree. If there is no tree: create a tree.
             # visit its children with:
@@ -225,12 +218,40 @@ class Model(sol.Solution):
 
         if tree is None:
             child = ete3.Tree(name=plate)
+            parent_id = None
+            node_id = 0
         elif is_sibling:
             # this means this was a subsecuent cut in the same level.
+            # the parent should go at the end
             child = tree.up.add_child(name=plate)
+            parent_id = tree.up.NODE_ID
+            if tree.NODE_ID is None:
+                # we already signaled for deletion.
+                node_id = len(child.get_tree_root().get_descendants()) - 1
+            else:
+                node_id = tree.NODE_ID
+                tree.NODE_ID = None
         else:
             # this means this was a cut in the lower level or it's a leaf.
             child = tree.add_child(name=plate)
+            parent_id = tree.NODE_ID
+            node_id = len(child.get_tree_root().get_descendants()) - 1
+
+        # we fill some of the nodes information (still missing TYPE)
+        # it's possible to make it more efficient to assign the NODE_ID
+        # by exploiting the fact that the node's ID needs to be bigger
+        # than neighbors and parent.only.
+
+        info = {
+            'X': ref_pos[0]
+            , 'Y': ref_pos[1]
+            , 'WIDTH': plate[0]
+            , 'HEIGHT': plate[1]
+            , 'PLATE_ID': plate_id
+            , 'NODE_ID': node_id
+            , 'PARENT': parent_id
+        }
+        child.add_features(**info)
 
         # if there is not subsecuent cut: we have arrived to a leaf. We return
         if r_cut is None:
@@ -241,7 +262,7 @@ class Model(sol.Solution):
         new_cut_level = r_cut[3]
 
         children_plates = self.get_plates_and_position_from_cut(r_cut, ref_pos)
-        print(child.get_tree_root().get_ascii(show_internal=True))
+        # print(child.get_tree_root().get_ascii(show_internal=True))
         for p, pos in children_plates:
             self.get_tree_from_solution(
                 tree=child
@@ -250,6 +271,7 @@ class Model(sol.Solution):
                 , ref_pos=pos
                 , is_sibling=next_is_sibling
                 , cut_level=new_cut_level
+                , plate_id=plate_id
             )
         return child.get_tree_root()
 
@@ -320,7 +342,7 @@ class Model(sol.Solution):
                 # sumo la produccion de placas y debe ser mayor a la demanda de placas
                 model += pl.lpSum(cuts[tup] for tup in cutting_production_k[j]) >= \
                          pl.lpSum(cuts[(j, o, q, l)] for (o, q, l) in cutting_production_j.get(j, [])) + \
-                         (j in items.values_l())
+                         (j in items.values_l() or self.rotate_plate(j) in items.values_l())
 
         default_options = {
             'timeLimit': 300
@@ -333,44 +355,52 @@ class Model(sol.Solution):
         result = config.solve_model(model)
 
         cuts_ = self.vars_to_tups(cuts, binary=False)
-        level = 0
 
         cut_by_level = cuts_.index_by_part_of_tuple(position=3, get_list=False)
-        pp.pprint(cut_by_level)
+        # pp.pprint(cut_by_level)
         num_trees = len([tup for tup in cut_by_level[1] if tup[0] == self.get_plate0()])
         trees = []
 
         for i in range(num_trees):
-            result = self.get_tree_from_solution(tree=None
-                                        , cut_by_level=cut_by_level
-                                        , ref_pos=(0,0)
-                                        , plate=self.get_plate0()
-                                        , cut_level=0
-                                        , is_sibling=False)
-            print(result.get_tree_root().get_ascii(show_internal=True))
-            trees.append(result)
+            tree = self.get_tree_from_solution(
+                tree=None
+                , cut_by_level=cut_by_level
+                , ref_pos=(0, 0)
+                , plate=self.get_plate0()
+                , cut_level=0
+                , is_sibling=False
+                , plate_id=i
+            )
+            # we delete intermediate nodes:
+            for n in tree.traverse():
+                if n.NODE_ID is None:
+                    n.detach()
+            # print(result.get_tree_root().get_ascii(show_internal=True))
+            trees.append(tree)
         self.trees = trees
-        pp.pprint(cut_by_level)
-        # return cut_by_level
-        #
-        # cut = ((1200.0, 3210), 1, 857, 1)
-        # plate, o, q, l = cut
-        # ref_pos = (0, 0)
-        # if o == pm.ORIENT_V:
-        #     x = ref_pos[0] + q
-        #     y = plate[1]
-        #     width = q
-        #     height = plate[1]
-        #     pos1 = ref_pos
-        #     p1 = (q, plate[1])
-        #     pos2 = ref_pos[0] + q, ref_pos[1]
-        #     p2 = (plate[0] - q, plate[1])
-        #
+        # pp.pprint(cut_by_level)
+        return trees
 
+    def search_items_in_tree(self):
+        trees = self.trees
+        demand = self.flatten_stacks()
+        for tree in trees:
+            for leaf in tree.iter_leaves():
+                leaf_p = leaf.WIDTH, leaf.HEIGHT
+                # print(demand)
+                for k, v in demand.items():
+                    found = False
+                    if v == leaf_p:
+                        found = True
+                    elif self.rotate_plate(v) == leaf_p:
+                        found = True
+                    if found:
+                        print('Match: {} and leaf: {} from tree: {}'.format(k, leaf, leaf.PLATE_ID))
+                        leaf.add_features(TYPE=k)
+                        demand.pop(k)
+                        break
 
-        # constraints (12)
-        # for j in items:
-        #     model += cut_items[j] >=
+        return trees
 
 
 if __name__ == "__main__":
@@ -381,6 +411,10 @@ if __name__ == "__main__":
     # result2 = self.get_cut_positions(plate0, 'v')
     # production = self.plate_generation()
     self.solve()
+    tree = self.trees[0]
+    print(tree.get_tree_root().get_ascii(show_internal=True))
+
+    # self
     # len(result2)
     # pp.pprint(result2)
     # len(result)

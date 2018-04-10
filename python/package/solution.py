@@ -14,7 +14,7 @@ class Solution(inst.Instance):
 
     def __init__(self, input_data, solution_data):
         super().__init__(input_data)
-        self.sol_data = solution_data
+        # self.sol_data = solution_data
         if len(solution_data) == 0:
             self.trees = []
             return
@@ -79,10 +79,10 @@ class Solution(inst.Instance):
 
     def square_inside_square(self, square1, square2, both_sides=True):
         """
-        Checks if square1 is inside square2.
+        Tests if square1 is inside square2.
         :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
         :param square2: a list of two dictionaries of type: {'X': 0, 'Y': 0}
-        :param both_sides: if true, alseo check if square2 is inside square1
+        :param both_sides: if true, alse see if square2 is inside square1
         :return: number of square inside the other. or 0 if not
         """
         if self.point_in_square(square1[0], square2, strict=False):
@@ -128,7 +128,13 @@ class Solution(inst.Instance):
         return leaves_by_plate
 
     def check_all(self):
-        return True
+        func_list = {
+            'overlapping': self.check_overlapping
+            , 'sequence': self.check_sequence
+            , 'defects': self.check_no_defects
+        }
+        result = {k: v() for k, v in func_list.items()}
+        return {k: v for k, v in result.items() if len(v) > 0}
 
     def check_overlapping(self):
         plate_leaves = self.get_pieces(by_plate=True)

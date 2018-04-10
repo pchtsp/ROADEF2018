@@ -26,12 +26,18 @@ def get_model_data(case_name, path=pm.PATHS['data']):
     tables = read_files_into_tables(filenames)
 
     defects = \
-        tables['defects'].set_index('DEFECT_ID').\
+        tables['defects']. \
+            assign(index=tables['defects'].DEFECT_ID). \
+            set_index('index').\
             to_dict(orient='index')
 
     batch = \
-        tables['batch'].set_index('ITEM_ID').\
+        tables['batch'].\
+            assign(index=tables['batch'].ITEM_ID).\
+            set_index('index').\
             to_dict(orient='index')
+
+    # batch = {k: v}
 
     parameters = {
         'nPlates': 100
