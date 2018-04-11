@@ -1,0 +1,6 @@
+heuristique?
+
+prendre en compte les contraintes plus dures au début.
+partager github avec PM
+Luca travaille sur un heuristique qui génère des solutions
+Franco continue avec le PLNE
