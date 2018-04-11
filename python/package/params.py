@@ -1,9 +1,12 @@
+import os
+import datetime as dt
+
 path_root = '/home/pchtsp/Documents/projects/ROADEF2018/'
 
 PATHS = {
     'root': path_root
-    # ,'results': path_results
-    # ,'experiments': path_results + "experiments/"
+    ,'results': path_root + 'results/'
+    ,'experiments': path_root + 'results/' + "experiments/"
     ,'img': path_root + "OPTIMA/img/"
     ,'latex': path_root + "OPTIMA/latex/"
     ,'data': path_root + "resources/data/dataset_A/"
@@ -13,3 +16,15 @@ PATHS = {
 ORIENTATIONS = [0, 1]
 ORIENT_H = 0
 ORIENT_V = 1
+
+OPTIONS = {
+    'timeLimit': 600
+    , 'gap': 0
+    , 'solver': "CHOCO"
+    , 'integer': False
+    , 'path': os.path.join(
+        PATHS['experiments'],
+        dt.datetime.now().strftime("%Y%m%d%H%M")
+    ) + '/'
+    , 'case_name': 'A1'
+}

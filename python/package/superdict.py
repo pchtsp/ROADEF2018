@@ -28,7 +28,7 @@ class SuperDict(dict):
         """
         dictdict = SuperDict()
         for tup, value in self.items():
-            self.tup_to_dicts(tup, value)
+            dictdict.tup_to_dicts(tup, value)
         return dictdict
 
     def tup_to_dicts(self, tup, value):

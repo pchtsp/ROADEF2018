@@ -2,6 +2,9 @@ import package.params as pm
 import package.data_input as di
 import package.tuplist as tl
 import package.superdict as sd
+import pandas as pd
+import package.auxiliar as aux
+import os
 
 
 class Instance(object):
@@ -44,10 +47,18 @@ class Instance(object):
     def get_plate0(self, get_dict=False):
         # TODO: take out /10 from width
         if not get_dict:
-            return self.get_param('widthPlates')/5, self.get_param('heightPlates')
+            return self.get_param('widthPlates')//5, self.get_param('heightPlates')
         return {'width': self.get_param('widthPlates'),
                 'height': self.get_param('heightPlates')}
 
     @classmethod
     def from_input_files(cls, case_name, path=pm.PATHS['data']):
         return cls(di.get_model_data(case_name, path))
+
+    def export_input_data(self, path=pm.PATHS['results'] + aux.get_timestamp()):
+        if not os.path.exists(path):
+            os.mkdir(path)
+        for val in ['defects', 'batch']:
+            table = pd.DataFrame.from_dict(self.input_data[val], orient='index')
+            table.to_csv(path + '{}.csv'.format(val))
+        return True

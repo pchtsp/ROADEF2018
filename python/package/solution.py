@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import palettable as pal
 import pprint as pp
+import pandas as pd
+import package.auxiliar as aux
+import os
 
 
 class Solution(inst.Instance):
@@ -112,20 +115,28 @@ class Solution(inst.Instance):
 
         pass
 
-    def get_pieces(self, by_plate=False, pos=0):
+    def get_pieces(self, by_plate=False, pos=None):
         """
         Gets the solution pieces indexed by the NODE_ID.
         :param by_plate: when active it returns a dictionary indexed
         by the plates. So it's {PLATE_0: {0: leaf0,  1: leaf1}, PLATE_1: {}}
         :return: {0: leaf0,  1: leaf1}
         """
-        leaves = self.trees[pos].get_leaves()
+        if pos is None:
+            leaves = [leaf for tree in self.trees
+                      for leaf in tree.get_leaves() if leaf.TYPE >= 0]
+        else:
+            leaves = [leaf for leaf in self.trees[0].get_leaves() if leaf.TYPE >= 0]
+
         if not by_plate:
-            return {int(leaf.TYPE): leaf for leaf in leaves if leaf.TYPE >= 0}
-        leaves_by_plate = {leaf.PLATE_ID: {} for leaf in leaves}
+            return {int(leaf.TYPE): leaf for leaf in leaves}
+
+        leaves_by_plate = {tree.PLATE_ID: {} for tree in self.trees}
         for leaf in leaves:
-            leaves_by_plate[leaf.PLATE_ID][leaf.TYPE] = leaf
-        return leaves_by_plate
+            leaves_by_plate[leaf.PLATE_ID][int(leaf.TYPE)] = leaf
+        if pos is None:
+            return leaves_by_plate
+        return leaves_by_plate[pos]
 
     def check_all(self):
         func_list = {
@@ -139,7 +150,7 @@ class Solution(inst.Instance):
     def check_overlapping(self):
         plate_leaves = self.get_pieces(by_plate=True)
         overlapped = []
-        for plate, leaves in plate_leaves:
+        for plate, leaves in plate_leaves.items():
             for k1, leaf1 in leaves.items():
                 point1 = {'X': leaf1.X, 'Y': leaf1.Y}
                 point2 = {'X': leaf1.X + leaf1.WIDTH, 'Y': leaf1.Y + leaf1.HEIGHT}
@@ -182,8 +193,9 @@ class Solution(inst.Instance):
     def check_no_defects(self):
         plate_cuts = self.get_pieces(by_plate=True)
         pieces_with_defects = []
-        for plate, defects_dict in self.get_defects_per_plate():
-            for k, piece in plate_cuts[plate].items():
+        for plate, piece_dict in plate_cuts.items():
+            defects_dict = self.get_defects_per_plate(plate)
+            for k, piece in piece_dict.items():
                 square = self.piece_to_square(piece)
                 for k, defect in defects_dict.items():
                     if self.point_in_square(point=defect, square=square):
@@ -225,7 +237,8 @@ class Solution(inst.Instance):
     def graph_solution(self, pos=0):
         colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
-        for plate, leafs in self.get_pieces(True, pos).items():
+        plate = pos
+        for plate, leafs in self.get_pieces(by_plate=True).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')
             ax1.set_xlim([0, width])
@@ -254,7 +267,31 @@ class Solution(inst.Instance):
                         linewidth=10
                     )
                 )
-            fig1.savefig('rect1.png', dpi=90, bbox_inches='tight')
+            fig1.savefig('rect1_{}.png'.format(plate), dpi=90, bbox_inches='tight')
+
+    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp()):
+        if not os.path.exists(path):
+            os.mkdir(path)
+        result = {}
+        k = 0
+        for tree in self.trees:
+            for v in tree.traverse():
+                d = \
+                    {'X': v.X,
+                    'Y': v.Y,
+                    'NODE_ID': v.NODE_ID,
+                    'PLATE_ID': v.PLATE_ID,
+                    'CUT': v.CUT,
+                    'PARENT': v.PARENT,
+                    'TYPE': v.TYPE,
+                    'WIDTH': v.WIDTH,
+                    'HEIGHT': v.HEIGHT,
+                 }
+                k += 1
+                result[k] = d
+        table = pd.DataFrame.from_dict(result, orient='index')
+        table.to_csv(path + 'solution.csv')
+        return True
 
 
 if __name__ == "__main__":

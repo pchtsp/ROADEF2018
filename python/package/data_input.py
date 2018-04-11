@@ -7,6 +7,7 @@ import json
 import pickle
 import package.params as pm
 import package.superdict as sd
+import package.auxiliar as aux
 import pprint as pp
 
 
@@ -18,9 +19,6 @@ def read_files_into_tables(filenames):
 
 
 def get_model_data(case_name, path=pm.PATHS['data']):
-    # case_name = "A3"
-    # path = pm.PATHS['data']
-    # TODO: maybe import parameters from file if exists?
     input_files = ['batch', 'defects']
     filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
     tables = read_files_into_tables(filenames)
@@ -37,8 +35,7 @@ def get_model_data(case_name, path=pm.PATHS['data']):
             set_index('index').\
             to_dict(orient='index')
 
-    # batch = {k: v}
-
+    # TODO: maybe import parameters from file if exists?
     parameters = {
         'nPlates': 100
         , 'widthPlates': 6000
@@ -60,9 +57,50 @@ def get_model_solution(case_name, path=pm.PATHS['checker_data']):
     input_files = ['solution']
     filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
     tables = read_files_into_tables(filenames)
-    result = tables['solution'].set_index('NODE_ID').to_dict(orient='index')
+    result = \
+        tables['solution'].\
+            assign(index=tables['solution'].NODE_ID).\
+            set_index('index').\
+            to_dict(orient='index')
     return sd.SuperDict(result)
 
+
+def load_data(path, file_type=None):
+    if file_type is None:
+        splitext = os.path.splitext(path)
+        if len(splitext) == 0:
+            raise ImportError("file type not given")
+        else:
+            file_type = splitext[1][1:]
+    if file_type not in ['json', 'pickle']:
+        raise ImportError("file type not known: {}".format(file_type))
+    if not os.path.exists(path):
+        return False
+    if file_type == 'pickle':
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+    if file_type == 'json':
+        with open(path, 'r') as f:
+            return json.load(f)
+
+
+def export_data(path, obj, name=None, file_type="pickle"):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if name is None:
+        name = aux.get_timestamp()
+    path = os.path.join(path, name + "." + file_type)
+    if file_type == "pickle":
+        with open(path, 'wb') as f:
+            pickle.dump(obj, f)
+    if file_type == 'json':
+        with open(path, 'w') as f:
+            json.dump(obj, f)
+    return True
+
+
+# def write_table(data, path=pm.PATHS['experiments'], filename='solution', ext='csv'):
+#     data.to_csv(path + aux.get_timestamp() + '/{}.{}'.format(filename, ext))
 
 if __name__ == "__main__":
 
