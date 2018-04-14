@@ -18,13 +18,16 @@ ORIENT_H = 0
 ORIENT_V = 1
 
 OPTIONS = {
-    'timeLimit': 600
+    'timeLimit': 3600
     , 'gap': 0
-    , 'solver': "CHOCO"
+    , 'solver': "CPLEXPY"
     , 'integer': False
     , 'path': os.path.join(
         PATHS['experiments'],
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
-    , 'case_name': 'A1'
+    , 'case_name': 'A3'
+    , 'max_plates': 10
+    , 'max_width': 6000//4
+    , 'max_iters': 100000
 }

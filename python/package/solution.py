@@ -32,6 +32,9 @@ class Solution(inst.Instance):
     def get_tree_from_solution_data(solution_data):
         parent_child = [(int(v['PARENT']), int(k), 1) for k, v in solution_data.items()
                         if not math.isnan(v['PARENT'])]
+        for p, c, d in parent_child:
+            if p == c:
+                raise ValueError('parent cannot be the same node!')
         if len(parent_child) == 0:
             return ete3.Tree(name=0)
 
@@ -50,12 +53,18 @@ class Solution(inst.Instance):
         return self.trees[pos].show()
 
     @classmethod
-    def from_io_files(cls, case_name, path=pm.PATHS['checker_data']):
+    def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data']):
+        if case_name is None:
+            try:
+                options = di.load_data(path + 'options.json')
+            except FileNotFoundError:
+                case_name = None
+            else:
+                case_name = options.get('case_name', None)
+        if case_name is None:
+            raise ImportError('case_name is None and options.json is not available')
         input_data = di.get_model_data(case_name, path)
-        try:
-            solution = di.get_model_solution(case_name, path)
-        except FileNotFoundError:
-            solution = {}
+        solution = di.get_model_solution(case_name, path)
         return cls(input_data, solution)
 
     @classmethod
@@ -269,7 +278,7 @@ class Solution(inst.Instance):
                 )
             fig1.savefig('rect1_{}.png'.format(plate), dpi=90, bbox_inches='tight')
 
-    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp()):
+    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix=''):
         if not os.path.exists(path):
             os.mkdir(path)
         result = {}
@@ -278,19 +287,19 @@ class Solution(inst.Instance):
             for v in tree.traverse():
                 d = \
                     {'X': v.X,
-                    'Y': v.Y,
-                    'NODE_ID': v.NODE_ID,
-                    'PLATE_ID': v.PLATE_ID,
-                    'CUT': v.CUT,
-                    'PARENT': v.PARENT,
-                    'TYPE': v.TYPE,
-                    'WIDTH': v.WIDTH,
-                    'HEIGHT': v.HEIGHT,
+                     'Y': v.Y,
+                     'NODE_ID': v.NODE_ID,
+                     'PLATE_ID': v.PLATE_ID,
+                     'CUT': v.CUT,
+                     'PARENT': v.PARENT,
+                     'TYPE': v.TYPE,
+                     'WIDTH': v.WIDTH,
+                     'HEIGHT': v.HEIGHT,
                  }
                 k += 1
                 result[k] = d
         table = pd.DataFrame.from_dict(result, orient='index')
-        table.to_csv(path + 'solution.csv')
+        table.to_csv(path + '{}solution.csv'.format(prefix), index=False, sep=';')
         return True
 
 

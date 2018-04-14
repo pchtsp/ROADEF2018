@@ -75,7 +75,7 @@ def load_data(path, file_type=None):
     if file_type not in ['json', 'pickle']:
         raise ImportError("file type not known: {}".format(file_type))
     if not os.path.exists(path):
-        return False
+        raise FileNotFoundError('File {} does not exist'.format(path))
     if file_type == 'pickle':
         with open(path, 'rb') as f:
             return pickle.load(f)

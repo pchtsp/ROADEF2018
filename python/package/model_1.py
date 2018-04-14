@@ -7,14 +7,11 @@ import package.config as conf
 def solve_model(self, options):
     """
     This solves the MIP problem using Furini2016
-    """
 
-    """
-    
     :return:
     """
     # parameters:
-    cutting_production = self.plate_generation()  # a
+    cutting_production = self.plate_generation(max_iterations=options.get('max_iters', None))  # a
     # (j, o, q, level, k)
     # cut "q" with orientation "o" on plate "j" produces plate "k"
 
@@ -55,7 +52,7 @@ def solve_model(self, options):
 
     # {j: num}
     # for each j in Ĵ, it names the demand
-    max_plates = 10
+    max_plates = options.get("max_plates", 10)
 
     # model
     model = pl.LpProblem("ROADEF", pl.LpMinimize)
@@ -78,7 +75,8 @@ def solve_model(self, options):
                      (j in items.values_l() or self.rotate_plate(j) in items.values_l())
 
     config = conf.Config(options)
-    result = config.solve_model(model)
+    solver = config.get_solver()
+    result = model.solve(solver)
 
     if result != 1:
         print("Model resulted in non-feasible status")
@@ -86,6 +84,4 @@ def solve_model(self, options):
 
     cuts_ = self.vars_to_tups(cuts, binary=False)
 
-    cut_by_level = cuts_.index_by_part_of_tuple(position=3, get_list=False)
-
-    return cut_by_level
+    return cuts_

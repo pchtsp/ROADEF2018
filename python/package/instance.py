@@ -45,9 +45,8 @@ class Instance(object):
         return params
 
     def get_plate0(self, get_dict=False):
-        # TODO: take out /10 from width
         if not get_dict:
-            return self.get_param('widthPlates')//5, self.get_param('heightPlates')
+            return self.get_param('widthPlates'), self.get_param('heightPlates')
         return {'width': self.get_param('widthPlates'),
                 'height': self.get_param('heightPlates')}
 
@@ -55,10 +54,10 @@ class Instance(object):
     def from_input_files(cls, case_name, path=pm.PATHS['data']):
         return cls(di.get_model_data(case_name, path))
 
-    def export_input_data(self, path=pm.PATHS['results'] + aux.get_timestamp()):
+    def export_input_data(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix=''):
         if not os.path.exists(path):
             os.mkdir(path)
         for val in ['defects', 'batch']:
             table = pd.DataFrame.from_dict(self.input_data[val], orient='index')
-            table.to_csv(path + '{}.csv'.format(val))
+            table.to_csv(path + '{}{}.csv'.format(prefix, val), index=False, sep=';')
         return True
