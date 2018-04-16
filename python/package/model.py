@@ -72,7 +72,9 @@ class Model(sol.Solution):
                             continue
                         # here we register the tuple
                         # of the production of plates
-                        cutting_production.add(j, cut_level, o, q, k, next_level)
+                        w1, h1 = j
+                        w2, h2 = k
+                        cutting_production.add(w1, h1, cut_level, o, q, w2, h2, next_level)
                         if next_level >= 3:
                             continue
                         if (k, next_level) in plates:
