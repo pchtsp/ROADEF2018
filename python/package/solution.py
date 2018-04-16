@@ -42,11 +42,16 @@ class Solution(inst.Instance):
         # add info about each node
         for node in tree.traverse():
             for k, v in solution_data[node.name].items():
-                node.add_feature(k, v)
+                if math.isnan(v):
+                    node.add_feature(k, v)
+                else:
+                    node.add_feature(k, int(v))
         return tree
 
-    def draw(self, pos=0):
-        print(self.trees[pos])
+    def draw(self, attributes=None, pos=0):
+        if attributes is None:
+            attributes = ['NODE_ID']
+        print(self.trees[pos].get_ascii(show_internal=True, attributes=attributes))
         return
 
     def draw_interactive(self, pos=0):
@@ -117,6 +122,21 @@ class Solution(inst.Instance):
         return [{'X': piece.X, 'Y': piece.Y},
                 {'X': piece.X + piece.WIDTH, 'Y': piece.Y + piece.HEIGHT}]
 
+    def plate_inside_plate(self, plate1, plate2, turn=True, both_sides=False):
+        origin = {'X': 0, 'Y': 0}
+        result = self.square_inside_square(
+            [origin, {'X': plate1[0], 'Y': plate1[1]}],
+            [origin, {'X': plate2[0], 'Y': plate2[1]}],
+            both_sides=both_sides
+        )
+        if result or not turn:
+            return result
+        return self.square_inside_square(
+            [origin, {'X': plate1[1], 'Y': plate1[0]}],
+            [origin, {'X': plate2[0], 'Y': plate2[1]}],
+            both_sides=both_sides
+    )
+
     def get_cuts(self):
         # for each node, we get the cut that made it.
         # there's always one of the children that has no cut
@@ -124,18 +144,21 @@ class Solution(inst.Instance):
 
         pass
 
-    def get_pieces(self, by_plate=False, pos=None):
+    def get_pieces_by_type(self, by_plate=False, pos=None, filter_type=True):
         """
-        Gets the solution pieces indexed by the NODE_ID.
+        Gets the solution pieces indexed by the TYPE.
         :param by_plate: when active it returns a dictionary indexed
         by the plates. So it's {PLATE_0: {0: leaf0,  1: leaf1}, PLATE_1: {}}
         :return: {0: leaf0,  1: leaf1}
         """
+        min_type = -5
+        if filter_type:
+            min_type = 0
         if pos is None:
             leaves = [leaf for tree in self.trees
-                      for leaf in tree.get_leaves() if leaf.TYPE >= 0]
+                      for leaf in tree.get_leaves() if leaf.TYPE >= min_type]
         else:
-            leaves = [leaf for leaf in self.trees[0].get_leaves() if leaf.TYPE >= 0]
+            leaves = [leaf for leaf in self.trees[0].get_leaves() if leaf.TYPE >= min_type]
 
         if not by_plate:
             return {int(leaf.TYPE): leaf for leaf in leaves}
@@ -147,17 +170,21 @@ class Solution(inst.Instance):
             return leaves_by_plate
         return leaves_by_plate[pos]
 
+    def get_plate_production(self):
+        return [(leaf.WIDTH, leaf.HEIGHT) for tree in self.trees for leaf in tree.get_leaves()]
+
     def check_all(self):
         func_list = {
             'overlapping': self.check_overlapping
             , 'sequence': self.check_sequence
             , 'defects': self.check_no_defects
+            , 'demand': self.check_demand_satisfied
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
 
     def check_overlapping(self):
-        plate_leaves = self.get_pieces(by_plate=True)
+        plate_leaves = self.get_pieces_by_type(by_plate=True)
         overlapped = []
         for plate, leaves in plate_leaves.items():
             for k1, leaf1 in leaves.items():
@@ -181,7 +208,7 @@ class Solution(inst.Instance):
         pass
 
     def check_sequence(self):
-        code_leaf = self.get_pieces()
+        code_leaf = self.get_pieces_by_type()
         wrong_order = []
         for stack, nodes_dict in self.get_items_per_stack().items():
             last_node = last_cut = last_plate = 0
@@ -200,7 +227,7 @@ class Solution(inst.Instance):
         return wrong_order
 
     def check_no_defects(self):
-        plate_cuts = self.get_pieces(by_plate=True)
+        plate_cuts = self.get_pieces_by_type(by_plate=True)
         pieces_with_defects = []
         for plate, piece_dict in plate_cuts.items():
             defects_dict = self.get_defects_per_plate(plate)
@@ -235,19 +262,23 @@ class Solution(inst.Instance):
     def check_demand_satisfied(self):
         demand = self.input_data['batch']
         produced = []
-        for leaf in self.trees.iter_leaves():
-            if leaf.TYPE not in demand:
+        pieces = self.get_pieces_by_type()
+        for k, leaf in pieces.items():
+            item = demand.get(k, None)
+            # there's no demand for this item code
+            if item is None:
                 continue
-            if leaf.WIDTH == demand[leaf.TYPE]['WIDTH_ITEM'] and\
-            leaf.HEIGHT == demand[leaf.TYPE]['LENGTH_ITEM']:
-                produced.append(leaf.name)
+            plate1 = item['WIDTH_ITEM'], item['LENGTH_ITEM']
+            plate2 = leaf.WIDTH, leaf.HEIGHT
+            if self.plate_inside_plate(plate1, plate2):
+                produced.append(k)
         return np.setdiff1d([*demand], produced)
 
     def graph_solution(self, pos=0):
         colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
         plate = pos
-        for plate, leafs in self.get_pieces(by_plate=True).items():
+        for plate, leafs in self.get_pieces_by_type(by_plate=True).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')
             ax1.set_xlim([0, width])

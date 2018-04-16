@@ -2,6 +2,9 @@ import package.tuplist as tl
 import package.superdict as sd
 import pulp as pl
 import package.config as conf
+import package.params as pm
+import numpy as np
+import pprint as pp
 
 
 def solve_model(self, options):
@@ -12,43 +15,72 @@ def solve_model(self, options):
     """
     # parameters:
     cutting_production = self.plate_generation(max_iterations=options.get('max_iters', None))  # a
-    # (j, o, q, level, k)
-    # cut "q" with orientation "o" on plate "j" produces plate "k"
+    # (j, l1, o, q, k, l2)
+    # cut "q" with orientation "o" on plate "j", in level l1 produces plate "k" in level l2
+    cutting_production = \
+        np.array(cutting_production,
+                 dtype=[('j', '2i4'),
+                        ('l1', 'i4'),
+                        ('o', 'i4'),
+                        ('q', 'i4'),
+                        ('k', '2i4'),
+                        ('l2', 'i4')]
+                 )
 
-    plates = \
-        cutting_production.filter(0).unique2() + \
-        cutting_production.filter(4).unique2()
-    plates = tl.TupList(plates).unique2()
-    # plates_dict = {k: p for k, p in enumerate(plates)}
-    # pd_inv = {p: k for k, p in plates_dict.items()}
-    # cutting_production_c = [(pd_inv[tup[0]], tup[1], tup[2], tup[3], pd_inv[tup[4]])
-    #                         for tup in cutting_production]
-    # cutting_production_c = tl.TupList(cutting_production_c)
-    # first_plate = pd_inv[self.get_plate0(get_dict=False)]
-    first_plate = self.get_plate0(get_dict=False)
-    items = self.flatten_stacks()  # Ĵ in J
-    # items[-1] = first_plate
-    # plates_items = tl.TupList([(p, i) for p in plates for i in items.values_l()
-    #                 if self.plate_inside_plate(i, p) == 1])
+    # plates = \
+    #     np.concatenate([
+    #         np.unique(cutting_production['j'], axis=0),
+    #         np.unique(cutting_production['k'], axis=0)
+    #     ])
+    # plates = np.unique(plates, axis=0)
+    first_plate = np.array(self.get_plate0(get_dict=False), dtype='i')
+    items = self.flatten_stacks(in_list=True)  # Ĵ in J
+    demand = {v: 0 for v in items}
+    for v in items:
+        demand[v] += 1
 
-    # [i for i in items.values_l() if i in plates]
-    # np.intersect1d(items.values_l(), plates)
+    # (j, l1, o, q)
+    cutting_options_tup = np.unique(cutting_production[['j', 'l1', 'o', 'q']])
+    # (plate0, o, q, level)
+    a = cutting_options_tup['j'] == first_plate
+    cutting_options_tup_0 = cutting_options_tup[a.all(axis=1)]
 
-    cutting_options_tup = cutting_production.filter([0, 1, 2, 3]).unique2()
-    # (j, o, q, level)
-    # tuple of cut posibilities based on cutting_options
+    # a = cutting_options_tup['j'][:, 1]
 
-    # cutting_options = cutting_options_tup.to_dict(result_col=2)  # Q
-    # (j, o): [q]
-    # set of cut positions we can cut plate j with orientation o.
-    cutting_options_tup_0 = \
-        tl.TupList([tup for tup in cutting_options_tup if tup[0] == first_plate])
-    # j: (o, q, level)
-    cutting_production_j = \
-        cutting_options_tup.to_dict(result_col=[1, 2, 3])
-    # k: (j, o, q, level)
-    cutting_production_k = \
-        cutting_production.to_dict(result_col=[0, 1, 2, 3])
+    plates_level_demand = \
+            np.unique(cutting_production[['k', 'l2']])
+
+    plates_level = \
+        np.concatenate([
+            plates_level_demand.tolist(),
+            np.unique(cutting_options_tup[['j', 'l1']]).tolist()
+        ])
+    plates_level = np.unique(plates_level)
+
+    l_j = {}
+    for j, l in plates_level:
+        key = tuple(j)
+        if key not in l_j:
+            l_j[key] = []
+        l_j[key].append(l)
+
+    # (j, l1): (o, q)
+    cutting_production_j_level = {}
+    for ((w, h), l1, o, q) in cutting_options_tup:
+        key = w, h, l1
+        value = (o, q)
+        if key not in cutting_production_j_level:
+            cutting_production_j_level[key] = []
+            cutting_production_j_level[key].append(value)
+
+    # (k, l2): (j, l1, o, q)
+    cutting_production_k_level = {}
+    for (j, l1, o, q, k, l2) in cutting_production:
+        key = k[0], k[1], l2
+        value = (j[0], j[1], l1, o, q)
+        if key not in cutting_production_k_level:
+            cutting_production_k_level[key] = []
+        cutting_production_k_level[key].append(value)
 
     # {j: num}
     # for each j in Ĵ, it names the demand
@@ -58,22 +90,44 @@ def solve_model(self, options):
     model = pl.LpProblem("ROADEF", pl.LpMinimize)
 
     # variables:
-    cuts = pl.LpVariable.dicts(name='cuts', indexs=cutting_options_tup,
-                               lowBound=0, upBound=max_plates, cat='Integer')
-    # cut_items = pl.LpVariable.dicts(name='items', indexs=items.values_l(),
-    #                                 lowBound=0, upBound=1, cat='Integer')
+    # this decides the kind of cut that is done on a plate
+    cuts = {}
+    for (w, h), l, o, q in cutting_options_tup:
+            cuts[w, h, l, o, q] = \
+                pl.LpVariable(name='cuts_{}_{}_{}_{}_{}'.format(w, h, l, o, q),
+                              lowBound=0, upBound=max_plates, cat='Integer')
+    # This models if a plate is use to satisfy demand instead than for plate-balancing
+    cut_for_demand = {}
+    for (w, h), l in plates_level_demand:
+        cut_for_demand[w, h, l] = \
+            pl.LpVariable(name='cut_for_demand_{}_{}_{}'.format(w, h, l),
+                          lowBound=0, upBound=max_plates, cat='Integer')
 
     # objective function: (11)
-    model += pl.lpSum(cuts[tup] for tup in cutting_options_tup_0)
+    model += pl.lpSum(cuts[w, h, l, o, q] for (w, h), l, o, q in cutting_options_tup_0)
 
     # constraints (2) + (3)
-    for j in plates:
-        if j != first_plate:
-            # sumo la produccion de placas y debe ser mayor a la demanda de placas
-            model += pl.lpSum(cuts[tup] for tup in cutting_production_k[j]) >= \
-                     pl.lpSum(cuts[(j, o, q, l)] for (o, q, l) in cutting_production_j.get(j, [])) + \
-                     (j in items.values_l() or self.rotate_plate(j) in items.values_l())
+    for j, l in plates_level:
+        np.all(j == first_plate)
+        w1, h1 = j
+        jl = w1, h1, l
+        # if I sum the plate *net* production, it needs to be greater than the demand
+        # the production needs to have occured in the level *before*
+        model += pl.lpSum(cuts[tup] for tup in cutting_production_k_level[jl]) >=\
+                 pl.lpSum(
+                     cuts[w1, h1, l, o, q] for (o, q) in cutting_production_j_level.get(jl, [])
+                 ) + cut_for_demand.get(jl, 0)
 
+    # for each item: we need to cut at least the correct number of plates:
+    # at any level
+    for j, q in demand.items():
+        w, h = j
+        model += pl.lpSum(
+            cut_for_demand.get((w, h, l), 0) + cut_for_demand.get((h, w, l), 0)
+            for l in l_j[j]
+        ) >= q
+
+    # model.writeLP('test.lp')
     config = conf.Config(options)
     solver = config.get_solver()
     result = model.solve(solver)
@@ -82,6 +136,10 @@ def solve_model(self, options):
         print("Model resulted in non-feasible status")
         return None
 
-    cuts_ = self.vars_to_tups(cuts, binary=False)
+    cuts_ = sd.SuperDict({
+        ((k[0], k[1]), k[3], k[4], k[2] + (k[3] == pm.cut_level_next_o[k[2]])): v
+        for k, v in self.vars_to_tups(cuts, binary=False).items()
+    })
+    cut_for_demand_ = self.vars_to_tups(cut_for_demand, binary=False)
 
     return cuts_

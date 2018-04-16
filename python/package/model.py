@@ -21,25 +21,9 @@ import package.model_1 as mdl
 
 class Model(sol.Solution):
 
-    def flatten_stacks(self, in_list=False):
-        """
-        :param in_list: return an size-ordered list of plates instead of dictionary?
-        :return: dictionary indexed by piece and with a tuple
-        of two dimentions. The first one is always smaller.
-        """
-        pieces = {k: (v['WIDTH_ITEM'], v['LENGTH_ITEM'])
-                 for k, v in self.input_data['batch'].items()}
-        for k, v in pieces.items():
-            if v[0] > v[1]:
-                pieces[k] = v[1], v[0]
-        if in_list:
-            pieces = sorted(pieces.values())
-            return tl.TupList(pieces)
-        return sd.SuperDict.from_dict(pieces)
-
     def get_smallest_items(self):
         pieces = self.flatten_stacks(in_list=True)
-        min_length = pieces[1][1] + 1
+        min_length = pieces[0][1] + 1
         filter_out_pos = set()
         for pos, i in enumerate(pieces):
             if i[1] >= min_length:
@@ -57,25 +41,19 @@ class Model(sol.Solution):
         # items = self.flatten_stacks()
         # cutting_options_tup = tl.TupList()
         # cutting_options = sd.SuperDict()
-        cut_level_next_o = {
-            0: pm.ORIENT_V
-            , 1: pm.ORIENT_H
-            , 2: pm.ORIENT_V
-            , 3: pm.ORIENT_H
-        }
         cutting_production = tl.TupList()  # (j, o, q, k)
         plate0 = self.get_plate0(get_dict=False)
         cut_level = 0
         plates = set()
         plates.add((plate0, cut_level))
-        non_processed = [(plate0, cut_level, self.flatten_stacks(in_list=True))]
+        non_processed = [(plate0, cut_level, self.flatten_stacks_plus_rotated())]
         smallest_items = self.get_smallest_items()
         max_iter = 0
         while len(non_processed) > 0 and (max_iterations is None or max_iter < max_iterations):
             max_iter += 1
             print('Iteration={}; Nonprocessed= {}; plates={}'.format(max_iter, len(non_processed), len(plates)))
             j, cut_level, original_items = non_processed.pop()
-            next_o = cut_level_next_o[cut_level]
+            next_o = pm.cut_level_next_o[cut_level]
             for o in pm.ORIENTATIONS:
                 # the first cut needs to be vertical always:
                 if cut_level == 0 and next_o != o:
@@ -83,7 +61,7 @@ class Model(sol.Solution):
                 # if we have next level orientation: we add 1. If not: we add 0.
                 next_level = cut_level + (next_o == o)
                 cutting_options, new_original_items = self.get_cut_positions(j, o, original_items)
-                for q in cutting_options[1:]:
+                for q in cutting_options:
                     # cut j
                     j1, j2 = self.cut_plate(j, o, q)
                     # print('from plate {}: {} and {} at cut_level= {}'.format(j, j1, j2, next_level))
@@ -94,7 +72,7 @@ class Model(sol.Solution):
                             continue
                         # here we register the tuple
                         # of the production of plates
-                        cutting_production.add(j, o, q, next_level, k)
+                        cutting_production.add(j, cut_level, o, q, k, next_level)
                         if next_level >= 3:
                             continue
                         if (k, next_level) in plates:
@@ -105,7 +83,7 @@ class Model(sol.Solution):
                         non_processed.append((k, next_level, new_original_items))
         return cutting_production
 
-    def get_cut_positions(self, plate, orientation, original_items=None):
+    def get_cut_positions(self, plate, orientation, original_items):
         """
         :param plate: (width, height)
         :param orientation:
@@ -119,12 +97,6 @@ class Model(sol.Solution):
         max_size_cut = plate[dim]
         max_size_fixed = plate[dim2]
 
-        if original_items is None:
-            original_items = self.flatten_stacks(in_list=True)
-            items_rotated = [self.rotate_plate(v) for v in original_items]
-            original_items = [item for item in list(set(original_items + items_rotated))]
-        # items_rotated = []
-
         candidates = [item for item in original_items
                       if item[dim2] <= max_size_fixed
                       and item[dim] <= max_size_cut]
@@ -132,6 +104,7 @@ class Model(sol.Solution):
         all_lengths = np.unique(all_lengths)
 
         # cuts = self.get_combination_cuts(all_lengths, max_size_cut)
+        # cuts = cuts[1:] # to take the cut at 0
         cuts = self.get_combination_cuts_strict(all_lengths, max_size_cut)
         return cuts, candidates
 
@@ -179,31 +152,12 @@ class Model(sol.Solution):
         return part1, part2
 
     @staticmethod
-    def rotate_plate(plate):
-        return plate[1], plate[0]
-
-    @staticmethod
     def vars_to_tups(var, binary=True):
         # because of rounding approximations; we need to check if its bigger than half:
         if binary:
             return tl.TupList([tup for tup in var if var[tup].value() > 0.5])
         return sd.SuperDict({tup: var[tup].value() for tup in var
                              if var[tup].value() is not None and var[tup].value() > 0.5})
-
-    def plate_inside_plate(self, plate1, plate2, turn=True, both_sides=False):
-        origin = {'X': 0, 'Y': 0}
-        result = self.square_inside_square(
-            [origin, {'X': plate1[0], 'Y': plate1[1]}],
-            [origin, {'X': plate2[0], 'Y': plate2[1]}],
-            both_sides=both_sides
-        )
-        if result or not turn:
-            return result
-        return self.square_inside_square(
-            [origin, {'X': plate1[1], 'Y': plate1[0]}],
-            [origin, {'X': plate2[0], 'Y': plate2[1]}],
-            both_sides=both_sides
-    )
 
     def check_plate_can_fit_some_item(self, plate, items):
         for item in items:
@@ -321,7 +275,6 @@ class Model(sol.Solution):
 
     def load_solution(self, solution):
         # pp.pprint(cut_by_level)
-        # cut_by_level_backup = copy.deepcopy(cut_by_level)
         cut_by_level = solution.index_by_part_of_tuple(position=3, get_list=False)
         num_trees = len([tup for tup in cut_by_level[1] if tup[0] == self.get_plate0()])
         self.trees = []

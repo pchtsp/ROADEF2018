@@ -17,6 +17,13 @@ ORIENTATIONS = [0, 1]
 ORIENT_H = 0
 ORIENT_V = 1
 
+cut_level_next_o = {
+    0: ORIENT_V
+    , 1: ORIENT_H
+    , 2: ORIENT_V
+    , 3: ORIENT_H
+}
+
 OPTIONS = {
     'timeLimit': 3600
     , 'gap': 0
@@ -26,8 +33,8 @@ OPTIONS = {
         PATHS['experiments'],
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
-    , 'case_name': 'A3'
+    , 'case_name': 'A1'
     , 'max_plates': 10
     , 'max_width': 6000//4
-    , 'max_iters': 100000
+    , 'max_iters': 10000
 }

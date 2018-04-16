@@ -2,6 +2,8 @@ import package.solution as sol
 import package.model as mod
 import package.params as pm
 import numpy as np
+import pprint as pp
+
 
 def test1():
 
@@ -10,6 +12,7 @@ def test1():
     # solution = sol.Solution.from_io_files(path=pm.PATHS['checker_data'], case_name='A0')
 # print(self.trees[0].get_ascii(show_internal=True, attributes=['NODE_ID', 'PARENT']))
 ################################################
+
 
 def test2():
 
@@ -26,5 +29,24 @@ def test2():
             min_length = i[1]
     # [i for i in r if i[1] <= r[0][1]]
 
+
+def test3():
+    e = 'multi1/A6/'
+    path = pm.PATHS['results'] + e
+    solution = mod.Model.from_io_files(path=path)
+    cuts = solution.import_cuts(path)
+    # solution.draw(['NODE_ID', 'TYPE'], pos=0)
+    missing = solution.check_all()['demand'].tolist()
+    solution.get_pieces_by_type()
+
+    demanded_plates = solution.flatten_stacks()
+    missing_plates = demanded_plates.filter(missing)
+    plates = solution.get_plate_production()
+
+    sorted(plates)
+    sorted(demanded_plates.values_l())
+    sorted(missing_plates.values_l())
+
+
 if __name__ == "__main__":
-    test1()
+    test3()

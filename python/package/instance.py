@@ -33,7 +33,7 @@ class Instance(object):
         if plate is None:
             return defects_plate
         if plate not in defects_plate:
-            raise IndexError('PLATE_ID={} was not found in defects'.format(plate))
+            return {}
         return defects_plate[plate]
 
     def get_param(self, name=None):
@@ -45,10 +45,35 @@ class Instance(object):
         return params
 
     def get_plate0(self, get_dict=False):
+        w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
         if not get_dict:
-            return self.get_param('widthPlates'), self.get_param('heightPlates')
-        return {'width': self.get_param('widthPlates'),
-                'height': self.get_param('heightPlates')}
+            return w, h
+        return {'width': w, 'height': h}
+
+    def flatten_stacks(self, in_list=False):
+        """
+        :param in_list: return an size-ordered list of plates instead of dictionary?
+        :return: dictionary indexed by piece and with a tuple
+        of two dimentions. The first one is always smaller.
+        """
+        pieces = {k: (v['WIDTH_ITEM'], v['LENGTH_ITEM'])
+                 for k, v in self.input_data['batch'].items()}
+        for k, v in pieces.items():
+            if v[0] > v[1]:
+                pieces[k] = v[1], v[0]
+        if in_list:
+            pieces = sorted(pieces.values())
+            return tl.TupList(pieces)
+        return sd.SuperDict.from_dict(pieces)
+
+    def flatten_stacks_plus_rotated(self):
+        original_items = self.flatten_stacks(in_list=True)
+        items_rotated = [self.rotate_plate(v) for v in original_items]
+        return [item for item in list(set(original_items + items_rotated))]
+
+    @staticmethod
+    def rotate_plate(plate):
+        return plate[1], plate[0]
 
     @classmethod
     def from_input_files(cls, case_name, path=pm.PATHS['data']):
