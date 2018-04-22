@@ -35,20 +35,28 @@ def get_model_data(case_name, path=pm.PATHS['data']):
             set_index('index').\
             to_dict(orient='index')
 
-    # TODO: maybe import parameters from file if exists?
-    parameters = {
-        'nPlates': 100
-        , 'widthPlates': 6000
-        , 'heightPlates': 3210
-        , 'minXX': 100
-        , 'maxXX': 3500
-        , 'minYY': 100
-        , 'minWaste': 20
-    }
+    params_filenames = {file: path + file + '.csv' for file in ['global_param']}
+    if os.path.exists(params_filenames['global_param']):
+        params = read_files_into_tables(params_filenames)
+
+        parameters = \
+            params['global_param'].\
+            set_index('NAME')['VALUE'].\
+            to_dict()
+    else:
+        parameters = {
+            'nPlates': 100
+            , 'widthPlates': 6000
+            , 'heightPlates': 3210
+            , 'minXX': 100
+            , 'maxXX': 3500
+            , 'minYY': 100
+            , 'minWaste': 20
+        }
 
     return sd.SuperDict({'batch': sd.SuperDict.from_dict(batch),
                          'defects': sd.SuperDict.from_dict(defects),
-                         'parameters': sd.SuperDict.from_dict(parameters)})
+                         'global_param': sd.SuperDict.from_dict(parameters)})
 
 
 def get_model_solution(case_name, path=pm.PATHS['checker_data']):

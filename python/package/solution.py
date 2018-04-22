@@ -57,15 +57,19 @@ class Solution(inst.Instance):
     def draw_interactive(self, pos=0):
         return self.trees[pos].show()
 
+    @staticmethod
+    def search_case_in_options(path):
+        try:
+            options = di.load_data(path + 'options.json')
+        except FileNotFoundError:
+            return None
+        else:
+            return options.get('case_name', None)
+
     @classmethod
     def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data']):
         if case_name is None:
-            try:
-                options = di.load_data(path + 'options.json')
-            except FileNotFoundError:
-                case_name = None
-            else:
-                case_name = options.get('case_name', None)
+            case_name = cls.search_case_in_options(path)
         if case_name is None:
             raise ImportError('case_name is None and options.json is not available')
         input_data = di.get_model_data(case_name, path)
@@ -73,7 +77,11 @@ class Solution(inst.Instance):
         return cls(input_data, solution)
 
     @classmethod
-    def from_input_files(cls, case_name, path=pm.PATHS['data']):
+    def from_input_files(cls, case_name=None, path=pm.PATHS['data']):
+        if case_name is None:
+            case_name = cls.search_case_in_options(path)
+        if case_name is None:
+            raise ImportError('case_name is None and options.json is not available')
         return cls(di.get_model_data(case_name, path), {})
 
     @staticmethod
@@ -274,10 +282,9 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self, pos=0):
+    def graph_solution(self):
         colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
-        plate = pos
         for plate, leafs in self.get_pieces_by_type(by_plate=True).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')
@@ -290,7 +297,7 @@ class Solution(inst.Instance):
                         (leaf.X, leaf.Y),  # (x,y)
                         leaf.WIDTH,  # width
                         leaf.HEIGHT,  # height
-                        facecolor=colors[pos],
+                        facecolor=colors[pos % len(colors)],
                         linewidth=3
                     )
                 )
@@ -308,6 +315,7 @@ class Solution(inst.Instance):
                     )
                 )
             fig1.savefig('rect1_{}.png'.format(plate), dpi=90, bbox_inches='tight')
+            plt.close(fig1)
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix=''):
         if not os.path.exists(path):

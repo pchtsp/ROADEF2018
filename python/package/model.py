@@ -127,7 +127,9 @@ class Model(sol.Solution):
 
     @staticmethod
     def get_combination_cuts_strict(all_lengths, max_size_cut):
-        return all_lengths
+        duplicated = max_size_cut - all_lengths[all_lengths < max_size_cut // 2]
+        return np.setdiff1d(all_lengths, duplicated)
+        # return all_lengths
 
     @staticmethod
     def cut_plate(plate, orientation, cut):
@@ -221,7 +223,7 @@ class Model(sol.Solution):
             child = ete3.Tree(name=plate)
             node_id = 1
         elif is_sibling:
-            # this means this was a subsecuent cut in the same level.
+            # this means this was a subsequent cut in the same level.
             # the parent should go at the end
             child = tree.up.add_child(name=plate)
             if tree.NODE_ID is None:
@@ -253,7 +255,7 @@ class Model(sol.Solution):
 
         # if there is not subsecuent cut: we have arrived to a leaf. We return
         if r_cut is None:
-            return
+            return child.get_tree_root()
 
         # child = tree
         new_orientation = r_cut[1]
@@ -278,11 +280,11 @@ class Model(sol.Solution):
     def load_solution(self, solution):
         # pp.pprint(cut_by_level)
         cut_by_level = solution.index_by_part_of_tuple(position=3, get_list=False)
-        num_trees = len([tup for tup in cut_by_level[1] if tup[0] == self.get_plate0()])
+        num_trees = sum(v for k, v in cut_by_level[1].items() if k[0] == self.get_plate0())
         self.trees = []
         next_node_id = 0
 
-        for i in range(num_trees):
+        for i in range(int(num_trees)):
             tree = self.get_tree_from_solution(
                 tree=None
                 , cut_by_level=cut_by_level
@@ -305,15 +307,17 @@ class Model(sol.Solution):
                 next_node_id += 1
 
         # here, we assign the correct TYPE:
-        demand = self.search_items_in_tree(strict=False)
+        demand = self.search_items_in_tree(strict=True)
+        demand = self.search_items_in_tree(strict=False, demand=demand)
         if len(demand) > 0:
             print('Not all items were found in solution: {}'.format(demand))
         self.fill_node_types()
         return
 
-    def search_items_in_tree(self, strict=True):
+    def search_items_in_tree(self, strict=True, demand=None):
         trees = self.trees
-        demand = self.flatten_stacks()
+        if demand is None:
+            demand = self.flatten_stacks()
         for tree in trees:
             for leaf in tree.iter_leaves():
                 leaf_p = leaf.WIDTH, leaf.HEIGHT

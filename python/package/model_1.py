@@ -14,9 +14,12 @@ def solve_model(self, options):
     :return:
     """
     # parameters:
-    cutting_production = self.plate_generation(max_iterations=options.get('max_iters', None))  # a
+    cutting_production = \
+        self.plate_generation(max_iterations=options.get('max_iters', None))  # a
     # (w1, h2, l1, o, q, w2, h2, l2)
-    # cut "q" with orientation "o" on plate "j", in level l1 produces plate "k" in level l2
+    # cut "q" with orientation "o" on plate "j",
+    # in level l1 produces plate "k" in level l2
+    print('Getting np array')
     cutting_production = \
         np.array(cutting_production,
                  dtype=[('w1', 'i4'),
@@ -44,10 +47,12 @@ def solve_model(self, options):
     for v in items:
         demand[v] += 1
 
+    print('Getting cutting options')
     # (j, l1, o, q)
     cutting_options_tup = np.unique(cutting_production[j + ['l1', 'o', 'q']])
     # (plate0, o, q, level)
-    cutting_options_tup_0 = cutting_options_tup[cutting_options_tup[j] == first_plate]
+    cutting_options_tup_0 = \
+        cutting_options_tup[cutting_options_tup[j] == first_plate]
 
     plates_level = np.unique(cutting_production[k + ['l2']])
 
@@ -58,6 +63,7 @@ def solve_model(self, options):
             l_j[key] = []
         l_j[key].append(l)
 
+    print('Getting dictionary of cutting options')
     # (j, l1): (o, q)
     cutting_production_j_level = {}
     for (w, h, l1, o, q) in cutting_options_tup:
@@ -67,6 +73,7 @@ def solve_model(self, options):
             cutting_production_j_level[key] = []
         cutting_production_j_level[key].append(value)
 
+    print('Getting dictionary of cutting production')
     # (k, l2): (j, l1, o, q)
     cutting_production_k_level = {}
     for (w1, h1, l1, o, q, w2, h2, l2) in cutting_production:
@@ -83,28 +90,35 @@ def solve_model(self, options):
     # model
     model = pl.LpProblem("ROADEF", pl.LpMinimize)
 
+    print('Creating variables')
     # variables:
     # this decides the kind of cut that is done on a plate
     cuts = pl.LpVariable.dicts(name='cuts', indexs=cutting_options_tup.tolist(),
                               lowBound=0, upBound=max_plates, cat=pl.LpInteger)
-    # This models if a plate is use to satisfy demand instead than for plate-balancing
+    # This models if a plate is used to satisfy demand instead than for plate-balancing
     cut_for_demand = pl.LpVariable.dicts(
         name='cut_for_demand', indexs=plates_level.tolist(),
         lowBound=0, upBound=max_plates, cat=pl.LpInteger)
+    # This models if a plate is used as leftover in the first level
+    # cut_for_leftover = pl.LpVariable.dicts(
+    #     name='cut_for_leftover', indexs=plates_level.tolist(),
+    #     lowBound=0, upBound=max_plates, cat=pl.LpInteger)
 
     # objective function: (11)
     model += pl.lpSum(cuts[tup] for tup in cutting_options_tup_0.tolist())
 
+    print('Creating constraints')
     # constraints (2) + (3)
     for w1, h1, l in plates_level:
         # if (w1, h1) == first_plate.tolist():
         #     continue
         jl = w1, h1, l
         # if I sum the plate *net* production, it needs to be greater than the demand
-        # the production needs to have occured in the level *before*
+        # the production needs to have occurred in the level *before*
         model += pl.lpSum(cuts[tup] for tup in cutting_production_k_level[jl]) >=\
                  pl.lpSum(
-                     cuts[w1, h1, l, o, q] for (o, q) in cutting_production_j_level.get(jl, [])
+                     cuts[w1, h1, l, o, q]
+                     for (o, q) in cutting_production_j_level.get(jl, [])
                  ) + cut_for_demand.get(jl, 0)
 
     # for each item: we need to cut at least the correct number of plates:
@@ -119,11 +133,13 @@ def solve_model(self, options):
             for l in l_j[j]
         ) >= q
 
+    print('Solving')
     # model.writeLP('test.lp')
     config = conf.Config(options)
     solver = config.get_solver()
     result = model.solve(solver)
 
+    print('Finished solving')
     if result != 1:
         print("Model resulted in non-feasible status")
         return None

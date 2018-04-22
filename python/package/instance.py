@@ -37,10 +37,10 @@ class Instance(object):
         return defects_plate[plate]
 
     def get_param(self, name=None):
-        params = self.input_data['parameters']
+        params = self.input_data['global_param']
         if name is not None:
             if name not in params:
-                raise ValueError("param named {} does not exist in parameters".format(name))
+                raise ValueError("param named {} does not exist in global_param".format(name))
             return params[name]
         return params
 
@@ -85,4 +85,10 @@ class Instance(object):
         for val in ['defects', 'batch']:
             table = pd.DataFrame.from_dict(self.input_data[val], orient='index')
             table.to_csv(path + '{}{}.csv'.format(prefix, val), index=False, sep=';')
+
+        val = 'global_param'
+        table = pd.DataFrame.from_dict(self.input_data[val], orient='index').\
+                reset_index().rename(columns={'index': 'NAME', 0: 'VALUE'})
+        table.to_csv(path + '{}.csv'.format(val), index=False, sep=';')
+
         return True

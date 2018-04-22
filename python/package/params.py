@@ -33,8 +33,8 @@ OPTIONS = {
         PATHS['experiments'],
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
-    , 'case_name': 'A1'
-    , 'max_plates': 10
-    , 'max_width': 6000//4
-    , 'max_iters': 10000
+    , 'case_name': 'A2  '
+    , 'max_plates': 40
+    , 'max_width': 6000//8
+    , 'max_iters': 200000
 }
