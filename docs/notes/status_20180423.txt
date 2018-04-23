@@ -1,0 +1,26 @@
+I have been thinking on what I have and what are my options to get a feasiblly-decent solution. It would be nice to share it with someone this Wednesday, if you're interested.
+
+Below I explain what I have and my options. Also, I make some pretty horrible drawings to try to explain the intentions.
+
+My current model produces small plates of height equal to the height of the original plates and width equal to an eight of the original plates. It fills these plates with items trying to use the minimum amount of plates and leaving the maximum horizontal gap at each plate.
+
+I've tested with all the instances and there are, so far, two instances that are too big for it. I need to see how to fix it, maybe with smaller plates? not sure.
+
+An example of these mini plates are the three plates above that measure 750 x 3200. We'll call them plates `p`. The complete ones (6000 x 3200) will be called `P`.
+
+These assignments **do not include** the sequence or the defects.  
+
+**bigger items**: Also, there are some items that are too big for these `p` plates and are not assigned in the first model. I have to do something with these ones: I guess I could run a model just with the big ones to generate some more `p` plates to add to the stack. I still have not decided. Since they are big, the model should be able to handle them.
+
+For my second model, I'm thinking on the following:
+
+* assign these `p` plates into the `P` plates, in order. So, I decide which `P` they are part of and to which position in `P` (from left to right).
+* *defects*: I cannot put `p` in a position of `P` that makes a piece fall into a defect.
+* *sequence*: I have to respect sequences of `p` according to the items they contain.
+* there are some items that have the same size: for theses ones I have to decide which is which (it matters because of the sequence).
+* also, I want to be able to mirror these `p` in both axis. So I have to decide which version of the `p` plate I want: original, mirrored over X, mirrored over Y, mirrored over both.
+* also, I may permit the pieces inside the plate to move a little to the left or to the right in order to avoid defects.
+
+I want to balance the size of the model with the likelihood of arriving to a feasible solution.
+
+After this second model, I should have a decent initial solution. Here, I could implement maybe some good heuristics to exchange items between plates while guarantying a feasible solution.

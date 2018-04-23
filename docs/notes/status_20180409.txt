@@ -1,0 +1,50 @@
+This is a summary of what I've been doing with the model recently:
+
+1. I've finally come up with a solution from the model. The very small instances gets solved instantly (which doesn't mean anything good but at least neither nothing bad).
+1. I was able to traduce the solution given by the model into a tree to understand it. I put an example below. This took me a lot of time for some reason.
+1. From what I see, the solution still has some issues but appear "solvable".
+
+My list for next things to do are:
+
+* Load correctly the solution into the object and run some tests on the feasibility of the solution.
+* I'm still using a smaller plate (1200 x 3210) instead of (6000 x 3120) so I could change that.
+* Add more constraints to the model: defects, the sequence of the order.
+* Test bigger cases.
+* Eventually, add the auxiliar model to decide how to add different cuts and solve everything iteratively (this is very far away still).
+
+On some other news: Pierre Antoine is interested in helping by talking but not joining the team. I'll told him that when we have thought what we want to do, I'll meet him to present what we have and hear his advise.
+
+*Example solution for case A1*.
+I do not yet understand everything that happens here, that's why I suspect there's still things to correct:
+
+                /(758, 3210)-(758, 124)
+                |          |
+                |          |--(758, 28)
+                |          |
+                |          |--(758, 1632)
+                |          |
+                |          |--(758, 1578)
+                |          |
+                |           \-(758, 54)
+                |
+    -(1200.0, 3210)                        /-(276, 581)
+                |             /(442.0, 581)
+                |            |            \-(166.0, 581)
+                |            |
+                |            |--(442.0, 2629)
+                |            |
+                |            |--(442.0, 581)
+                |            |
+                |            |--(442.0, 2048)
+                |            |
+                \(442.0, 3210)-(442.0, 581)
+                |
+                |--(442.0, 1467)
+                |
+                |--(442.0, 581)
+                |
+                |--(442.0, 886)
+                |
+                |--(442.0, 581)
+                |
+                \-(442.0, 305)
