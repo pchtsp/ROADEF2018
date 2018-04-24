@@ -32,8 +32,10 @@ def test2():
 
 
 def test3():
-    e = '201804201125/'
+    # e = 'multi2/A2/'
+    e = '201804240009/'
     path = pm.PATHS['experiments'] + e
+    # path = pm.PATHS['results'] + e
     # solution = mod.Model.from_io_files(path=path)
     solution = mod.Model.from_input_files(path=path)
     # solution.export_input_data()
@@ -54,5 +56,13 @@ def test3():
     sorted(plates)
 
 
+def test4():
+    e = '201804242310/'
+    path = pm.PATHS['experiments'] + e
+    # path = pm.PATHS['results'] + e
+    solution = mod.Model.from_io_files(path=path)
+    solution.graph_solution()
+
+
 if __name__ == "__main__":
-    test3()
+    test4()

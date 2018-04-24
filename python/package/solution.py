@@ -36,9 +36,11 @@ class Solution(inst.Instance):
             if p == c:
                 raise ValueError('parent cannot be the same node!')
         if len(parent_child) == 0:
-            return ete3.Tree(name=0)
-
-        tree = ete3.Tree.from_parent_child_table(parent_child)
+            # this means we have a one-node tree:
+            name = [*solution_data.keys()][0]
+            tree = ete3.Tree(name=name)
+        else:
+            tree = ete3.Tree.from_parent_child_table(parent_child)
         # add info about each node
         for node in tree.traverse():
             for k, v in solution_data[node.name].items():
@@ -68,6 +70,7 @@ class Solution(inst.Instance):
 
     @classmethod
     def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data']):
+        # TODO: what to do if plate has the size of item?? only one node
         if case_name is None:
             case_name = cls.search_case_in_options(path)
         if case_name is None:
@@ -317,28 +320,46 @@ class Solution(inst.Instance):
             fig1.savefig('rect1_{}.png'.format(plate), dpi=90, bbox_inches='tight')
             plt.close(fig1)
 
-    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix=''):
+    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
+        # TODO:
+        """
+        When creating the output forest:
+        – Always add the header as it is done in the example (see Figure 3).
+        – The trees must be given in the correct sequence of plates, i.e. first
+        the nodes of plate 0, then nodes of plate 1....
+        – For each plate, the root (node with CUT=0) should be given first.
+        – The children of a node should be given from left to right (as repre-
+        sented on the cutting pattern).
+        – The nodes of trees should be given in depth first search.
+        – If the last 1-cut of the forest in the last cutting pattern is a waste, it
+        must be declared as a residual.
+        :param path:
+        :param prefix:
+        :param name:
+        :return:
+        """
         if not os.path.exists(path):
             os.mkdir(path)
         result = {}
-        k = 0
         for tree in self.trees:
             for v in tree.traverse():
+                parent = v.PARENT
+                if parent is not None:
+                    parent = int(parent)
                 d = \
-                    {'X': v.X,
-                     'Y': v.Y,
-                     'NODE_ID': v.NODE_ID,
-                     'PLATE_ID': v.PLATE_ID,
-                     'CUT': v.CUT,
-                     'PARENT': v.PARENT,
-                     'TYPE': v.TYPE,
-                     'WIDTH': v.WIDTH,
-                     'HEIGHT': v.HEIGHT,
+                    {'X': int(v.X),
+                     'Y': int(v.Y),
+                     'NODE_ID': int(v.NODE_ID),
+                     'PLATE_ID': int(v.PLATE_ID),
+                     'CUT': int(v.CUT),
+                     'PARENT': parent,
+                     'TYPE': int(v.TYPE),
+                     'WIDTH': int(v.WIDTH),
+                     'HEIGHT': int(v.HEIGHT),
                  }
-                k += 1
-                result[k] = d
+                result[int(v.NODE_ID)] = d
         table = pd.DataFrame.from_dict(result, orient='index')
-        table.to_csv(path + '{}solution.csv'.format(prefix), index=False, sep=';')
+        table.to_csv(path + '{}{}.csv'.format(prefix, name), index=False, sep=';')
         return True
 
 

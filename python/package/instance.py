@@ -44,6 +44,13 @@ class Instance(object):
             return params[name]
         return params
 
+    def set_param(self, name, value):
+        params = self.input_data['global_param']
+        if name not in params:
+            raise ValueError("param named {} does not exist in global_param".format(name))
+        params[name] = value
+        return True
+
     def get_plate0(self, get_dict=False):
         w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
         if not get_dict:

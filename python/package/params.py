@@ -26,15 +26,16 @@ cut_level_next_o = {
 
 OPTIONS = {
     'timeLimit': 3600
-    , 'gap': 0
+    , 'gap': 0.1
     , 'solver': "CPLEXPY"
     , 'integer': False
     , 'path': os.path.join(
         PATHS['experiments'],
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
-    , 'case_name': 'A2  '
+    , 'case_name': 'A16'
     , 'max_plates': 40
     , 'max_width': 6000//8
     , 'max_iters': 200000
+    , 'ratio_plate_size': 4
 }

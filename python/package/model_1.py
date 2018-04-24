@@ -55,6 +55,7 @@ def solve_model(self, options):
         cutting_options_tup[cutting_options_tup[j] == first_plate]
 
     plates_level = np.unique(cutting_production[k + ['l2']])
+    plates_level1 = plates_level[plates_level['l2'] == 1]
 
     l_j = {}
     for w, h, l in plates_level:
@@ -100,18 +101,17 @@ def solve_model(self, options):
         name='cut_for_demand', indexs=plates_level.tolist(),
         lowBound=0, upBound=max_plates, cat=pl.LpInteger)
     # This models if a plate is used as leftover in the first level
-    # cut_for_leftover = pl.LpVariable.dicts(
-    #     name='cut_for_leftover', indexs=plates_level.tolist(),
-    #     lowBound=0, upBound=max_plates, cat=pl.LpInteger)
+    cut_for_leftover = pl.LpVariable.dicts(
+        name='cut_for_leftover', indexs=plates_level1.tolist(),
+        lowBound=0, upBound=max_plates, cat=pl.LpInteger)
 
     # objective function: (11)
-    model += pl.lpSum(cuts[tup] for tup in cutting_options_tup_0.tolist())
+    model += pl.lpSum(cuts[tup] * (tup[0]+1) for tup in cutting_options_tup_0.tolist()) - \
+             pl.lpSum(cut_for_leftover[tup] * tup[0] for tup in plates_level1.tolist())
 
     print('Creating constraints')
     # constraints (2) + (3)
     for w1, h1, l in plates_level:
-        # if (w1, h1) == first_plate.tolist():
-        #     continue
         jl = w1, h1, l
         # if I sum the plate *net* production, it needs to be greater than the demand
         # the production needs to have occurred in the level *before*
@@ -119,7 +119,7 @@ def solve_model(self, options):
                  pl.lpSum(
                      cuts[w1, h1, l, o, q]
                      for (o, q) in cutting_production_j_level.get(jl, [])
-                 ) + cut_for_demand.get(jl, 0)
+                 ) + cut_for_demand.get(jl, 0) + cut_for_leftover.get(jl, 0)
 
     # for each item: we need to cut at least the correct number of plates:
     # at any level
@@ -148,6 +148,6 @@ def solve_model(self, options):
         ((k[0], k[1]), k[3], k[4], k[2] + (k[3] == pm.cut_level_next_o[k[2]])): v
         for k, v in self.vars_to_tups(cuts, binary=False).items()
     })
-    cut_for_demand_ = self.vars_to_tups(cut_for_demand, binary=False)
+    # cut_for_demand_ = self.vars_to_tups(cut_for_demand, binary=False)
 
     return cuts_

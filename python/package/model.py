@@ -8,6 +8,7 @@ import ete3
 import pprint as pp
 import copy
 import package.model_1 as mdl
+import copy
 
 # TODO: increase plate size
 # TODO: add defects
@@ -228,7 +229,7 @@ class Model(sol.Solution):
             child = tree.up.add_child(name=plate)
             if tree.NODE_ID is None:
                 # we already signaled for deletion.
-                # we delete it??
+                # we delete it
                 tree.detach()
                 node_id = 1
             else:
@@ -277,6 +278,35 @@ class Model(sol.Solution):
     def solve(self, options):
         return mdl.solve_model(self, options)
 
+    def solve_iterative(self, options, export=False):
+        new_width = options['max_width']
+        count = 0
+        while True:
+            # get missing items.
+            # create instance with filtered items
+            # update max width
+            # solve
+            # store solution
+            missing = self.check_demand_satisfied().tolist()
+            if len(missing) == 0:
+                break
+            self2 = copy.deepcopy(self)
+            self2.input_data['batch'] = self2.input_data['batch'].filter(missing)
+            self2.set_param('widthPlates', new_width)
+            solution = self2.solve(options)
+            if solution is None:
+                return None
+            self2.load_solution(solution)
+            self.trees += self2.trees
+            new_width = min(new_width * 4, self.get_param('widthPlates'))
+            if export:
+                self.export_cuts(solution, path=options['path'], name='cuts_{}'.format(count))
+                self.export_solution(path=options['path'], name='solution_{}'.format(count))
+            count += 1
+        self.correct_plate_node_ids()
+        self.export_solution(path=options['path'], prefix=options['case_name']+'_')
+        return True
+
     def load_solution(self, solution):
         # pp.pprint(cut_by_level)
         cut_by_level = solution.index_by_part_of_tuple(position=3, get_list=False)
@@ -295,16 +325,13 @@ class Model(sol.Solution):
             )
             self.trees.append(tree)
 
-            # we delete intermediate nodes and assign plate:
-            # we also make node_ids absolute across trees
-            # and parents accordingly
+        # we assign plate ids:
+        # we also make node_ids absolute across trees
+        # and parents accordingly
+        self.correct_plate_node_ids()
+        for tree in self.trees:
             for n in tree.traverse():
-                n.add_features(PLATE_ID=i, TYPE=None, NODE_ID=next_node_id)
-                if n.up is not None:
-                    n.add_features(PARENT=n.up.NODE_ID)
-                else:
-                    n.add_features(PARENT=None)
-                next_node_id += 1
+                n.add_features(TYPE=None)
 
         # here, we assign the correct TYPE:
         demand = self.search_items_in_tree(strict=True)
@@ -355,8 +382,20 @@ class Model(sol.Solution):
                 node.add_features(TYPE=-1)
         return
 
+    def correct_plate_node_ids(self):
+        next_node_id = 0
+        for i, tree in enumerate(self.trees):
+            for n in tree.traverse():
+                n.add_features(PLATE_ID=i, NODE_ID=next_node_id)
+                if n.up is not None:
+                    n.add_features(PARENT=n.up.NODE_ID)
+                else:
+                    n.add_features(PARENT=None)
+                next_node_id += 1
+        return True
+
     @staticmethod
-    def export_cuts(cuts, path=pm.PATHS['results']):
+    def export_cuts(cuts, path=pm.PATHS['results'], name='cuts'):
         code = 0
         result = {}
         for k, v in cuts.items():
@@ -371,7 +410,7 @@ class Model(sol.Solution):
             code += 1
             result[code] = d
         table = pd.DataFrame.from_dict(result, orient='index')
-        table.to_csv(path + 'cuts.csv', index=False, sep=';')
+        table.to_csv(path + '{}.csv'.format(name), index=False, sep=';')
 
     @staticmethod
     def import_cuts(path):
