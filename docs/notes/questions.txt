@@ -1,0 +1,2 @@
+* we count the residual even if it has defects?
+* the NODE_ID is unique even for different plates?
