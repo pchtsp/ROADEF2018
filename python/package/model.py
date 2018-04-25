@@ -424,6 +424,81 @@ class Model(sol.Solution):
             cuts[(k[0], k[1]), k[2], k[3], k[4]] = v['quantity']
         return cuts
 
+    def arrange_plates(self):
+        # steps:
+        # get all type=-2 nodes children of roots of trees.
+        # take out the first one and put it in plate.
+        # if width passes the width of the bin: we start a new one.
+        max_width = self.get_param('widthPlates')
+        plates = [plate for tree in self.trees for plate in tree.children if plate.TYPE == -2]
+        bins_remaining = {0: max_width}
+        bin_plates = {0: []}
+        while len(plates) > 0:
+            done = False
+            plate = plates[0]
+            for bin, remaining in bins_remaining.items():
+                if plate.WIDTH <= remaining:
+                    bin_plates[bin].append(plate)
+                    bins_remaining[bin] -= plate.WIDTH
+                    plates.pop(0)
+                    done = True
+                    break
+            if done:
+                continue
+            # if we reach here it's because there was not enough space
+            new_bin = len(bin_plates)
+            bin_plates[new_bin] = []
+            bins_remaining[new_bin] = max_width
+
+        # At some moment, we need to recursively edit the positions of items in the plate
+        for bin, plates in bin_plates.items():
+            ref_pos = 0
+            for plate in plates:
+                movement = ref_pos - plate.X
+                plate.X += movement
+                ref_pos += plate.WIDTH
+                for node in plate.get_descendants():
+                    node.X += movement
+
+        # now I need to reconstruct the new trees merging the nodes,
+        # and creating a root for each bin.
+        root_info = {
+            'X': 0
+            , 'Y': 0
+            , 'WIDTH': self.get_param('widthPlates')
+            , 'HEIGHT': self.get_param('heightPlates')
+            , 'CUT': 0
+            , 'TYPE': -2
+            , 'PARENT': None
+        }
+
+        rem_info = {
+            'X': 0
+            , 'Y': 0
+            , 'WIDTH': self.get_param('widthPlates')
+            , 'HEIGHT': self.get_param('heightPlates')
+            , 'CUT': 1
+            , 'TYPE': -3
+            , 'PARENT': None
+        }
+
+        bins = []
+        for bin, plates in bin_plates.items():
+            rem = bins_remaining[bin]
+            root = ete3.Tree(name="root")
+            root.add_features(**root_info)
+            for plate in plates:
+                root.add_child(child=plate)
+            remaining = root.add_child(name=0)
+            remaining.add_features(**rem_info)
+            remaining.add_features(X=root.WIDTH - rem, WIDTH=rem)
+            bins.append(root)
+
+        self.trees = bins
+        self.correct_plate_node_ids()
+
+        return self.trees
+
 
 if __name__ == "__main__":
     pass
