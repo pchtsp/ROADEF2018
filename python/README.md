@@ -38,7 +38,7 @@ Steps to set up development environment:
 Windows:
 
     git clone git@github.com:pchtsp/ROADEF2018.git
-    cd gmaps-downloader\python
+    cd ROADEF2018\python
     python3 -m venv venv
     venv\Scripts\bin\activate
     pip3 install -r requirements
@@ -46,7 +46,7 @@ Windows:
 Ubuntu:
 
     git clone git@github.com:pchtsp/ROADEF2018.git
-    cd gmaps-downloader/python
+    cd ROADEF2018/python
     python3 -m venv venv
     source venv/bin/activate
     pip3 install -r requirements
