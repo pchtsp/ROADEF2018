@@ -5,12 +5,18 @@ import package.superdict as sd
 import pandas as pd
 import package.auxiliar as aux
 import os
+import package.cluster as cl
+import math
+
 
 
 class Instance(object):
 
     def __init__(self, model_data):
         self.input_data = model_data
+
+    def get_batch(self):
+        return self.input_data['batch']
 
     def get_items_per_stack(self, stack=None):
         # TODO: use SuperDict.index_by_property instead
@@ -23,6 +29,17 @@ class Instance(object):
         if stack not in batch_data:
             IndexError('STACK={} was not found in batch'.format(stack))
         return batch_data[stack]
+
+    def get_previous_items(self):
+        # for each item: we get the items that need to go out first
+        item_prec = {}
+        for stack, items_dict in self.get_items_per_stack().items():
+            items = sorted([*items_dict.values()], key=lambda x: x['SEQUENCE'])
+            prec = []
+            for i in items:
+                item_prec[i['ITEM_ID']] = prec[:]
+                prec.append(i['ITEM_ID'])
+        return item_prec
 
     def get_defects_per_plate(self, plate=None):
         # TODO: use SuperDict.index_by_property instead
@@ -73,8 +90,27 @@ class Instance(object):
             return tl.TupList(pieces)
         return sd.SuperDict.from_dict(pieces)
 
-    def flatten_stacks_plus_rotated(self):
-        original_items = self.flatten_stacks(in_list=True)
+    def get_demand_from_items(self, tol=0):
+        items = self.flatten_stacks(in_list=True)  # Ĵ in J
+        items_dict = {(i, i2): math.sqrt(sum((i[r] - i2[r]) ** 2 for r in range(2)))
+                      for i in items for i2 in items}
+
+        clusters = cl.cluster_graph(items_dict, tol=tol)
+
+        # tolerance: we try to join items into their bigger siblings.
+        # the items list is sorted from smallest to biggest
+        # if tolerance is 0 it will only cluster the ones that have dist= 0
+        demand = {v: 0 for v in clusters}
+        for v, nodes in clusters.items():
+            for n in nodes:
+                demand[v] += 1
+        return demand
+
+    def flatten_stacks_plus_rotated(self, clustered=False, tol=0):
+        if clustered:
+            original_items = [*self.get_demand_from_items(tol).keys()]
+        else:
+            original_items = self.flatten_stacks(in_list=True)
         items_rotated = [self.rotate_plate(v) for v in original_items]
         return [item for item in list(set(original_items + items_rotated))]
 

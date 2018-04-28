@@ -70,7 +70,6 @@ class Solution(inst.Instance):
 
     @classmethod
     def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data']):
-        # TODO: what to do if plate has the size of item?? only one node
         if case_name is None:
             case_name = cls.search_case_in_options(path)
         if case_name is None:
@@ -93,7 +92,7 @@ class Solution(inst.Instance):
         :param point: dict with X and Y values
         :param square: a list of two points that define a square.
         **important**: first point of square is bottom left.
-        :param strict: does not count borders
+        :param strict: does not count being in the borders as being inside
         :return: True if point is inside square (with <)
         """
         if strict:
@@ -123,6 +122,21 @@ class Solution(inst.Instance):
                 return 2
         return 0
 
+    def square_intersects_square(self, square1, square2):
+        """
+        Tests if some point in square1 is inside square2 (or viceversa).
+        :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
+        :param square2: a list of two dictionaries of type: {'X': 0, 'Y': 0}
+        :return: True if both squares share some area
+        """
+        for point in square1:
+            if self.point_in_square(point, square2, strict=True):
+                return True
+        for point in square2:
+            if self.point_in_square(point, square1, strict=True):
+                return True
+        return False
+
     @staticmethod
     def piece_to_square(piece):
         """
@@ -130,8 +144,27 @@ class Solution(inst.Instance):
         :param piece: a leaf from ete3 tree.
         :return: list of two points {'X': 1, 'Y': 1}
         """
+        # axis = ['X', 'Y']
+        # axis_dim = {'X': 'WIDTH', 'Y': 'HEIGHT'}
+        # [{a: getattr(piece, a) for a in axis},
+        #  {a: getattr(piece, a) + getattr(piece, axis_dim[a] for a in axis})}]
         return [{'X': piece.X, 'Y': piece.Y},
                 {'X': piece.X + piece.WIDTH, 'Y': piece.Y + piece.HEIGHT}]
+
+    @staticmethod
+    def defect_to_square(defect):
+        """
+        Reformats a defect to a list of two points
+        :param defect: a dict.
+        :return: list of two points {'X': 1, 'Y': 1}
+        """
+        return [{'X': defect['X'], 'Y': defect['Y']},
+                {'X': defect['X'] + defect['WIDTH'], 'Y': defect['Y'] + defect['HEIGHT']}]
+
+    def piece_inside_piece(self, piece1, piece2, **kwargs):
+        square1 = self.piece_to_square(piece1)
+        square2 = self.piece_to_square(piece2)
+        return self.square_inside_square(square1, square2, **kwargs)
 
     def plate_inside_plate(self, plate1, plate2, turn=True, both_sides=False):
         origin = {'X': 0, 'Y': 0}
@@ -188,7 +221,7 @@ class Solution(inst.Instance):
         func_list = {
             'overlapping': self.check_overlapping
             , 'sequence': self.check_sequence
-            , 'defects': self.check_no_defects
+            , 'defects': self.check_defects
             , 'demand': self.check_demand_satisfied
         }
         result = {k: v() for k, v in func_list.items()}
@@ -218,36 +251,47 @@ class Solution(inst.Instance):
         # TODO
         pass
 
-    def check_sequence(self):
+    def get_previous_nodes(self):
+        prev_items = self.get_previous_items()
         code_leaf = self.get_pieces_by_type()
+        prev_nodes = {}
+        for k, v in prev_items.items():
+            prev_nodes[code_leaf[k]] = []
+            for i in v:
+                prev_nodes[code_leaf[k]].append(code_leaf[i])
+        return prev_nodes
+
+    def check_sequence(self):
         wrong_order = []
-        for stack, nodes_dict in self.get_items_per_stack().items():
-            last_node = last_cut = last_plate = 0
-            nodes = sorted([*nodes_dict.items()], key=lambda x: x[1]['SEQUENCE'])
-            for k, v in nodes:
-                if k not in code_leaf:
-                    continue
-                if code_leaf[k].PLATE_ID < last_plate:
-                    wrong_order.append((last_node, k))
-                if code_leaf[k].PLATE_ID == last_plate and \
-                    code_leaf[k].CUT < last_cut:
-                    wrong_order.append((last_node, k))
-                last_node = k
-                last_cut = code_leaf[k].CUT
-                last_plate = code_leaf[k].PLATE_ID
+        for node, prec_nodes in self.get_previous_nodes().items():
+            for prec_node in prec_nodes:
+                if node.PLATE_ID < prec_node.PLATE_ID:
+                    wrong_order.append((node, prec_node))
+                if node.PLATE_ID == prec_node and node.CUT < prec_node.CUT:
+                    wrong_order.append((node, prec_node))
         return wrong_order
 
-    def check_no_defects(self):
+    def check_defects(self):
         plate_cuts = self.get_pieces_by_type(by_plate=True)
         pieces_with_defects = []
         for plate, piece_dict in plate_cuts.items():
             defects_dict = self.get_defects_per_plate(plate)
             for k, piece in piece_dict.items():
-                square = self.piece_to_square(piece)
-                for k, defect in defects_dict.items():
-                    if self.point_in_square(point=defect, square=square):
-                        pieces_with_defects.append((piece, defect))
+                defects = self.defects_in_node(piece, defects=defects_dict)
+                for defect in defects:
+                    pieces_with_defects.append((piece, defect))
         return pieces_with_defects
+
+    def defects_in_node(self, node, defects=None):
+        square = self.piece_to_square(node)
+        defects_in_node = []
+        if defects is None:
+            defects = self.get_defects_per_plate(plate=node.PLATE_ID)
+        for k, defect in defects.items():
+            square2 = self.defect_to_square(defect)
+            if self.square_intersects_square(square2, square):
+                defects_in_node.append(defect)
+        return defects_in_node
 
     def check_siblings(self):
         # siblings must share a dimension of size and a point dimension
@@ -285,8 +329,8 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self):
-        colors = pal.colorbrewer.diverging.BrBG_5.hex_colors
+    def graph_solution(self, path="", name="rect"):
+        colors = pal.colorbrewer.qualitative.Set3_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
         for plate, leafs in self.get_pieces_by_type(by_plate=True).items():
             fig1 = plt.figure(figsize=(width/100, height/100))
@@ -308,16 +352,19 @@ class Solution(inst.Instance):
                          '{} x {}'.format(leaf.WIDTH, leaf.HEIGHT),
                          horizontalalignment='center', fontsize=30)
             for defect in self.get_defects_per_plate(plate).values():
+                ax1.axhline(y=defect['Y'], color="red", ls='dashed')
+                ax1.axvline(x=defect['X'], color="red", ls='dashed')
                 ax1.add_patch(
-                    patches.Rectangle(
+                    patches.Circle(
                         (defect['X'], defect['Y']),  # (x,y)
-                        defect['WIDTH'],  # width
-                        defect['HEIGHT'],  # height
-                        facecolor='red',
-                        linewidth=10
+                        radius=20,
+                        # defect['WIDTH'],  # width
+                        # defect['HEIGHT'],  # height
+                        color='red',
                     )
                 )
-            fig1.savefig('rect1_{}.png'.format(plate), dpi=90, bbox_inches='tight')
+            fig_path = os.path.join(path, '{}_{}.png'.format(name, plate))
+            fig1.savefig(fig_path, dpi=90, bbox_inches='tight')
             plt.close(fig1)
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
@@ -341,27 +388,36 @@ class Solution(inst.Instance):
         if not os.path.exists(path):
             os.mkdir(path)
         result = {}
+        features = ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
         for tree in self.trees:
             for v in tree.traverse():
                 parent = v.PARENT
                 if parent is not None:
                     parent = int(parent)
-                d = \
-                    {'X': int(v.X),
-                     'Y': int(v.Y),
-                     'NODE_ID': int(v.NODE_ID),
-                     'PLATE_ID': int(v.PLATE_ID),
-                     'CUT': int(v.CUT),
-                     'PARENT': parent,
-                     'TYPE': int(v.TYPE),
-                     'WIDTH': int(v.WIDTH),
-                     'HEIGHT': int(v.HEIGHT),
-                 }
+                d = {k: int(getattr(v, k)) for k in features}
+                d['PARENT'] = parent
                 result[int(v.NODE_ID)] = d
         table = pd.DataFrame.from_dict(result, orient='index')
         table.to_csv(path + '{}{}.csv'.format(prefix, name), index=False, sep=';')
         return True
 
+    @staticmethod
+    def move_node(node, movement, axis):
+        node_pos = getattr(node, axis)
+        setattr(node, axis, node_pos + movement)
+        # node.X += movement
+        for children in node.get_descendants():
+            children_pos = getattr(children, axis)
+            setattr(children, axis, children_pos + movement)
+            # node.X += movement
+        return True
+
+    @staticmethod
+    def find_ancestor_level(node, level):
+        for anc in node.iter_ancestors():
+            if anc.CUT==level:
+                return anc
+        return None
 
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])

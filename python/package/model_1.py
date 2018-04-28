@@ -13,9 +13,10 @@ def solve_model(self, options):
 
     :return:
     """
+    # TODO: I'm having multiple wastes at the same level... let's avoid this in OF.
     # parameters:
     cutting_production = \
-        self.plate_generation(max_iterations=options.get('max_iters', None))  # a
+        self.plate_generation(options)  # a
     # (w1, h2, l1, o, q, w2, h2, l2)
     # cut "q" with orientation "o" on plate "j",
     # in level l1 produces plate "k" in level l2
@@ -42,10 +43,7 @@ def solve_model(self, options):
     # plates = np.unique(plates, axis=0)
     first_plate = np.array(self.get_plate0(get_dict=False),
                            dtype=[('w1', 'i4'), ('h1', 'i4')])
-    items = self.flatten_stacks(in_list=True)  # Ĵ in J
-    demand = {v: 0 for v in items}
-    for v in items:
-        demand[v] += 1
+    demand = self.get_demand_from_items(tol=options.get('cluster_tolerance', 0))
 
     print('Getting cutting options')
     # (j, l1, o, q)

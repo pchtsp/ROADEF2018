@@ -10,6 +10,7 @@ import copy
 import package.model_1 as mdl
 import copy
 
+
 # TODO: increase plate size
 # TODO: add defects
 # TODO: add sequence
@@ -33,21 +34,21 @@ class Model(sol.Solution):
                 min_length = i[1]
         return [p for pos, p in enumerate(pieces) if pos not in filter_out_pos]
 
-    def plate_generation(self, max_iterations=None):
+    def plate_generation(self, options):
         """
         calculates all possible cuts to plates and the resulting plates
         In the paper, this is called "Procedure 1"
         :return:
         """
-        # items = self.flatten_stacks()
-        # cutting_options_tup = tl.TupList()
-        # cutting_options = sd.SuperDict()
+        # TODO: I'm generating cuts with q=0 apparently??
+        max_iterations = options.get('max_iters', None)
+        tolerance = options.get('cluster_tolerance', 0)
         cutting_production = tl.TupList()  # (j, o, q, k)
         plate0 = self.get_plate0(get_dict=False)
         cut_level = 0
         plates = set()
         plates.add((plate0, cut_level))
-        non_processed = [(plate0, cut_level, self.flatten_stacks_plus_rotated())]
+        non_processed = [(plate0, cut_level, self.flatten_stacks_plus_rotated(clustered=True, tol=tolerance))]
         smallest_items = self.get_smallest_items()
         max_iter = 0
         while len(non_processed) > 0 and (max_iterations is None or max_iter < max_iterations):
@@ -304,6 +305,7 @@ class Model(sol.Solution):
                 self.export_solution(path=options['path'], name='solution_{}'.format(count))
             count += 1
         self.correct_plate_node_ids()
+        self.arrange_plates()
         self.export_solution(path=options['path'], prefix=options['case_name']+'_')
         return True
 
@@ -426,11 +428,17 @@ class Model(sol.Solution):
 
     def arrange_plates(self):
         # steps:
-        # get all type=-2 nodes children of roots of trees.
+        # get all type=-2 or type > 0 node children of roots of trees.
+        # also, some roots have type >= 0
         # take out the first one and put it in plate.
         # if width passes the width of the bin: we start a new one.
+        items = self.get_batch()
         max_width = self.get_param('widthPlates')
-        plates = [plate for tree in self.trees for plate in tree.children if plate.TYPE == -2]
+        plates = [plate for tree in self.trees
+                  for plate in tree.children
+                  if plate.TYPE == -2 or plate.TYPE >= 0]
+        plates += [tree for tree in self.trees if tree.TYPE >= 0]
+        plates.sort(key=lambda x: sum(items[n.TYPE] for n in x.get_leaves()))
         bins_remaining = {0: max_width}
         bin_plates = {0: []}
         while len(plates) > 0:
@@ -455,10 +463,8 @@ class Model(sol.Solution):
             ref_pos = 0
             for plate in plates:
                 movement = ref_pos - plate.X
-                plate.X += movement
                 ref_pos += plate.WIDTH
-                for node in plate.get_descendants():
-                    node.X += movement
+                self.move_node(plate, movement, "X")
 
         # now I need to reconstruct the new trees merging the nodes,
         # and creating a root for each bin.
