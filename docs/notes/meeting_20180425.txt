@@ -1,0 +1,1 @@
+add simplification: group pieces that have similar size.

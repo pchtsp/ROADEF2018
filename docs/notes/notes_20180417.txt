@@ -1,0 +1,32 @@
+To minimize the "rest", I could consider optional pieces of consumption for each plate of level 1. this pieces would go to the objective function discounting. Here, I need to use the correct weights. 
+
+To guarantee the order, we would have to give an order to each root node and compare the pieces between root nodes and within root nodes. 
+
+To guarantee the defects we could assign demand to the root node and model the sequence of root nodes. 
+
+Another option to guarantee defects and sequence is to build an heuristic to play with the solution and fix it. 
+
+For heuristics:
+* Rotate a node in place
+* exchange two nodes in a tree. 
+  * check that useful parts enter in the other node. 
+* exchange two nodes between trees. 
+* Change two trees from order. 
+* Change two nodes from order. 
+
+Candidate nodes to change:
+* nodes that have a bad sequence. 
+* nodes that include a defect. 
+
+Candidate nodes to exchange: 
+* nodes that have useful sizes that are similar (check rotation). 
+* nodes that have slack in terms of sequence in the production chain. 
+* nodes that do not have defects. 
+* better if in level 2 or 3. 
+
+Evaluation of fitness:
+* sequence is improved. 
+* defects are not included in pieces. 
+* objective function is not too affected. 
+
+* After knowing the defects, it's possible to change or move the pieces inside the nodes so they avoid the defects. 

@@ -6,7 +6,7 @@ My current model produces small plates of height equal to the height of the orig
 
 I've tested with all the instances and there are, so far, two instances that are too big for it. I need to see how to fix it, maybe with smaller plates? not sure.
 
-An example of these mini plates are the three plates above that measure 750 x 3200. We'll call them plates `p`. The complete ones (6000 x 3200) will be called `P`.
+An example of these mini plates are the three plates above that measure 750 x 3200. We'll call them plates `p`. The complete ones (6000 x 3200) will be called *bins*.
 
 These assignments **do not include** the sequence or the defects.  
 
@@ -14,8 +14,8 @@ These assignments **do not include** the sequence or the defects.
 
 For my second model, I'm thinking on the following:
 
-* assign these `p` plates into the `P` plates, in order. So, I decide which `P` they are part of and to which position in `P` (from left to right).
-* *defects*: I cannot put `p` in a position of `P` that makes a piece fall into a defect.
+* assign these `p` plates into the *bin*, in order. So, I decide which *bin* they are part of and to which position in *bin* (from left to right).
+* *defects*: I cannot put `p` in a position of *bin* that makes a piece fall into a defect.
 * *sequence*: I have to respect sequences of `p` according to the items they contain.
 * there are some items that have the same size: for theses ones I have to decide which is which (it matters because of the sequence).
 * also, I want to be able to mirror these `p` in both axis. So I have to decide which version of the `p` plate I want: original, mirrored over X, mirrored over Y, mirrored over both.

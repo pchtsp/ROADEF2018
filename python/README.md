@@ -6,45 +6,55 @@ For example:
 
 * models done in `pulp`.
 * data wrangling scripts done with `pandas`.
-* applications done with `flask`.
 
 Code is organized as follows:
 
-* **scripts**: python scripts done for data wrangling.
-* **package**: core code with models, data proessing and main logic. Objects for data input and output.
-* **desktop_app**: PyQt gui for app.
-
-Steps to set up development environment:
-
-* git clone https://github.com/pchtsp/ROADEF2018
-* cd ROADEF2018
-* virtualenv venv
-* `venv\Scripts\bin\activate` or `source venv/bin/activate`
-* pip install -r requirements
+* **scripts**: python scripts done for executing model, heuristics, etc.
+* **package**: core code with models, data processing and main logic. Objects for data input and output.
 
 Requirements:
 
 * python >= 3.5
-* pip install virtualenv
 * git
-* R
-* gurobipy => install manually.
 
-## Ubuntu:
+## Install dependencies
 
-(not tested)
+### Ubuntu:
 
-    sudo apt-get install python3 r-core pip git r-base
-    pip install virtualenv --user
+    sudo apt-get install python3 pip git python3-venv
 
-## Windows
+### Windows
 
-(not tested)
+This requires to have `choco` installed.
 
-    choco install python3 git r.project pip -y
-    pip install virtualenv --user
+    choco install python3 git pip -y
 
-For installing requirements in Windows:
+Alternatively, one can manually download the latest python version and git. `pip` usually comes with python already.
+
+## Get the software
+
+Steps to set up development environment:
+
+Windows:
+
+    git clone git@github.com:pchtsp/ROADEF2018.git
+    cd gmaps-downloader\python
+    python3 -m venv venv
+    venv\Scripts\bin\activate
+    pip3 install -r requirements
+
+Ubuntu:
+
+    git clone git@github.com:pchtsp/ROADEF2018.git
+    cd gmaps-downloader/python
+    python3 -m venv venv
+    source venv/bin/activate
+    pip3 install -r requirements
+
+
+## For installing requirements in Windows:
+
+(This is only necessary if not using anaconda and having problems installing some packages).
 
 Check: https://stackoverflow.com/a/32064281
 
