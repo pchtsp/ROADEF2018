@@ -11,6 +11,9 @@ import pprint as pp
 import pandas as pd
 import package.auxiliar as aux
 import os
+import package.superdict as sd
+import package.tuplist as tl
+import package.nodes as nd
 
 
 class Solution(inst.Instance):
@@ -193,6 +196,8 @@ class Solution(inst.Instance):
         Gets the solution pieces indexed by the TYPE.
         :param by_plate: when active it returns a dictionary indexed
         by the plates. So it's {PLATE_0: {0: leaf0,  1: leaf1}, PLATE_1: {}}
+        :param pos: get an individual plate marked by pos
+        :param filter_type: if True: gets only demanded items. If not: returns all plates
         :return: {0: leaf0,  1: leaf1}
         """
         min_type = -5
@@ -200,9 +205,9 @@ class Solution(inst.Instance):
             min_type = 0
         if pos is None:
             leaves = [leaf for tree in self.trees
-                      for leaf in tree.get_leaves() if leaf.TYPE >= min_type]
+                      for leaf in nd.get_node_leaves(tree, min_type)]
         else:
-            leaves = [leaf for leaf in self.trees[0].get_leaves() if leaf.TYPE >= min_type]
+            leaves = [leaf for leaf in nd.get_node_leaves(self.trees[pos], min_type)]
 
         if not by_plate:
             return {int(leaf.TYPE): leaf for leaf in leaves}
@@ -259,7 +264,7 @@ class Solution(inst.Instance):
             prev_nodes[code_leaf[k]] = []
             for i in v:
                 prev_nodes[code_leaf[k]].append(code_leaf[i])
-        return prev_nodes
+        return sd.SuperDict(prev_nodes)
 
     def check_sequence(self):
         wrong_order = []
@@ -267,9 +272,10 @@ class Solution(inst.Instance):
             for prec_node in prec_nodes:
                 if node.PLATE_ID < prec_node.PLATE_ID:
                     wrong_order.append((node, prec_node))
+                    continue
                 if node.PLATE_ID == prec_node and node.CUT < prec_node.CUT:
                     wrong_order.append((node, prec_node))
-        return wrong_order
+        return tl.TupList(wrong_order)
 
     def check_defects(self):
         plate_cuts = self.get_pieces_by_type(by_plate=True)
@@ -330,6 +336,9 @@ class Solution(inst.Instance):
         return np.setdiff1d([*demand], produced)
 
     def graph_solution(self, path="", name="rect"):
+        batch_data = self.get_batch()
+        stack = batch_data.get_property('STACK')
+        sequence = batch_data.get_property('SEQUENCE')
         colors = pal.colorbrewer.qualitative.Set3_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
         for plate, leafs in self.get_pieces_by_type(by_plate=True).items():
@@ -349,8 +358,11 @@ class Solution(inst.Instance):
                     )
                 )
                 ax1.text(leaf.X + leaf.WIDTH/2, leaf.Y + leaf.HEIGHT/2,
-                         '{} x {}'.format(leaf.WIDTH, leaf.HEIGHT),
-                         horizontalalignment='center', fontsize=30)
+                         '{} x {}\nstack={}\npos={}'.
+                         format(leaf.WIDTH, leaf.HEIGHT, stack[leaf.TYPE], sequence[leaf.TYPE]),
+                         horizontalalignment='center',
+                         verticalalignment='center',
+                         fontsize=30)
             for defect in self.get_defects_per_plate(plate).values():
                 ax1.axhline(y=defect['Y'], color="red", ls='dashed')
                 ax1.axvline(x=defect['X'], color="red", ls='dashed')
@@ -400,24 +412,6 @@ class Solution(inst.Instance):
         table = pd.DataFrame.from_dict(result, orient='index')
         table.to_csv(path + '{}{}.csv'.format(prefix, name), index=False, sep=';')
         return True
-
-    @staticmethod
-    def move_node(node, movement, axis):
-        node_pos = getattr(node, axis)
-        setattr(node, axis, node_pos + movement)
-        # node.X += movement
-        for children in node.get_descendants():
-            children_pos = getattr(children, axis)
-            setattr(children, axis, children_pos + movement)
-            # node.X += movement
-        return True
-
-    @staticmethod
-    def find_ancestor_level(node, level):
-        for anc in node.iter_ancestors():
-            if anc.CUT==level:
-                return anc
-        return None
 
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])

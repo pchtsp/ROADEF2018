@@ -65,7 +65,7 @@ class SuperDict(dict):
         :return: a dictionary with the list elements as keys and
         old keys as values.
         """
-        new_keys = np.unique([val for l in self.values() for val in l])
+        new_keys = list(set(val for l in self.values() for val in l))
         dict_out = SuperDict({k: [] for k in new_keys})
         for k, v in self.items():
             for el in v:
