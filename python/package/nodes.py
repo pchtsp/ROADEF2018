@@ -24,10 +24,11 @@ def find_ancestor_level(node, level):
 
 
 def find_waste_sibling(node):
-    for n in node.get_sisters():
-        if n.TYPE in [-1, -3]:
-            return n
-    return None
+    # We assume waste is at the end. Always.
+    waste = node.up.children[-1]
+    if waste.TYPE not in [-1, -3]:
+        return None
+    return waste
 
 
 def order_children(node):

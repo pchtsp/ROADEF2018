@@ -358,8 +358,8 @@ class Solution(inst.Instance):
                     )
                 )
                 ax1.text(leaf.X + leaf.WIDTH/2, leaf.Y + leaf.HEIGHT/2,
-                         '{} x {}\nstack={}\npos={}'.
-                         format(leaf.WIDTH, leaf.HEIGHT, stack[leaf.TYPE], sequence[leaf.TYPE]),
+                         '{} x {}\nstack={}\npos={}\nnode={}'.
+                         format(leaf.WIDTH, leaf.HEIGHT, stack[leaf.TYPE], sequence[leaf.TYPE], leaf.name),
                          horizontalalignment='center',
                          verticalalignment='center',
                          fontsize=30)
