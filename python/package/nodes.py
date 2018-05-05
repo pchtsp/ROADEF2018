@@ -23,6 +23,19 @@ def find_ancestor_level(node, level):
     return None
 
 
+def get_descendant(node, which="first"):
+    assert which in ['first', 'last']
+    if which == 'first':
+        pos = 0
+    else:
+        pos = -1
+    children = node.children
+    if not children:
+        return node
+    else:
+        return get_descendant(children[pos])
+
+
 def find_waste_sibling(node):
     # We assume waste is at the end. Always.
     waste = node.up.children[-1]

@@ -95,8 +95,12 @@ class ImproveHeuristic(sol.Solution):
         """
         # 1. take node out from where it is (detach and everything)
         # update all the positions of siblings accordingly
+        # if the node was in the same destination and in a smaller position:
+        #   we need to reduce the position by one.
         parent = node.up
         plate, ch_pos = nd.get_node_pos(node)
+        if parent == destination and ch_pos < position:
+            position -= 1
         axis, dim = nd.get_orientation_from_cut(node)
         for sib in parent.children[ch_pos+1:]:
             nd.move_node(node=sib, movement=-getattr(node, dim), axis=axis)
@@ -106,6 +110,7 @@ class ImproveHeuristic(sol.Solution):
         # to make space and assign new plate, and new axis
         # add node to new parent
 
+        # we make space:
         if position < len(destination.children):
             axis_dest = getattr(destination.children[position], axis)
             for sib in destination.children[position:]:
@@ -115,8 +120,10 @@ class ImproveHeuristic(sol.Solution):
             # so we do not move anything.
             last_node = destination.children[-1]
             axis_dest = getattr(last_node, axis) + getattr(last_node, dim)
+        # we make the move:
         nd.change_feature(node, 'PLATE_ID', destination.PLATE_ID)
-        nd.change_feature(node, axis, axis_dest)
+        dist = axis_dest - getattr(node, axis)
+        nd.move_node(node, dist, axis)
         destination.add_child(node)
 
         # 3. update parents order:
@@ -125,6 +132,7 @@ class ImproveHeuristic(sol.Solution):
         return True
 
     def check_swap_size(self, node1, node2, insert=False, cut=False):
+        # TODO: we need to guarantee there's always a waste for every cut. Even if it's 0.
         # if insert=True, we insert node1 before node2. So we count the whole size
         siblings = node1.up == node2.up
         if siblings:
@@ -145,16 +153,19 @@ class ImproveHeuristic(sol.Solution):
             dif_length = -dif_length
             node1, node2 = node2, node1
         # we check the small one's waste:
-        waste = nd.find_waste_sibling(node2)
-        if waste is None:
-            # no waste in node2. cannot do the change
+        waste2 = nd.find_waste_sibling(node2)
+        # we need also the first one's waste, to expand it.
+        waste1 = nd.find_waste_sibling(node1)
+        if waste1 is None or waste2 is None:
+            # no waste in node2 or waste1. cannot do the change
             return False
-        waste_length = getattr(waste, dim)
+        waste_length = getattr(waste2, dim)
         if waste_length < dif_length:
             # waste is not big enough
             return False
         if cut:
-            setattr(waste, dim, waste_length - dif_length)
+            setattr(waste2, dim, getattr(waste2, dim) - dif_length)
+            setattr(waste1, dim, getattr(waste1, dim) + dif_length)
         return True
 
     def check_assumptions_swap(self, node1, node2):
@@ -191,9 +202,13 @@ class ImproveHeuristic(sol.Solution):
         return True
 
     def clean_empty_cuts(self):
+        """
+        An empty cut is a cut with a 0 distance in a dimension
+        :return:
+        """
         for tree in self.trees:
             for v in tree.traverse():
-                children = v.children
+                children = v.get_children()
                 if len(children) != 2:
                     continue
                 if children[0].TYPE < 0 or \
@@ -202,7 +217,7 @@ class ImproveHeuristic(sol.Solution):
                     continue
                 v.TYPE = children[0].TYPE
                 v.remove_child(children[0])
-                v.remove_child(children[0])
+                v.remove_child(children[1])
 
     def join_neighbors(self, node1, node2):
         # this only makes sense if both
@@ -254,22 +269,47 @@ class ImproveHeuristic(sol.Solution):
                     candidates.pop(1)
         return True
 
+    def check_swap_nodes_defect(self, node1, node2, insert=False):
+        # we need to check if each node will be able to arrange itself
+        # between the defects present in the jumbo.
+        # before that: we'll only check if exchanging the nodes gets a
+        # positive defect balance.
+        # We need to:
+        # 1. list the nodes to check (re-use the 'nodes between nodes'?)
+            # here there's two sets of nodes, I guess?
+        # 1b. list the relevant defects (for each the plate?)
+            # here there's two sets of defects, I guess?
+        # 1c. calculate the present defect violations.
+        # 2. calculate the distance to move them.
+        # 3. create squares with new positions.
+        # 4. calculate new defect violations
+        plate1 = node1.PLATE_ID
+        plate2 = node2.PLATE_ID
+        if plate1 == plate2:
+            first_node, second_node, nodes = self.get_nodes_between_nodes(node1, node2)
+
+        pass
+
     def check_swap_nodes_seq(self, node1, node2, insert=False):
-        # convention: node1 is always before node2:
-        switch = False
-        if nd.get_node_pos(node1) > nd.get_node_pos(node2):
-            node1, node2 = node2, node1
-            switch = True
+        """
+        checks if a changes is benefitial in terms of sequence violations
+        :param node1:
+        :param node2:
+        :param insert: type of swap can be insert or swap
+        :return: balance of violations. Bigger is better.
+        """
         precedence = self.get_previous_nodes()
         precedence_inv = precedence.list_reverse()
         # get all leaves in node1 and node2
         items1 = nd.get_node_leaves(node1)
         items2 = nd.get_node_leaves(node2)
         # get all leaves between the two nodes
-        nodes = self.get_nodes_between_nodes(node1, node2)
+        first_node, second_node, nodes = self.get_nodes_between_nodes(node1, node2)
         items = set(leaf for node in nodes for leaf in nd.get_node_leaves(node))
         negative = set()
         positive = set()
+        # We'll assume node1 is the first node.
+        # It's that not the case, we'll switch the math at the end
         # for each leaf in node1:
             # because node1 is "going forward":
             # if I find nodes that precede it: good
@@ -278,38 +318,97 @@ class ImproveHeuristic(sol.Solution):
             negative |= items & set(precedence_inv.get(item, set()))
             positive |= items & set(precedence.get(item, set()))
         if insert:
+            if node1 == second_node:
+                negative, positive = positive, negative
             # we only care about the first node
             # because is the only one we move.
-            return len(positive) - len(negative), switch
+            return len(positive) - len(negative)
         # for each leaf in node2:
             # because node2 is "going back":
             # if I find nodes that precede it: bad
             # if I find nodes that follow it: good
+        items |= set(items1)
         for item in items2:
             negative |= items & set(precedence.get(item, set()))
             positive |= items & set(precedence_inv.get(item, set()))
-        return len(positive) - len(negative), switch
+        # lastly, we need to take into account the items in each node.
+        if node1 == second_node:
+            negative, positive = positive, negative
+        return len(positive) - len(negative)
 
     def get_nodes_between_nodes(self, node1, node2):
-        # the level of the returned nodes may vary.
-        # it will always be the biggest possible
-        plate1, pos1 = nd.get_node_pos(node1)
-        plate2, pos2 = nd.get_node_pos(node2)
-        if (plate1, pos1) > (plate2, pos2):
+        """
+        :param node1:
+        :param node2:
+        :return: (n1, n2, list): the order of the nodes and a list of nodes in between.
+        """
+        plate1 = node1.PLATE_ID
+        plate2 = node2.PLATE_ID
+
+        if plate1 == plate2:
+            # if they're in the same plate: I just get the nodes between them
+            return self.get_nodes_between_nodes_in_tree(node1=node1, node2=node2)
+
+        if plate1 > plate2:
             node1, node2 = node2, node1
-            plate1, pos1, plate2, pos2 = plate2, pos2, plate1, pos1
-        parent1 = node1.up
-        parent2 = node2.up
-        siblings = parent1 == parent2
-        if siblings:
-            return node1.up.children[pos1+1:pos2]
-        nodes = node1.up.children[pos1+1:]
-        nodes += node2.up.children[:pos2]
+            plate1, plate2 = plate2, plate1
+        # if not in the same plate: i have three parts:
+        # the rest of node1's plate:
+        node1, _, nodes1 = self.get_nodes_between_nodes_in_tree(node1=node1)
+        # the beginning of node2's plate:
+        _, node2, nodes2 = self.get_nodes_between_nodes_in_tree(node2=node2)
+        nodes = nodes1 + nodes2
+        # nodes in intermediate plates:
         i = plate1 + 1
         while i < plate2:
             nodes += self.trees[i]
             i += 1
-        return nodes
+        return node1, node2, nodes
+
+    def get_nodes_between_nodes_in_tree(self, node1=None, node2=None, only_order=False):
+        """
+        This procedure searches a tree for all nodes between node1 and node2.
+        In case node1 is None: it should start in the first node
+        If node2 is None: it should end in the last node
+        :param node1:
+        :param node2:
+        :param only_order: we only care about which nodes comes before.
+            Not the nodes in between.
+        :return: (n1, n2, list): the order of the nodes and a list of nodes in between.
+        """
+        if node1 is None and node2 is None:
+            raise ValueError("node1 and node2 cannot be None at the same time")
+        if node1 is None:
+            node1 = nd.get_descendant(node2.get_tree_root(), which='first')
+        if node2 is None:
+            node2 = nd.get_descendant(node1.get_tree_root(), which='last')
+        ancestor = node1.get_common_ancestor(node2)
+        n1ancestors = node1.get_ancestors()
+        n2ancestors = node2.get_ancestors()
+        all_ancestors = set(n1ancestors) | set(n2ancestors)
+        nodes = []
+        first_node = None
+        second_node = None
+
+        def is_not_ancestor(node):
+            return node not in all_ancestors
+
+        for node in ancestor.iter_descendants(strategy='postorder', is_leaf_fn=is_not_ancestor):
+            if first_node is None:
+                if node not in [node1, node2]:
+                    continue
+                first_node, second_node = node1, node2
+                if node == node2:
+                    first_node, second_node = node2, node1
+                if only_order:
+                    break
+                continue
+            if node == second_node:
+                break
+            if is_not_ancestor(node):
+                nodes.append(node)
+
+        return first_node, second_node, nodes
 
     def order_all_children(self):
         for tree in self.trees:
@@ -319,14 +418,36 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
+    def try_change_node(self, node, candidates, tolerance=0):
+        did_change = False
+        for node2 in candidates:
+            balance1 = self.check_swap_nodes_seq(node, node2, insert=True)
+            balance2 = self.check_swap_nodes_seq(node, node2, insert=False)
+            insert = True
+            balance = balance1
+            if balance2 > balance1:
+                insert = False
+                balance = balance2
+            if balance <= tolerance:
+                continue
+            result = self.swap_nodes_same_level(node, node2, insert=insert)
+            if result:
+                did_change = True
+        return did_change
+
 
 if __name__ == "__main__":
+    # TODO: if a parent has only one child: collapse
+    # TODO: check defects always together with sequence
     import pprint as pp
     e = '201804271903/'
+    # e = '201805020012/'
     path = pm.PATHS['experiments'] + e
     solution = sol.Solution.from_io_files(path=path)
 
     self = ImproveHeuristic(solution)
+    node1 = self.trees[1].search_nodes(name=78)[0]
+    self.get_nodes_between_nodes_in_tree(node1=node1)
     # self.draw(pos=0, attributes=['name', 'WIDTH', 'HEIGHT', 'TYPE'])
     # self.draw(pos=0, attributes=['name', 'X', 'Y', 'TYPE'])
     # self.draw(pos=2, attributes=['name', 'X', 'WIDTH', 'TYPE'])
@@ -345,64 +466,21 @@ if __name__ == "__main__":
     while count < 1000 and i < len(prec):
         count += 1
         node = [*prec][i]
-        # node, _ = max(prec.to_lendict().items(), key=lambda x: x[1])
+        change = False
         node_level1 = nd.find_ancestor_level(node, 1)
-        prec_lv1 = [nd.find_ancestor_level(p, 1) for p in prec[node]]
-        # prec_lv1.sort(key=lambda x: x.PLATE_ID)
-        node1 = node_level1
-        result = False
-        for node2 in prec_lv1:
-            # we need to be sure we want to make this change...
-            balance, switch = self.check_swap_nodes_seq(node1, node2)
-            if balance <= tolerance:
-                continue
-            result = self.swap_nodes_same_level(node1, node2)
-            if result:
-                break
-        if result:
-            # made a swap: recalculate
-            prec = self.check_sequence().to_dict(result_col=1)
-            i = 0
-            continue
+        candidates = [nd.find_ancestor_level(p, 1) for p in prec[node]]
+        change |= self.try_change_node(node_level1, candidates)
         # we're desperated: why not try with all nodes level1?
-        # nodes_lv1 = [ch for tree in self.trees for ch in tree.get_children() if ch != node1]
-        nodes_lv1 = [ch for ch in node1.get_sisters()]
-        result = False
-        for node2 in nodes_lv1:
-            # we need to be sure we want to make this change...
-            balance, switch = self.check_swap_nodes_seq(node1, node2, insert=True)
-            if balance <= tolerance:
-                continue
-            if switch:
-                node1, node2 = node2, node1
-            result = self.swap_nodes_same_level(node1, node2, insert=True)
-            if result:
-                break
-        if result:
-            # made a swap: recalculate
-            prec = self.check_sequence().to_dict(result_col=1)
-            i = 0
-            continue
+        candidates = [ch for ch in node_level1.get_sisters()]
+        change |= self.try_change_node(node_level1, candidates)
         # we're desperated: why not try with all nodes level1?
-        nodes_lv1 = [ch for tree in self.trees for ch in tree.get_children() if ch != node1]
-        # nodes_lv1 = [ch for ch in node1.get_sisters()]
-        result = False
-        for node2 in nodes_lv1:
-            # we need to be sure we want to make this change...
-            balance, switch = self.check_swap_nodes_seq(node1, node2)
-            if balance <= tolerance:
-                continue
-            if switch:
-                node1, node2 = node2, node1
-            result = self.swap_nodes_same_level(node1, node2)
-            if result:
-                break
-        if result:
-            # made a swap: recalculate
-            prec = self.check_sequence().to_dict(result_col=1)
-            i = 0
-            continue
+        candidates = [ch for tree in self.trees for ch in tree.get_children() if ch != node_level1]
+        change |= self.try_change_node(node_level1, candidates)
         i += 1
+        if change:
+            # made a swap: recalculate
+            prec = self.check_sequence().to_dict(result_col=1)
+            i = 0
 
 
     # succ = seq.to_dict(result_col=1)
@@ -415,7 +493,10 @@ if __name__ == "__main__":
 
     # node1, node2, node3 = heur.trees[0].children[:3]
     # result = heur.swap_siblings(node1, node3)
-    self.graph_solution(path, name="edited")
+    self.graph_solution(path, name="edited", dpi=50)
+
+
+    # self.graph_solution(path, show=True, pos=3, dpi=30, fontsize=10)
     # heur.get_pieces_by_type(by_plate=True)
     # prev_nodes = self.get_previous_nodes()
     pass

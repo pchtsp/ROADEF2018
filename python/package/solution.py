@@ -212,7 +212,7 @@ class Solution(inst.Instance):
         if not by_plate:
             return {int(leaf.TYPE): leaf for leaf in leaves}
 
-        leaves_by_plate = {tree.PLATE_ID: {} for tree in self.trees}
+        leaves_by_plate = sd.SuperDict({tree.PLATE_ID: {} for tree in self.trees})
         for leaf in leaves:
             leaves_by_plate[leaf.PLATE_ID][int(leaf.TYPE)] = leaf
         if pos is None:
@@ -270,11 +270,25 @@ class Solution(inst.Instance):
         wrong_order = []
         for node, prec_nodes in self.get_previous_nodes().items():
             for prec_node in prec_nodes:
+                # prec is in a previous plate: correct
+                if node.PLATE_ID > prec_node.PLATE_ID:
+                    continue
+                # if prec is in the next plate: very incorrect
                 if node.PLATE_ID < prec_node.PLATE_ID:
                     wrong_order.append((node, prec_node))
                     continue
-                if node.PLATE_ID == prec_node and node.CUT < prec_node.CUT:
-                    wrong_order.append((node, prec_node))
+                # if we're here, they are in the same plate/ tree.
+                # we find the common ancestor and check which node's
+                # ancestors appear first
+                ancestor = node.get_common_ancestor(prec_node)
+                n1ancestors = set([node] + node.get_ancestors())
+                n2ancestors = set([prec_node] + prec_node.get_ancestors())
+                for n in ancestor.iter_descendants():
+                    if n in n1ancestors:
+                        wrong_order.append((node, prec_node))
+                        break
+                    if n in n2ancestors:
+                        break
         return tl.TupList(wrong_order)
 
     def check_defects(self):
@@ -335,13 +349,16 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self, path="", name="rect"):
+    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30):
         batch_data = self.get_batch()
         stack = batch_data.get_property('STACK')
         sequence = batch_data.get_property('SEQUENCE')
         colors = pal.colorbrewer.qualitative.Set3_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
-        for plate, leafs in self.get_pieces_by_type(by_plate=True).items():
+        pieces_by_type = self.get_pieces_by_type(by_plate=True)
+        if pos is not None:
+            pieces_by_type = pieces_by_type.filter([pos])
+        for plate, leafs in pieces_by_type.items():
             fig1 = plt.figure(figsize=(width/100, height/100))
             ax1 = fig1.add_subplot(111, aspect='equal')
             ax1.set_xlim([0, width])
@@ -353,7 +370,7 @@ class Solution(inst.Instance):
                         (leaf.X, leaf.Y),  # (x,y)
                         leaf.WIDTH,  # width
                         leaf.HEIGHT,  # height
-                        facecolor=colors[pos % len(colors)],
+                        facecolor=colors[stack[leaf.TYPE] % len(colors)],
                         linewidth=3
                     )
                 )
@@ -362,7 +379,7 @@ class Solution(inst.Instance):
                          format(leaf.WIDTH, leaf.HEIGHT, stack[leaf.TYPE], sequence[leaf.TYPE], leaf.name),
                          horizontalalignment='center',
                          verticalalignment='center',
-                         fontsize=30)
+                         fontsize=fontsize)
             for defect in self.get_defects_per_plate(plate).values():
                 ax1.axhline(y=defect['Y'], color="red", ls='dashed')
                 ax1.axvline(x=defect['X'], color="red", ls='dashed')
@@ -376,8 +393,9 @@ class Solution(inst.Instance):
                     )
                 )
             fig_path = os.path.join(path, '{}_{}.png'.format(name, plate))
-            fig1.savefig(fig_path, dpi=90, bbox_inches='tight')
-            plt.close(fig1)
+            fig1.savefig(fig_path, dpi=dpi, bbox_inches='tight')
+            if not show:
+                plt.close(fig1)
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
         # TODO:
