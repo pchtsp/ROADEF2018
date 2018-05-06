@@ -90,22 +90,25 @@ class Solution(inst.Instance):
         return cls(di.get_model_data(case_name, path), {})
 
     @staticmethod
-    def point_in_square(point, square, strict=True):
+    def point_in_square(point, square, strict=True, lag=None):
         """
         :param point: dict with X and Y values
         :param square: a list of two points that define a square.
         **important**: first point of square is bottom left.
         :param strict: does not count being in the borders as being inside
+        :param lag: move the node in some distance
         :return: True if point is inside square (with <)
         """
+        if lag is None:
+            lag = {'X': 0, 'Y': 0}
         if strict:
             return \
-                square[0]['X'] < point['X'] < square[1]['X'] and\
-                square[0]['Y'] < point['Y'] < square[1]['Y']
+                square[0]['X'] < point['X'] + lag['X'] < square[1]['X'] and\
+                square[0]['Y'] < point['Y'] + lag['Y'] < square[1]['Y']
         else:
             return \
-                square[0]['X'] <= point['X'] <= square[1]['X'] and\
-                square[0]['Y'] <= point['Y'] <= square[1]['Y']
+                square[0]['X'] <= point['X'] + lag['X'] <= square[1]['X'] and\
+                square[0]['Y'] <= point['Y'] + lag['Y'] <= square[1]['Y']
 
     def square_inside_square(self, square1, square2, both_sides=True):
         """
@@ -130,7 +133,7 @@ class Solution(inst.Instance):
         Tests if some point in square1 is inside square2 (or viceversa).
         :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
         :param square2: a list of two dictionaries of type: {'X': 0, 'Y': 0}
-        :return: True if both squares share some area
+        :return: True if both squares share some (smaller) area
         """
         for point in square1:
             if self.point_in_square(point, square2, strict=True):
@@ -139,20 +142,6 @@ class Solution(inst.Instance):
             if self.point_in_square(point, square1, strict=True):
                 return True
         return False
-
-    @staticmethod
-    def piece_to_square(piece):
-        """
-        Reformats a piece to a list of two points
-        :param piece: a leaf from ete3 tree.
-        :return: list of two points {'X': 1, 'Y': 1}
-        """
-        # axis = ['X', 'Y']
-        # axis_dim = {'X': 'WIDTH', 'Y': 'HEIGHT'}
-        # [{a: getattr(piece, a) for a in axis},
-        #  {a: getattr(piece, a) + getattr(piece, axis_dim[a] for a in axis})}]
-        return [{'X': piece.X, 'Y': piece.Y},
-                {'X': piece.X + piece.WIDTH, 'Y': piece.Y + piece.HEIGHT}]
 
     @staticmethod
     def defect_to_square(defect):
@@ -165,8 +154,8 @@ class Solution(inst.Instance):
                 {'X': defect['X'] + defect['WIDTH'], 'Y': defect['Y'] + defect['HEIGHT']}]
 
     def piece_inside_piece(self, piece1, piece2, **kwargs):
-        square1 = self.piece_to_square(piece1)
-        square2 = self.piece_to_square(piece2)
+        square1 = nd.node_to_square(piece1)
+        square2 = nd.node_to_square(piece2)
         return self.square_inside_square(square1, square2, **kwargs)
 
     def plate_inside_plate(self, plate1, plate2, turn=True, both_sides=False):
@@ -191,7 +180,7 @@ class Solution(inst.Instance):
 
         pass
 
-    def get_pieces_by_type(self, by_plate=False, pos=None, filter_type=True):
+    def get_pieces_by_type(self, by_plate=False, pos=None, min_type=0):
         """
         Gets the solution pieces indexed by the TYPE.
         :param by_plate: when active it returns a dictionary indexed
@@ -200,9 +189,6 @@ class Solution(inst.Instance):
         :param filter_type: if True: gets only demanded items. If not: returns all plates
         :return: {0: leaf0,  1: leaf1}
         """
-        min_type = -5
-        if filter_type:
-            min_type = 0
         if pos is None:
             leaves = [leaf for tree in self.trees
                       for leaf in nd.get_node_leaves(tree, min_type)]
@@ -240,7 +226,7 @@ class Solution(inst.Instance):
                 point1 = {'X': leaf1.X, 'Y': leaf1.Y}
                 point2 = {'X': leaf1.X + leaf1.WIDTH, 'Y': leaf1.Y + leaf1.HEIGHT}
                 for k2, leaf2 in leaves.items():
-                    square = self.piece_to_square(leaf2)
+                    square = nd.node_to_square(leaf2)
                     if self.point_in_square(point1, square) or \
                             self.point_in_square(point2, square):
                         overlapped.append((leaf1, leaf2))
@@ -303,7 +289,7 @@ class Solution(inst.Instance):
         return pieces_with_defects
 
     def defects_in_node(self, node, defects=None):
-        square = self.piece_to_square(node)
+        square = nd.node_to_square(node)
         defects_in_node = []
         if defects is None:
             defects = self.get_defects_per_plate(plate=node.PLATE_ID)
@@ -349,7 +335,7 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30):
+    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30, min_type=0):
         batch_data = self.get_batch()
         stack = batch_data.get_property('STACK')
         sequence = batch_data.get_property('SEQUENCE')
@@ -364,38 +350,63 @@ class Solution(inst.Instance):
             ax1.set_xlim([0, width])
             ax1.set_ylim([0, height])
             ax1.tick_params(axis='both', which='major', labelsize=50)
+            # graph items
             for pos, leaf in enumerate(leafs.values()):
-                ax1.add_patch(
-                    patches.Rectangle(
-                        (leaf.X, leaf.Y),  # (x,y)
-                        leaf.WIDTH,  # width
-                        leaf.HEIGHT,  # height
-                        facecolor=colors[stack[leaf.TYPE] % len(colors)],
-                        linewidth=3
-                    )
-                )
-                ax1.text(leaf.X + leaf.WIDTH/2, leaf.Y + leaf.HEIGHT/2,
-                         '{} x {}\nstack={}\npos={}\nnode={}'.
-                         format(leaf.WIDTH, leaf.HEIGHT, stack[leaf.TYPE], sequence[leaf.TYPE], leaf.name),
-                         horizontalalignment='center',
-                         verticalalignment='center',
-                         fontsize=fontsize)
+                self.draw_leaf(ax1, leaf, stack, sequence, colors, fontsize)
+            # graph wastes:
+            wastes = nd.get_node_leaves(self.trees[plate], min_type=-1, max_type=-1)
+            for waste in wastes:
+                self.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
+            # graph defects
             for defect in self.get_defects_per_plate(plate).values():
-                ax1.axhline(y=defect['Y'], color="red", ls='dashed')
-                ax1.axvline(x=defect['X'], color="red", ls='dashed')
-                ax1.add_patch(
-                    patches.Circle(
-                        (defect['X'], defect['Y']),  # (x,y)
-                        radius=20,
-                        # defect['WIDTH'],  # width
-                        # defect['HEIGHT'],  # height
-                        color='red',
-                    )
-                )
+                self.draw_defect(ax1, defect)
             fig_path = os.path.join(path, '{}_{}.png'.format(name, plate))
             fig1.savefig(fig_path, dpi=dpi, bbox_inches='tight')
             if not show:
                 plt.close(fig1)
+
+    @staticmethod
+    def draw_leaf(ax1, leaf, stack, sequence, colors, fontsize):
+        if leaf.TYPE in stack:
+            color = colors[stack[leaf.TYPE] % len(colors)]
+            edge_color = 'black'
+        else:
+            color = 'white'
+            edge_color = 'black'
+        ax1.add_patch(
+            patches.Rectangle(
+                (leaf.X, leaf.Y),  # (x,y)
+                leaf.WIDTH,  # width
+                leaf.HEIGHT,  # height
+                facecolor=color,
+                edgecolor=edge_color,
+                linewidth=3
+            )
+        )
+        ax1.text(leaf.X + leaf.WIDTH / 2, leaf.Y + leaf.HEIGHT / 2,
+                 '{} x {}\nstack={}\npos={}\nnode={}'.
+                 format(leaf.WIDTH,
+                        leaf.HEIGHT,
+                        stack.get(leaf.TYPE, ''),
+                        sequence.get(leaf.TYPE, ''),
+                        leaf.name),
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 fontsize=fontsize)
+
+    @staticmethod
+    def draw_defect(ax1, defect):
+        ax1.axhline(y=defect['Y'], color="red", ls='dashed')
+        ax1.axvline(x=defect['X'], color="red", ls='dashed')
+        ax1.add_patch(
+            patches.Circle(
+                (defect['X'], defect['Y']),  # (x,y)
+                radius=20,
+                # defect['WIDTH'],  # width
+                # defect['HEIGHT'],  # height
+                color='red',
+            )
+        )
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
         # TODO:
@@ -418,13 +429,12 @@ class Solution(inst.Instance):
         if not os.path.exists(path):
             os.mkdir(path)
         result = {}
-        features = ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
         for tree in self.trees:
             for v in tree.traverse():
                 parent = v.PARENT
                 if parent is not None:
                     parent = int(parent)
-                d = {k: int(getattr(v, k)) for k in features}
+                d = nd.get_features(v)
                 d['PARENT'] = parent
                 result[int(v.NODE_ID)] = d
         table = pd.DataFrame.from_dict(result, orient='index')
