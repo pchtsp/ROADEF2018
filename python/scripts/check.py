@@ -61,8 +61,35 @@ def test4():
     path = pm.PATHS['experiments'] + e
     # path = pm.PATHS['results'] + e
     solution = mod.Model.from_io_files(path=path)
+    solution.draw(['name', 'TYPE'], pos=1)
     solution.graph_solution()
+    self = solution
+
+
+def test5():
+    e = '201805020012/'
+    path = pm.PATHS['experiments'] + e
+    solution = mod.Model.from_io_files(path=path)
+    # plates = solution.arrange_plates()
+    checks = solution.check_all()
+    len(checks['defects'])
+    len(checks['sequence'])
+    checks.keys()
+    solution.graph_solution(path)
+
+
+def test6():
+
+    e = '201804271903/'
+    e = 'multi2/A6/'
+    path = pm.PATHS['experiments'] + e
+    path = pm.PATHS['results'] + e
+    solution = mod.Model.from_io_files(path=path)
+    solution = mod.Model.from_input_files(path=path)
+    demand = solution.get_demand_from_items(tol=50)
+    # items = solution.flatten_stacks(in_list=True)  # Ĵ in J
+
 
 
 if __name__ == "__main__":
-    test4()
+    test6()

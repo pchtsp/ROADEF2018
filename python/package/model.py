@@ -9,6 +9,7 @@ import pprint as pp
 import copy
 import package.model_1 as mdl
 import copy
+import package.nodes as nd
 
 
 # TODO: increase plate size
@@ -279,8 +280,11 @@ class Model(sol.Solution):
     def solve(self, options):
         return mdl.solve_model(self, options)
 
-    def solve_iterative(self, options, export=False):
-        new_width = options['max_width']
+    def solve_iterative(self, options, export=False, max_items=None, sort=True):
+        new_width = options.get('max_width', None)
+        if new_width is None:
+            new_width = self.get_param('widthPlates')
+        batch = self.input_data['batch']
         count = 0
         while True:
             # get missing items.
@@ -291,15 +295,21 @@ class Model(sol.Solution):
             missing = self.check_demand_satisfied().tolist()
             if len(missing) == 0:
                 break
+            items_to_solve = missing
+            if sort:
+                items_to_solve = \
+                    sorted(items_to_solve, key=lambda x: batch[x]['SEQUENCE'])
+            if max_items is not None:
+                items_to_solve = items_to_solve[:max_items]
             self2 = copy.deepcopy(self)
-            self2.input_data['batch'] = self2.input_data['batch'].filter(missing)
+            self2.input_data['batch'] = batch.filter(items_to_solve)
             self2.set_param('widthPlates', new_width)
             solution = self2.solve(options)
             if solution is None:
                 return None
             self2.load_solution(solution)
             self.trees += self2.trees
-            new_width = min(new_width * 4, self.get_param('widthPlates'))
+            new_width = min(new_width * options.get('ratio_plate_size', 4), self.get_param('widthPlates'))
             if export:
                 self.export_cuts(solution, path=options['path'], name='cuts_{}'.format(count))
                 self.export_solution(path=options['path'], name='solution_{}'.format(count))
@@ -438,7 +448,7 @@ class Model(sol.Solution):
                   for plate in tree.children
                   if plate.TYPE == -2 or plate.TYPE >= 0]
         plates += [tree for tree in self.trees if tree.TYPE >= 0]
-        plates.sort(key=lambda x: sum(items[n.TYPE] for n in x.get_leaves()))
+        plates.sort(key=lambda x: sum(items[n.TYPE]['SEQUENCE'] for n in nd.get_node_leaves(x)))
         bins_remaining = {0: max_width}
         bin_plates = {0: []}
         while len(plates) > 0:
@@ -464,7 +474,7 @@ class Model(sol.Solution):
             for plate in plates:
                 movement = ref_pos - plate.X
                 ref_pos += plate.WIDTH
-                self.move_node(plate, movement, "X")
+                nd.move_node(plate, movement, "X")
 
         # now I need to reconstruct the new trees merging the nodes,
         # and creating a root for each bin.

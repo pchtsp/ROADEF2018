@@ -34,9 +34,10 @@ OPTIONS = {
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
     , 'case_name': 'A6'
-    , 'max_plates': 40
+    , 'max_plates': 10
     , 'max_width': 6000//4
+    , 'max_items': 15
     , 'max_iters': 200000
-    , 'ratio_plate_size': 4
-    , 'cluster_tolerance': 50
+    , 'ratio_plate_size': 1
+    # , 'cluster_tolerance': 50
 }

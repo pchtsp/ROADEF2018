@@ -3,6 +3,7 @@ import package.data_input as di
 import package.model as md
 import package.params as pm
 import os
+import sys
 
 
 def solve_case(options):
@@ -57,11 +58,15 @@ def solve_case_iter(options):
     di.export_data(output_path, options, name="options", file_type='json')
 
     # solving part:
-    try:
-        self.solve_iterative(options, export=True)
-    except:
-        print('There was an error with the solving!')
-        return None
+    # try:
+    self.solve_iterative(options,
+                         export=True,
+                         max_items=options.get('max_items', 20),
+                         sort=True)
+    # except:
+    #     print('There was an error with the solving!')
+    #     print(sys.exc_info()[0])
+    #     return None
 
     return True
 

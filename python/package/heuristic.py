@@ -176,6 +176,8 @@ class ImproveHeuristic(sol.Solution):
         return True
 
     def check_assumptions_swap(self, node1, node2):
+        # for now, the only requisite is to have the same level.
+        # Maybe this will be relaxed in the future.
         assert node1.CUT == node2.CUT, \
             'nodes {} and {} need to have the same level'.format(node1.name, node2.name)
         # axis_inv, inv_dim = nd.get_orientation_from_cut(node1, inv=True)
@@ -486,6 +488,7 @@ class ImproveHeuristic(sol.Solution):
     def try_change_node(self, node, candidates, tolerance=0):
         did_change = False
         for node2 in candidates:
+            # TODO: I should know if it's possible before deciding which one to do!
             balance1 = self.check_swap_nodes_seq(node, node2, insert=True)
             balance2 = self.check_swap_nodes_seq(node, node2, insert=False)
             insert = True
@@ -495,6 +498,7 @@ class ImproveHeuristic(sol.Solution):
                 balance = balance2
             if balance <= tolerance:
                 continue
+            print("I want to swap nodes {} and {} for a balance of {}".format(node.name, node2.name, balance))
             result = self.swap_nodes_same_level(node, node2, insert=insert)
             if result:
                 did_change = True
@@ -540,6 +544,7 @@ if __name__ == "__main__":
         change = False
         node_level1 = nd.find_ancestor_level(node, 1)
         candidates = [nd.find_ancestor_level(p, 1) for p in prec[node]]
+        # TODO: here I want to swap with the *next* node in the plate, if possible.
         change |= self.try_change_node(node_level1, candidates)
         i += 1
         if change:
@@ -568,7 +573,7 @@ if __name__ == "__main__":
             # made a swap: recalculate
             prec = self.check_sequence().to_dict(result_col=1)
             i = 0
-    i = 0
+    i = count = 0
     while count < 1000 and i < len(prec):
         count += 1
         node = [*prec][i]
@@ -576,6 +581,7 @@ if __name__ == "__main__":
         node_level2 = nd.find_ancestor_level(node, 2)
         if node_level2 is None:
             continue
+        # TODO: here I want to swap with the *next* node in the plate, if possible.
         candidates = [nd.find_ancestor_level(p, 2) for p in prec[node]
                       if nd.find_ancestor_level(p, 2) is not None]
         change |= self.try_change_node(node_level2, candidates)
@@ -584,7 +590,22 @@ if __name__ == "__main__":
             # made a swap: recalculate
             prec = self.check_sequence().to_dict(result_col=1)
             i = 0
-
+    i = count = 0
+    while count < 1000 and i < len(prec):
+        count += 1
+        node = [*prec][i]
+        change = False
+        node_level2 = nd.find_ancestor_level(node, 2)
+        if node_level2 is None:
+            continue
+        candidates = [ch for tree in self.trees for ch in tree.traverse()
+                      if ch != node_level2 and ch.CUT == 2]
+        change |= self.try_change_node(node_level2, candidates)
+        i += 1
+        if change:
+            # made a swap: recalculate
+            prec = self.check_sequence().to_dict(result_col=1)
+            i = 0
     # succ = seq.to_dict(result_col=1)
 
     # len(prec[node])
@@ -595,7 +616,7 @@ if __name__ == "__main__":
 
     # node1, node2, node3 = heur.trees[0].children[:3]
     # result = heur.swap_siblings(node1, node3)
-    self.graph_solution(path, name="edited", dpi=50, min_type=-1)
+    self.graph_solution(path, name="edited", dpi=50)
 
 
     # self.graph_solution(path, show=True, pos=3, dpi=30, fontsize=10)

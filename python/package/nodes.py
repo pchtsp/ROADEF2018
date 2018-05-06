@@ -111,12 +111,39 @@ def get_features(node):
     return {k: int(getattr(node, k)) for k in features}
 
 
+def duplicate_node_as_child(node):
+    features = get_features(node)
+    features['NODE_ID'] += 200
+    child = create_node(**features)
+    node.add_child(child)
+    node.TYPE = -2
+    return True
+
+
+def delete_only_child(node):
+    if len(node.children) != 1:
+        return False
+    child = node.children[0]
+    features = get_features(child)
+    child.detach()
+    node.add_features(**features)
+    return True
+
+
 def add_child_waste(node, fill):
     axis, dim_i = get_orientation_from_cut(node, inv=True)
     node_size = getattr(node, dim_i)
     child_size = fill - node_size
     if child_size <= 0:
+        # sometimes we want a node without children
+        # (because it had waste as only other child and now it hasn't).
+        if len(node.children) == 1:
+            delete_only_child(node)
         return False
+    if node.is_leaf():
+        # sometimes we have a node without children
+        # (because it had no waste and now it has).
+        duplicate_node_as_child(node)
     features = get_features(node)
     features[axis] += node_size
     features[dim_i] = child_size

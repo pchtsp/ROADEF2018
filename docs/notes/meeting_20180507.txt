@@ -1,0 +1,13 @@
+formulation en carrés => morceaux de 50 x 50. 
+* séquence et défauts.
+* pas des 3 coupes guillotine (encore).
+
+knapsack itératif: 
+* choisir le valeur des pièces en fonction de quelque critère. 
+* pre-selectioner les candidats à entrer dans le jumbo.
+* option multistart en fonction des valeurs et des candidats.
+
+CuttingStock itératif:
+* fixe les candidats selon un critère.
+* limiter les nombre des jumbo.
+* option multistart en fonction des candidats.
