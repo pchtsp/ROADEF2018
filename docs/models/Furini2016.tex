@@ -29,44 +29,48 @@
 
     \begin{itemize}
         \item All jumbos are the same.
-        \item No deffects.
+        \item No defects.
         \item No sequence between items.
     \end{itemize}
 
     \subsection{Notations}
 
+    \vskip 0.3cm
+
     \textbf{Sets}
 
-    \begin{tabular}{ll}
+    \begin{tabular}{p{20mm}p{120mm}}
         $l \in \mathcal{L}$ & Set of possible levels. There are the following: 0, 1, 2, 3. \\
         $j \in \mathcal{J}$ & Set of possible plates. A plate is defined as a tuple with a width $w$ and a length $l$. \\
-        $j'_j \in \mathcal{J}$ & inverse plate of $j$. So width and length are exchanged. \\
-        $C^o_{qjl}$ & set of tuples ($oqjl$). All combinations of possible cuts at distance $q$ that can be done in plate $j$ at level $l$ and orientation $o$. \\
+        $j'_j \in \mathcal{J}$ & Inverse plate of $j$. So width and length are exchanged and width becomes the height and vice-versa. \\
+        $C^o_{qjl}$ & Set of tuples ($oqjl$). All combinations of possible cuts at distance $q$ that can be done in plate $j$ at level $l$ and orientation $o$. \\
         % $J^o_{qj0} \subset C^o_{qjm}$ & set of of possible cuts on plate at level 0 ($m=0$).
-        $J_{l}$ & all plates that can be produced at level $l$.\\
-        $L_{j}$ & all levels where plate $j$ can be produced.\\
+        $J_{l}$ & All plates that can be produced at level $l$.\\
+        $L_{j}$ & All levels where plate $j$ can be produced.\\
         % $J_1$ & all plates that can be produced at level 1 ($J_1$).
-        $C'_{km} \subset C^o_{qjl}$ & for each plate $k$ in level $m$, the set of available cuts that produce this piece. This is calculated from parameter $a^o_{qkljm}$, see below. \\
-        $C''_{jl} \subset C^o_{qjl}$ & for each plate $j$ in level $l$, the set of available cuts that are used by this cut. This is calculated from set $C^o_{qjl}$. \\
+        $C'_{km} \subset C^o_{qjl}$ & For each plate $k$ in level $m$, the set of available cuts that produce this piece. This is calculated from parameter $a^o_{qkljm}$, see below. \\
+        $C''_{jl} \subset C^o_{qjl}$ & For each plate $j$ in level $l$, the set of available cuts that are used by this cut. This is calculated from set $C^o_{qjl}$. \\
     \end{tabular}
 
     \vskip 0.3cm
 
-    \subsection{Parameters}
+    \textbf{Parameters}
 
-    \begin{tabular}{ll}
-        $a^o_{qkmjl}$ & plate $k$, at level $m$ is produced while cutting plate $j$ at level $l$ in position $q$ with orientation $o$. \\
-        $W_j$ & width of plate $j$.\\
-        $d_j$ & height of plate $j$.\\
+    \begin{tabular}{p{20mm}p{120mm}}
+        $a^o_{qkmjl}$ & Plate $k$, at level $m$ is produced while cutting plate $j$ at level $l$ in position $q$ with orientation $o$. \\
+        $W_j$ & Width of plate $j$.\\
+        $d_j$ & Demand of plate $j$.\\
     \end{tabular}
 
-    \subsection{Variables}
+    \vskip 0.3cm
 
-    \begin{itemize}
-         \item $x^o_{lqj}$: number of times cut of distance $q$ is done in a plate of type $j$ at level $l$ with orientation $o$.
-         \item $y_{jl}$: number of times a plate of type $j$ has been used to cover demand.
-         \item $r_{jl}$: number of times a plate of type $j$ has been used as residue (right side of each plate). Only exists for level 1 ($l=1$).
-    \end{itemize}
+    \textbf{Variables}
+
+    \begin{tabular}{p{20mm}p{120mm}}
+        $x^o_{lqj}$ & number of times cut of distance $q$ is done in a plate of type $j$ at level $l$ with orientation $o$.\\
+         $y_{jl}$ & number of times a plate of type $j$ has been used to cover demand.\\
+         $r_{jl}$ & number of times a plate of type $j$ has been used as residue (right side of each plate). Only exists for level 1 ($l=1$).\\
+    \end{tabular}
 
     \subsection{Model}
 
