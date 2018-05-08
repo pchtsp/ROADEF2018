@@ -5,6 +5,7 @@ import package.superdict as sd
 import package.tuplist as tl
 import package.nodes as nd
 import numpy as np
+import random as rn
 
 # we could do something like...
 # 1. find a candidate node to edit
@@ -67,6 +68,19 @@ class ImproveHeuristic(sol.Solution):
         # instead of an item
         pass
 
+    def extract_node_from_position(self, node):
+        # take node out from where it is (detach and everything)
+        # update all the positions of siblings accordingly
+        parent = node.up
+        plate, ch_pos = nd.get_node_pos(node)
+        axis, dim = nd.get_orientation_from_cut(node)
+        for sib in parent.children[ch_pos+1:]:
+            nd.move_node(node=sib, movement=-getattr(node, dim), axis=axis)
+        node.detach()
+        # In case there's any waste at the end: I want to trim it.
+        nd.del_child_waste(node)
+        return node
+
     def insert_node_at_position(self, node, destination, position):
         """
         :param node: node I'm going to insert.
@@ -74,29 +88,12 @@ class ImproveHeuristic(sol.Solution):
         :param position: position of a children on the parent node (1 : num_children)
         :return:
         """
-        # 1. take node out from where it is (detach and everything)
-        # update all the positions of siblings accordingly
-        # if the node was in the same destination and in a smaller position:
-        #   we need to reduce the position by one.
-        parent = node.up
-        plate, ch_pos = nd.get_node_pos(node)
-        # if parent == destination and ch_pos < position:
-        #     position -= 1
-        # if we're moving to the same place... this does not make any sense??
-        if parent == destination and ch_pos == position:
-            return True
-        axis, dim = nd.get_orientation_from_cut(node)
-        axis_i, dim_i = nd.get_orientation_from_cut(node, inv=True)
-        ref = {axis: dim, axis_i: dim_i}
-        for sib in parent.children[ch_pos+1:]:
-            nd.move_node(node=sib, movement=-getattr(node, dim), axis=axis)
-        node.detach()
-        # In case there's any waste at the end: I want to trim it.
-        nd.del_child_waste(node)
-
-        # 2. move all nodes at destination starting from the marked position
+        # move all nodes at destination starting from the marked position
         # to make space and assign new plate, and new axis
         # add node to new parent
+        axis_i, dim_i = nd.get_orientation_from_cut(node, inv=True)
+        axis, dim = nd.get_orientation_from_cut(node)
+        ref = {axis: dim, axis_i: dim_i}
         if position < len(destination.children):
             # we get the destination position and then make space:
             axis_dest = {a: getattr(destination.children[position], a) for a in ref}
@@ -111,8 +108,7 @@ class ImproveHeuristic(sol.Solution):
 
 
         # we make the move:
-        if parent != destination:
-            nd.change_feature(node, 'PLATE_ID', destination.PLATE_ID)
+        nd.change_feature(node, 'PLATE_ID', destination.PLATE_ID)
         dist = {a: axis_dest[a] - getattr(node, a) for a in ref}
         for k, v in dist.items():
             if not v:
@@ -128,16 +124,22 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def check_space(self, node, space):
+    def check_space(self, node_space, free_space, insert):
         """
-        :param node:
-        :param space: dict {WIDTH: XX, HEIGHT: XX}
+        :param node_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
+        :param free_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
         :return:
         """
-        pass
+        # if dimensions are too small, we can't do the change
+        # in insert=True we only check node1 movement
+        for d in ['HEIGHT', 'WIDTH']:
+            if node_space[1][d] > free_space[2][d]:
+                return False
+            if not insert and node_space[2][d] > free_space[1][d]:
+                return False
+        return True
 
-
-    def check_swap_size(self, node1, node2, insert=False, cut=False):
+    def check_swap_size(self, node1, node2, insert=False, rotate=None):
         # ideally, there should be not reference to the tree here
             # so we can test nodes that are not part of a tree
         _, dim = nd.get_orientation_from_cut(node1)
@@ -167,19 +169,17 @@ class ImproveHeuristic(sol.Solution):
         if insert:
             space[2][dim] -= node_space[2][dim]
 
-        # if dimensions are too small, we can't do the change
-        # in insert=True we only check node1 movement
-        for d in [dim, dim_i]:
-            if node_space[1][d] > space[2][d]:
-                return False
-            if not insert and node_space[2][d] > space[1][d]:
-                return False
+        if rotate is None:
+            return self.check_space(node_space, space, insert)
 
-        # TODO: I think here we should do a check by turning the node
-        # if cut:
-        #     setattr(waste2, dim, getattr(waste2, dim) - dif_length)
-        #     setattr(waste1, dim, getattr(waste1, dim) + dif_length)
-        return True
+        # rotate can be a list with the index of nodes to reverse.
+        # this way, we can check different combinations of rotation
+        for pos in rotate:
+            node_space[pos][dim], node_space[pos][dim_i] = \
+                node_space[pos][dim_i], node_space[pos][dim]
+
+        return self.check_space(node_space, space, insert)
+
 
     def check_assumptions_swap(self, node1, node2):
         # for now, the only requisite is to have the same level.
@@ -187,19 +187,26 @@ class ImproveHeuristic(sol.Solution):
         assert node1.CUT == node2.CUT, \
             'nodes {} and {} need to have the same level'.format(node1.name, node2.name)
 
-    def swap_nodes_same_level(self, node1, node2, insert=False):
-        # for now, they need to be level=1
-        # or siblings.
-        # meaning: sharing the dimension we are not changing and the axis.
-        # we do not want to make cuts for the moment.
+    def swap_nodes_same_level(self, node1, node2, insert=False, try_rotation=False):
         # if insert_only=True, we insert node1 before node2 but we do not move node2
         self.check_assumptions_swap(node1, node2)
         axis, dim = nd.get_orientation_from_cut(node1)
 
         # siblings? no problem
+        rotation = []
         if node1.up != node2.up:
-            if not self.check_swap_size(node1, node2, insert, cut=False):
-                return  False
+            if not self.check_swap_size(node1, node2, insert):
+                if not try_rotation:
+                    return False
+                result = False
+                rotations = [[1], [2], [1, 2]]
+                # rotations = [[1]]
+                for rotation in rotations:
+                    result = self.check_swap_size(node1, node2, insert, rotate=rotation)
+                    if result:
+                        break
+                if not result:
+                    return False
                 # node_cp = node1.copy()
                 # nd.del_child_waste(node_cp)
                 # node1_rev = nd.rotate_node(node_cp)
@@ -220,9 +227,18 @@ class ImproveHeuristic(sol.Solution):
                 ch_pos1 += 1
             elif ch_pos1 < ch_pos2:
                 ch_pos2 -= 1
-        self.insert_node_at_position(node1, parent2, ch_pos2)
+
+        if node1.up != parent2 or ch_pos1 != ch_pos2:
+            node1_trimmed = self.extract_node_from_position(node1)
+            if 1 in rotation:
+                nd.rotate_node(node1_trimmed)
+            self.insert_node_at_position(node1_trimmed, parent2, ch_pos2)
         if not insert:
-            self.insert_node_at_position(node2, parent1, ch_pos1)
+            if node2.up != parent1 or ch_pos1 + 1 != ch_pos2:
+                node2_trimmed = self.extract_node_from_position(node2)
+                if 2 in rotation:
+                    nd.rotate_node(node2_trimmed)
+                self.insert_node_at_position(node2_trimmed, parent1, ch_pos1)
 
         # we need to update the waste at the smaller node
         if parent1 != parent2:
@@ -507,7 +523,7 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def try_change_node(self, node, candidates, tolerance=0):
+    def try_change_node(self, node, candidates, tolerance=0, **kwargs):
         did_change = False
         for node2 in candidates:
             # TODO: I should know if it's possible before deciding which one to do!
@@ -521,7 +537,7 @@ class ImproveHeuristic(sol.Solution):
             if balance <= tolerance:
                 continue
             print("I want to swap nodes {} and {} for a balance of {}".format(node.name, node2.name, balance))
-            result = self.swap_nodes_same_level(node, node2, insert=insert)
+            result = self.swap_nodes_same_level(node, node2, insert=insert, **kwargs)
             if result:
                 did_change = True
         return did_change
@@ -611,21 +627,24 @@ if __name__ == "__main__":
             # made a swap: recalculate
             prec = self.check_sequence().to_dict(result_col=1)
             i = 0
+    rem = [n for tup in self.check_sequence() for n in tup]
     i = count = 0
-    while count < 1000 and i < len(prec):
+    while count < 1000 and i < len(rem):
         count += 1
-        node = sorted([*prec], key=lambda x: x.name)[i]
+        node = rem[i]
         change = False
         node_level2 = nd.find_ancestor_level(node, 2)
         if node_level2 is None:
             continue
         candidates = [ch for tree in self.trees for ch in tree.traverse()
                       if ch != node_level2 and ch.CUT == 2]
-        change |= self.try_change_node(node_level2, candidates)
+        tolerance = 0
+        if rn.random() <= 1 * (1000 - count)/1000:
+            tolerance = -1
+        change |= self.try_change_node(node_level2, candidates, tolerance=0, try_rotation=True)
         i += 1
         if change:
-            # made a swap: recalculate
-            prec = self.check_sequence().to_dict(result_col=1)
+            rem = [n for tup in self.check_sequence() for n in tup]
             i = 0
     # i = count = 0
     # while count < 1000 and i < len(prec):
