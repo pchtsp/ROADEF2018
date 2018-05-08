@@ -106,7 +106,9 @@ class ImproveHeuristic(sol.Solution):
             # we're puting the node in a new, last place:
             # so we do not move anything.
             last_node = destination.children[-1]
-            axis_dest = {a: getattr(last_node, a) + getattr(last_node, d) for a, d in ref.items()}
+            axis_dest = {a: getattr(last_node, a) for a in ref}
+            axis_dest[axis] += getattr(last_node, dim)
+
 
         # we make the move:
         if parent != destination:
@@ -126,50 +128,57 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def check_swap_size(self, node1, node2, insert=False, cut=False,
-                        reverse_node1=False, reverse_node2=False):
+    def check_space(self, node, space):
+        """
+        :param node:
+        :param space: dict {WIDTH: XX, HEIGHT: XX}
+        :return:
+        """
+        pass
+
+
+    def check_swap_size(self, node1, node2, insert=False, cut=False):
         # ideally, there should be not reference to the tree here
             # so we can test nodes that are not part of a tree
         _, dim = nd.get_orientation_from_cut(node1)
         # TODO: if cut=4, there can be no waste
         axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
-        dim_i_1 = nd.get_size_without_waste(node1, dim_i)
-        dim_i_2 = nd.get_size_without_waste(node2, dim_i)
 
-        # if alt dimension is too small, we can't do the change
-        # in insert=True we only check if node1's dim
-        if dim_i_1 > getattr(node2, dim_i):
-            return False
-        if not insert and dim_i_2 > getattr(node1, dim_i):
-            return False
+        wastes = {1: nd.find_waste(node1), 2: nd.find_waste(node2)}
+        for w in wastes.values():
+            if w is None:
+                # no waste in node2 or waste1. cannot do the change
+                return False
 
+        node_space = {
+            1: {dim: getattr(node1, dim),
+                  dim_i: nd.get_size_without_waste(node1, dim_i)},
+            2: {dim: getattr(node2, dim),
+                  dim_i: nd.get_size_without_waste(node2, dim_i)},
+        }
+
+        space = {}
+        for pos, node in enumerate([node1, node2], start=1):
+            space[pos] = {
+                dim_i: getattr(node, dim_i),
+                dim: getattr(wastes[pos], dim) + node_space[pos][dim]
+            }
+        # if not swapping, we have less space in node2
         if insert:
-            dif_length = getattr(node1, dim)
-        else:
-            dif_length = getattr(node1, dim) - getattr(node2, dim)
-        if not dif_length:
-            # same size? no problem
-            return True
-        # check there's space in smaller piece waste to eat.
-        if dif_length < 0:
-            # node1 is always bigger
-            dif_length = -dif_length
-            node1, node2 = node2, node1
-        # we check the small one's waste:
-        waste2 = nd.find_waste(node2)
-        # we need also the first one's waste, to expand it.
-        waste1 = nd.find_waste(node1)
-        if waste1 is None or waste2 is None:
-            # no waste in node2 or waste1. cannot do the change
-            return False
+            space[2][dim] -= node_space[2][dim]
+
+        # if dimensions are too small, we can't do the change
+        # in insert=True we only check node1 movement
+        for d in [dim, dim_i]:
+            if node_space[1][d] > space[2][d]:
+                return False
+            if not insert and node_space[2][d] > space[1][d]:
+                return False
+
         # TODO: I think here we should do a check by turning the node
-        waste_length = getattr(waste2, dim)
-        if waste_length < dif_length:
-            # waste is not big enough
-            return False
-        if cut:
-            setattr(waste2, dim, getattr(waste2, dim) - dif_length)
-            setattr(waste1, dim, getattr(waste1, dim) + dif_length)
+        # if cut:
+        #     setattr(waste2, dim, getattr(waste2, dim) - dif_length)
+        #     setattr(waste1, dim, getattr(waste1, dim) + dif_length)
         return True
 
     def check_assumptions_swap(self, node1, node2):
@@ -177,11 +186,6 @@ class ImproveHeuristic(sol.Solution):
         # Maybe this will be relaxed in the future.
         assert node1.CUT == node2.CUT, \
             'nodes {} and {} need to have the same level'.format(node1.name, node2.name)
-        # axis_inv, inv_dim = nd.get_orientation_from_cut(node1, inv=True)
-        # assert getattr(node1, inv_dim) == getattr(node2, inv_dim), \
-        #     'nodes {} and {} need to have the same fixed dim'.format(node1.name, node2.name)
-        # assert getattr(node1, axis_inv) == getattr(node2, axis_inv), \
-        #     'nodes {} and {} need to have the same fixed axis'.format(node1.name, node2.name)
 
     def swap_nodes_same_level(self, node1, node2, insert=False):
         # for now, they need to be level=1
@@ -190,11 +194,17 @@ class ImproveHeuristic(sol.Solution):
         # we do not want to make cuts for the moment.
         # if insert_only=True, we insert node1 before node2 but we do not move node2
         self.check_assumptions_swap(node1, node2)
+        axis, dim = nd.get_orientation_from_cut(node1)
 
         # siblings? no problem
         if node1.up != node2.up:
-            if not self.check_swap_size(node1, node2, insert, cut=True):
-                return False
+            if not self.check_swap_size(node1, node2, insert, cut=False):
+                return  False
+                # node_cp = node1.copy()
+                # nd.del_child_waste(node_cp)
+                # node1_rev = nd.rotate_node(node_cp)
+                # if not self.check_swap_size(node1_rev, node2, insert, cut=True):
+                #     return False
 
         print('Found! Change between nodes {} and {}'.format(node1.name, node2.name))
         parent1 = node1.up
@@ -213,9 +223,15 @@ class ImproveHeuristic(sol.Solution):
         self.insert_node_at_position(node1, parent2, ch_pos2)
         if not insert:
             self.insert_node_at_position(node2, parent1, ch_pos1)
+
         # we need to update the waste at the smaller node
-        # self.check_swap_size(node1, node2, insert_only, cut=True)
-        # for now we're doing it before the swapping...
+        if parent1 != parent2:
+            if not insert:
+                dif = getattr(node1, dim) - getattr(node2, dim)
+            else:
+                dif = getattr(node1, dim)
+            nd.resize_node(parent1, dim, dif)
+            nd.resize_node(parent2, dim, -dif)
         return True
 
     def clean_empty_cuts(self):
@@ -517,8 +533,8 @@ class ImproveHeuristic(sol.Solution):
             )
             print("")
 
+
 if __name__ == "__main__":
-    # TODO: if a parent has only one child: collapse
     import pprint as pp
     e = '201804271903/'
     # e = '201805020012/'  # this one was optimised for sequence.
@@ -526,18 +542,17 @@ if __name__ == "__main__":
     solution = sol.Solution.from_io_files(path=path)
 
     self = ImproveHeuristic(solution)
-    # self.graph_solution(path, name="edited", dpi=50)
-    # node1 = self.trees[1].search_nodes(name=78)[0]
-    # self.get_nodes_between_nodes_in_tree(node1=node1)
-    # self.draw(pos=0, attributes=['name', 'WIDTH', 'HEIGHT', 'TYPE'])
-    # self.draw(pos=0, attributes=['name', 'X', 'Y', 'TYPE'])
-    # self.draw(pos=2, attributes=['name', 'X', 'WIDTH', 'TYPE'])
     # for i in range(4):
     #     self.move_item_inside_node()
     #     self.exchange_level1_nodes_defects()
     #
     # defects = self.check_defects()
     # previous = self.get_previous_nodes()
+    # node = self.trees[0].children[5]
+    # new_node = node.copy()
+    # node.detach()
+    # new_node2 = nd.rotate_node(new_node)
+    # self.trees[0].add_child(new_node)
 
     # seq = tl.TupList(self.check_sequence())
     # prec = seq.to_dict(result_col=1)
@@ -612,7 +627,7 @@ if __name__ == "__main__":
             # made a swap: recalculate
             prec = self.check_sequence().to_dict(result_col=1)
             i = 0
-    i = count = 0
+    # i = count = 0
     # while count < 1000 and i < len(prec):
     #     count += 1
     #     node = sorted([*prec], key=lambda x: x.name)[i]

@@ -32,6 +32,19 @@ def resize_node(node, dim, quantity):
     setattr(waste, dim, getattr(waste, dim) + quantity)
     return True
 
+
+def rotate_node(node, subnodes=True):
+    node.WIDTH, node.HEIGHT = node.HEIGHT, node.WIDTH
+    root = node.get_tree_root()
+    pos_rel_i = {'Y': node.X - root.X + root.Y,
+                 'X': node.Y - root.Y + root.X}
+    for axis in ['X', 'Y']:
+        setattr(node, axis, pos_rel_i[axis])
+    for children in node.get_children():
+        rotate_node(children, subnodes)
+    return node
+
+
 def find_ancestor_level(node, level, incl_node=True):
     if incl_node:
         if node.CUT == level:
