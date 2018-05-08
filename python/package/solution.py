@@ -4,6 +4,8 @@ import math
 import package.instance as inst
 import package.params as pm
 import numpy as np
+import matplotlib
+matplotlib.use('Qt5Agg', warn=False, force=True)
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import palettable as pal
@@ -354,7 +356,7 @@ class Solution(inst.Instance):
             for pos, leaf in enumerate(leafs.values()):
                 self.draw_leaf(ax1, leaf, stack, sequence, colors, fontsize)
             # graph wastes:
-            wastes = nd.get_node_leaves(self.trees[plate], min_type=-1, max_type=-1)
+            wastes = nd.get_node_leaves(self.trees[plate], type_options=[-1, -3])
             for waste in wastes:
                 self.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
             # graph defects

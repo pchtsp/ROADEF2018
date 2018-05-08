@@ -9,6 +9,7 @@ def create_node(**kwargs):
     node.add_features(**kwargs)
     return node
 
+
 def move_node(node, movement, axis):
     node_pos = getattr(node, axis)
     setattr(node, axis, node_pos + movement)
@@ -23,6 +24,13 @@ def change_feature(node, feature, value):
         change_feature(children, feature, value)
     return True
 
+
+def resize_node(node, dim, quantity):
+    waste = find_waste(node, child=True)
+    if waste is None:
+        return False
+    setattr(waste, dim, getattr(waste, dim) + quantity)
+    return True
 
 def find_ancestor_level(node, level, incl_node=True):
     if incl_node:
@@ -86,8 +94,13 @@ def get_orientation_from_cut(node, inv=False):
     return axis, dim
 
 
-def get_node_leaves(node, min_type=0, max_type=99999):
-    return [leaf for leaf in node.get_leaves() if min_type <= leaf.TYPE <= max_type]
+def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
+    if type_options is None:
+        return [leaf for leaf in node.get_leaves() if min_type <= leaf.TYPE <= max_type]
+    if type(type_options) is not list:
+        raise ValueError("type_options needs to be a list instead of {}".
+                         format(type(type_options)))
+    return [leaf for leaf in node.get_leaves() if leaf.TYPE in type_options]
 
 
 def get_node_pos(node):
@@ -114,6 +127,7 @@ def get_features(node):
 def duplicate_node_as_child(node):
     features = get_features(node)
     features['NODE_ID'] += 200
+    features['CUT'] += 1
     child = create_node(**features)
     node.add_child(child)
     node.TYPE = -2
@@ -125,6 +139,7 @@ def delete_only_child(node):
         return False
     child = node.children[0]
     features = get_features(child)
+    features['CUT'] -= 1
     child.detach()
     node.add_features(**features)
     return True
@@ -148,7 +163,7 @@ def add_child_waste(node, fill):
     features[axis] += node_size
     features[dim_i] = child_size
     features['TYPE'] = -1
-    features['CUT'] -= 1
+    features['CUT'] += 1
     # TODO: get a better NODE_ID
     features['NODE_ID'] += 100
     child = create_node(**features)

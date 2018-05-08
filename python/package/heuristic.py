@@ -126,15 +126,11 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def check_swap_size(self, node1, node2, insert=False, cut=False):
-        # TODO: we need to guarantee there's always a waste for every cut. Even if it's 0.
-        # if insert=True, we insert node1 before node2. So we count the whole size
-        siblings = node1.up == node2.up
-        if siblings:
-            # siblings? no problem
-            return True
+    def check_swap_size(self, node1, node2, insert=False, cut=False,
+                        reverse_node1=False, reverse_node2=False):
+        # ideally, there should be not reference to the tree here
+            # so we can test nodes that are not part of a tree
         _, dim = nd.get_orientation_from_cut(node1)
-        # TODO: trim waste in dims before comparing
         # TODO: if cut=4, there can be no waste
         axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
         dim_i_1 = nd.get_size_without_waste(node1, dim_i)
@@ -166,6 +162,7 @@ class ImproveHeuristic(sol.Solution):
         if waste1 is None or waste2 is None:
             # no waste in node2 or waste1. cannot do the change
             return False
+        # TODO: I think here we should do a check by turning the node
         waste_length = getattr(waste2, dim)
         if waste_length < dif_length:
             # waste is not big enough
@@ -194,16 +191,25 @@ class ImproveHeuristic(sol.Solution):
         # if insert_only=True, we insert node1 before node2 but we do not move node2
         self.check_assumptions_swap(node1, node2)
 
-        if not self.check_swap_size(node1, node2, insert, cut=True):
-            return False
+        # siblings? no problem
+        if node1.up != node2.up:
+            if not self.check_swap_size(node1, node2, insert, cut=True):
+                return False
 
         print('Found! Change between nodes {} and {}'.format(node1.name, node2.name))
         parent1 = node1.up
         parent2 = node2.up
         plate1, ch_pos1 = nd.get_node_pos(node1)
         plate2, ch_pos2 = nd.get_node_pos(node2)
-        if plate1 == plate2 and ch_pos1 > ch_pos2:
-            ch_pos1 += 1
+        # since we're modifying the order while swapping
+        # we need to take it into account before the swap
+        # I think this should be included inside the
+        # insert_nod_at_position function.
+        if node1.up == node2.up:
+            if ch_pos1 > ch_pos2:
+                ch_pos1 += 1
+            elif ch_pos1 < ch_pos2:
+                ch_pos2 -= 1
         self.insert_node_at_position(node1, parent2, ch_pos2)
         if not insert:
             self.insert_node_at_position(node2, parent1, ch_pos1)
@@ -540,7 +546,7 @@ if __name__ == "__main__":
     i = count = 0
     while count < 1000 and i < len(prec):
         count += 1
-        node = [*prec][i]
+        node = sorted([*prec], key=lambda x: x.name)[i]
         change = False
         node_level1 = nd.find_ancestor_level(node, 1)
         candidates = [nd.find_ancestor_level(p, 1) for p in prec[node]]
@@ -554,7 +560,7 @@ if __name__ == "__main__":
     i = count = 0
     while count < 1000 and i < len(prec):
         count += 1
-        node = [*prec][i]
+        node = sorted([*prec], key=lambda x: x.name)[i]
         change = False
         node_level1 = nd.find_ancestor_level(node, 1)
         # we're desperated: why not try with its siblings?
@@ -576,7 +582,7 @@ if __name__ == "__main__":
     i = count = 0
     while count < 1000 and i < len(prec):
         count += 1
-        node = [*prec][i]
+        node = sorted([*prec], key=lambda x: x.name)[i]
         change = False
         node_level2 = nd.find_ancestor_level(node, 2)
         if node_level2 is None:
@@ -593,7 +599,7 @@ if __name__ == "__main__":
     i = count = 0
     while count < 1000 and i < len(prec):
         count += 1
-        node = [*prec][i]
+        node = sorted([*prec], key=lambda x: x.name)[i]
         change = False
         node_level2 = nd.find_ancestor_level(node, 2)
         if node_level2 is None:
@@ -606,6 +612,23 @@ if __name__ == "__main__":
             # made a swap: recalculate
             prec = self.check_sequence().to_dict(result_col=1)
             i = 0
+    i = count = 0
+    # while count < 1000 and i < len(prec):
+    #     count += 1
+    #     node = sorted([*prec], key=lambda x: x.name)[i]
+    #     change = False
+    #     node_level2 = nd.find_ancestor_level(node, 2)
+    #     if node_level2 is None:
+    #         continue
+    #     candidates = [ch for tree in self.trees for ch in tree.traverse()
+    #                   if ch != node_level2 and ch.TYPE == -3]
+    #     change |= self.try_change_node(node_level2, candidates)
+    #     i += 1
+    #     if change:
+    #         # made a swap: recalculate
+    #         prec = self.check_sequence().to_dict(result_col=1)
+    #         i = 0
+
     # succ = seq.to_dict(result_col=1)
 
     # len(prec[node])
