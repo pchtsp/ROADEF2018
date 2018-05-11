@@ -201,3 +201,20 @@ def del_child_waste(node):
     new_size = getattr(node, dim_i) - getattr(child, dim_i)
     setattr(node, dim_i, new_size)
     return True
+
+
+def get_node_position_cost_unit(node, plate_width):
+    return node.PLATE_ID * plate_width + node.X
+
+
+def get_node_position_cost(node, plate_width):
+    # we'll give more weight to things that are in the right and up.
+    # I guess it depends on the size too...
+    return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
+
+
+def filter_defects(node, defects, previous=True):
+    if previous:
+        return [d for d in defects if d['X'] >= node.X or d['Y'] >= node.Y]
+    return [d for d in defects if d['X'] <= node.X + node.WIDTH or d['Y'] <= node.Y + node.HEIGHT]
+

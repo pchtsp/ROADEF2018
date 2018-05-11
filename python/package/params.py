@@ -25,7 +25,7 @@ cut_level_next_o = {
 }
 
 OPTIONS = {
-    'timeLimit': 600
+    'timeLimit': 3600
     , 'gap': 0.1
     , 'solver': "CPLEXPY"
     , 'integer': False
@@ -33,7 +33,7 @@ OPTIONS = {
         PATHS['experiments'],
         dt.datetime.now().strftime("%Y%m%d%H%M")
     ) + '/'
-    , 'case_name': 'A6'
+    , 'case_name': 'A20'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15

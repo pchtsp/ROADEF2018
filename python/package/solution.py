@@ -280,6 +280,9 @@ class Solution(inst.Instance):
         return tl.TupList(wrong_order)
 
     def check_defects(self):
+        """
+        :return: [(node, defect), ()]
+        """
         plate_cuts = self.get_pieces_by_type(by_plate=True)
         pieces_with_defects = []
         for plate, piece_dict in plate_cuts.items():
@@ -291,6 +294,11 @@ class Solution(inst.Instance):
         return pieces_with_defects
 
     def defects_in_node(self, node, defects=None):
+        """
+        :param node:
+        :param defects: defects to check
+        :return: [defect1, defect2]
+        """
         square = nd.node_to_square(node)
         defects_in_node = []
         if defects is None:
@@ -300,6 +308,10 @@ class Solution(inst.Instance):
             if self.square_intersects_square(square2, square):
                 defects_in_node.append(defect)
         return defects_in_node
+
+    def check_space_usage(self):
+        return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in self.trees
+            for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
 
     def check_siblings(self):
         # siblings must share a dimension of size and a point dimension
