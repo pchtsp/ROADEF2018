@@ -65,7 +65,7 @@ def get_descendant(node, which="first"):
     if not children:
         return node
     else:
-        return get_descendant(children[pos])
+        return get_descendant(children[pos], which=which)
 
 
 def find_waste(node, child=False):
@@ -134,7 +134,12 @@ def node_to_square(node):
 
 def get_features(node):
     features = ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
-    return {k: int(getattr(node, k)) for k in features}
+    attrs = {k: int(getattr(node, k)) for k in features}
+    parent = node.up
+    if parent is not None:
+        parent = parent.NODE_ID
+    attrs['PARENT'] = parent
+    return attrs
 
 
 def duplicate_node_as_child(node):
@@ -144,7 +149,7 @@ def duplicate_node_as_child(node):
     child = create_node(**features)
     node.add_child(child)
     node.TYPE = -2
-    return True
+    return child
 
 
 def delete_only_child(node):
@@ -220,3 +225,29 @@ def filter_defects(node, defects, previous=True):
         return [d for d in defects if d['X'] >= node.X and d['Y'] >= node.Y]
     return [d for d in defects if d['X'] <= node.X + node.WIDTH and d['Y'] <= node.Y + node.HEIGHT]
 
+
+def split_waste(node1, cut):
+    # first, we split one waste in two.
+    # then we make a swap to one of the nodes.
+    # if child=True: the resulting wastes are children of the first waste
+    assert node1.TYPE == -1, "node {} needs to be waste!".format(node1.name)
+    parent = node1.up
+    axis, dim = get_orientation_from_cut(node1)
+    axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
+    attributes = [axis, axis_i, dim, dim_i]
+    size = getattr(node1, dim)
+    assert size > cut, "cut for node {} needs to be smaller than size".format(node1.name)
+    node2 = node1.copy()
+    nodes = {1: node1, 2: node2}
+    pos = {k: {a: getattr(nodes[k], a) for a in attributes} for k in nodes}
+    pos[2][axis] = pos[1][axis] + cut
+    pos[2][dim] = pos[1][dim] - cut
+    pos[1][dim] = cut
+
+    for k, node in nodes.items():
+        setattr(node, axis, pos[k][axis])
+        setattr(node, dim, pos[k][dim])
+    node2.NODE_ID += 300
+    parent.add_child(node2)
+    order_children(parent)
+    return nodes

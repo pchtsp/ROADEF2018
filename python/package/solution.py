@@ -182,25 +182,28 @@ class Solution(inst.Instance):
 
         pass
 
-    def get_pieces_by_type(self, by_plate=False, pos=None, min_type=0):
+    def get_pieces_by_type(self, by_plate=False, pos=None, min_type=0, solution=None):
         """
         Gets the solution pieces indexed by the TYPE.
         :param by_plate: when active it returns a dictionary indexed
         by the plates. So it's {PLATE_0: {0: leaf0,  1: leaf1}, PLATE_1: {}}
         :param pos: get an individual plate marked by pos
         :param filter_type: if True: gets only demanded items. If not: returns all plates
+        :param solution: if given it's evaluated instead of self.trees
         :return: {0: leaf0,  1: leaf1}
         """
+        if solution is None:
+            solution = self.trees
         if pos is None:
-            leaves = [leaf for tree in self.trees
+            leaves = [leaf for tree in solution
                       for leaf in nd.get_node_leaves(tree, min_type)]
         else:
-            leaves = [leaf for leaf in nd.get_node_leaves(self.trees[pos], min_type)]
+            leaves = [leaf for leaf in nd.get_node_leaves(solution[pos], min_type)]
 
         if not by_plate:
             return {int(leaf.TYPE): leaf for leaf in leaves}
 
-        leaves_by_plate = sd.SuperDict({tree.PLATE_ID: {} for tree in self.trees})
+        leaves_by_plate = sd.SuperDict({tree.PLATE_ID: {} for tree in solution})
         for leaf in leaves:
             leaves_by_plate[leaf.PLATE_ID][int(leaf.TYPE)] = leaf
         if pos is None:
@@ -244,9 +247,11 @@ class Solution(inst.Instance):
         # TODO
         pass
 
-    def get_previous_nodes(self):
+    def get_previous_nodes(self, solution=None):
+        if solution is None:
+            solution = self.trees
         prev_items = self.get_previous_items()
-        code_leaf = self.get_pieces_by_type()
+        code_leaf = self.get_pieces_by_type(solution=solution)
         prev_nodes = {}
         for k, v in prev_items.items():
             prev_nodes[code_leaf[k]] = []
@@ -254,9 +259,11 @@ class Solution(inst.Instance):
                 prev_nodes[code_leaf[k]].append(code_leaf[i])
         return sd.SuperDict(prev_nodes)
 
-    def check_sequence(self):
+    def check_sequence(self, solution=None):
+        if solution is None:
+            solution = self.trees
         wrong_order = []
-        for node, prec_nodes in self.get_previous_nodes().items():
+        for node, prec_nodes in self.get_previous_nodes(solution).items():
             for prec_node in prec_nodes:
                 # prec is in a previous plate: correct
                 if node.PLATE_ID > prec_node.PLATE_ID:
@@ -279,11 +286,11 @@ class Solution(inst.Instance):
                         break
         return tl.TupList(wrong_order)
 
-    def check_defects(self):
+    def check_defects(self, solution=None):
         """
         :return: [(node, defect), ()]
         """
-        plate_cuts = self.get_pieces_by_type(by_plate=True)
+        plate_cuts = self.get_pieces_by_type(by_plate=True, solution=solution)
         pieces_with_defects = []
         for plate, piece_dict in plate_cuts.items():
             defects_dict = self.get_defects_per_plate(plate)
@@ -309,8 +316,10 @@ class Solution(inst.Instance):
                 defects_in_node.append(defect)
         return defects_in_node
 
-    def check_space_usage(self):
-        return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in self.trees
+    def check_space_usage(self, solution=None):
+        if solution is None:
+            solution = self.trees
+        return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
             for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
 
     def check_siblings(self):
@@ -349,13 +358,15 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30, min_type=0):
+    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30, solution=None):
+        if solution is None:
+            solution = self.trees
         batch_data = self.get_batch()
         stack = batch_data.get_property('STACK')
         sequence = batch_data.get_property('SEQUENCE')
         colors = pal.colorbrewer.qualitative.Set3_5.hex_colors
         width, height = self.get_param('widthPlates'), self.get_param('heightPlates')
-        pieces_by_type = self.get_pieces_by_type(by_plate=True)
+        pieces_by_type = self.get_pieces_by_type(by_plate=True, solution=solution)
         if pos is not None:
             pieces_by_type = pieces_by_type.filter([pos])
         for plate, leafs in pieces_by_type.items():
@@ -368,7 +379,7 @@ class Solution(inst.Instance):
             for pos, leaf in enumerate(leafs.values()):
                 self.draw_leaf(ax1, leaf, stack, sequence, colors, fontsize)
             # graph wastes:
-            wastes = nd.get_node_leaves(self.trees[plate], type_options=[-1, -3])
+            wastes = nd.get_node_leaves(solution[plate], type_options=[-1, -3])
             for waste in wastes:
                 self.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
             # graph defects
@@ -423,10 +434,8 @@ class Solution(inst.Instance):
         )
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
-        # TODO:
         """
         When creating the output forest:
-        – Always add the header as it is done in the example (see Figure 3).
         – The trees must be given in the correct sequence of plates, i.e. first
         the nodes of plate 0, then nodes of plate 1....
         – For each plate, the root (node with CUT=0) should be given first.
@@ -436,24 +445,33 @@ class Solution(inst.Instance):
         – If the last 1-cut of the forest in the last cutting pattern is a waste, it
         must be declared as a residual.
         :param path:
-        :param prefix:
-        :param name:
+        :param prefix: usually the case.
+        :param name: name after prefix. Without extension.
         :return:
         """
         if not os.path.exists(path):
             os.mkdir(path)
         result = {}
+        order = 0
         for tree in self.trees:
-            for v in tree.traverse():
-                parent = v.PARENT
-                if parent is not None:
-                    parent = int(parent)
+            for v in tree.traverse("preorder"):
+                # rename the NODE_IDs
+                v.NODE_ID = order
+                # correct all wastes to -1 by default
+                if v.TYPE == -3:
+                    v.TYPE = -1
                 d = nd.get_features(v)
-                d['PARENT'] = parent
                 result[int(v.NODE_ID)] = d
+                order += 1
+        # last waste is -3
+        if result[order-1]['TYPE'] == -1:
+            result[order - 1]['TYPE'] = -3
         table = pd.DataFrame.from_dict(result, orient='index')
+        col_order = ['PLATE_ID', 'NODE_ID', 'X', 'Y', 'WIDTH', 'HEIGHT', 'TYPE', 'CUT', 'PARENT']
+        table = table[col_order]
         table.to_csv(path + '{}{}.csv'.format(prefix, name), index=False, sep=';')
         return True
+
 
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])
@@ -472,3 +490,4 @@ if __name__ == "__main__":
     # help(tree)
     # print(tree)
     # tree.show()
+
