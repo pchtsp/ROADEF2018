@@ -1,4 +1,5 @@
 import package.solution as sol
+import package.solution as sol
 import package.params as pm
 import copy
 import package.superdict as sd
@@ -6,6 +7,7 @@ import package.tuplist as tl
 import package.nodes as nd
 import numpy as np
 import random as rn
+import math
 
 # we could do something like...
 # 1. find a candidate node to edit
@@ -24,7 +26,12 @@ class ImproveHeuristic(sol.Solution):
         self.order_all_children()
         self.clean_empty_cuts()
         self.join_blanks()
+        # we store the best solution:
+        self.update_best_solution()
         return
+
+    def update_best_solution(self):
+        self.best_solution = copy.deepcopy(self)
 
     def move_item_inside_node(self):
         # This should keep the cuts the same but
@@ -38,26 +45,6 @@ class ImproveHeuristic(sol.Solution):
                 result = self.swap_nodes_same_level(node, sibling)
                 break
         return
-
-    def exchange_level1_nodes_defects(self):
-        # TODO: search for the thinest slice!
-        # TODO: deal with several defects
-        # TODO: try to exchange plates from different bins
-        defects = self.check_defects()
-        for defect in defects:
-            node, actual_defect = defect
-            node_level1 = nd.find_ancestor_level(node, 1)
-            dist_x = actual_defect['X'] + actual_defect['WIDTH'] - node_level1.X
-            dist_y = min(actual_defect['Y'], node_level1.HEIGHT - actual_defect['Y'])
-            for sibling in node_level1.get_sisters():
-                if self.defects_in_node(sibling):
-                    continue
-                candidates = [n for n in sibling.children if n.TYPE == -1 and n.HEIGHT >= dist_y]
-                if len(candidates) == 0:
-                    continue
-                print('Found! Swapping {} and {}'.format(node_level1.name, sibling.name))
-                result = self.swap_nodes_same_level(node_level1, sibling)
-                break
 
     def fill_defect_with_waste(self):
         # given a defect in a plate, try to put a waste
@@ -320,6 +307,18 @@ class ImproveHeuristic(sol.Solution):
         node2.detach()
         return True
 
+    def join_blanks_tail(self, node):
+        pos = len(node.children) - 1
+        wastes = []
+        while pos >= 0 and node.children[pos].TYPE in [-1, -3]:
+            wastes.append(node.children[pos])
+            pos -= 1
+        if len(wastes) < 2:
+            return False
+        for w_1, w_2 in zip(wastes, wastes[1:]):
+            self.join_neighbors(w_1, w_2)
+        return True
+
     def join_blanks(self):
         for tree in self.trees:
             for v in tree.traverse('postorder'):
@@ -385,6 +384,7 @@ class ImproveHeuristic(sol.Solution):
             }
             # If a defect is to the left of the first node
             # or to the right of the second node: take it out.
+            # TODO: This filtering could be done by searching the node where the defect is
             right = nd.filter_defects(nodes[first_node], defects[first_node])
             left = nd.filter_defects(nodes[second_node], defects[first_node], previous=False)
             defects[first_node] = [d for d in right if d in left]
@@ -420,6 +420,10 @@ class ImproveHeuristic(sol.Solution):
         nodes_sq = {k: [(nd.node_to_square(p), pos_dif[k]) for p in nd.get_node_leaves(nodes[k])]
                     for k in nodes
                     }
+        # the destination node needs to be included in the first one in case of siblings:
+        if siblings:
+            nodes_sq[first_node] += nodes_sq[second_node]
+
         # second of the nodes in between
         dif = {1: {axis: -move_neighbors, axis_i: 0}, 2: {axis: move_neighbors, axis_i: 0}}
         for k, _neighbors in neighbors.items():
@@ -434,18 +438,19 @@ class ImproveHeuristic(sol.Solution):
         squares = [{k: [] for k in nodes_sq} for r in range(2)]
         for k, squares_changes in nodes_sq.items():
             for (sq, change) in squares_changes:
+                _sq = copy.deepcopy(sq)
                 squares[0][k].append(sq)
                 for n in range(2):  # we change the position in the two nodes of the square
                     for a in [axis, axis_i]:
-                        sq[n][a] += change[a]
-                squares[1][k].append(sq)
+                        _sq[n][a] += change[a]
+                squares[1][k].append(_sq)
 
         # here I count the number of defects that collide with squares. Before and now.
         defects_found = [[] for r in range(2)]
-        for pos in range(2):
-            for k, sq_list in squares[pos].items():
-                for d in defects_sq[k]:
-                    for sq in sq_list:
+        for pos in range(2):  # for (before) => after
+            for k, sq_list in squares[pos].items():  # for each node
+                for d in defects_sq[k]:  # for each defect
+                    for sq in sq_list:  # for each neighbor
                         if self.square_intersects_square(d, sq):
                             defects_found[pos].append(d)
                             # if it's inside some node, it's not in the rest:
@@ -525,6 +530,22 @@ class ImproveHeuristic(sol.Solution):
         }
         gains = {k: v * weights[k] for k, v in components.items()}
         return sum(gains.values())
+
+    def evaluate_solution(self, weights):
+        components = {
+            'space': - self.check_space_usage()
+            ,'seq': len(self.check_sequence())
+            ,'defects': len(self.check_defects())
+        }
+        gains = {k: v * weights[k] for k, v in components.items()}
+        return sum(gains.values())
+
+    @staticmethod
+    def acceptance_probability(change_benefit, temperature):
+        if change_benefit > 0:
+            return 1.0
+        else:
+            return math.exp(change_benefit / temperature)
 
     def get_nodes_between_nodes(self, node1, node2):
         """
@@ -611,16 +632,20 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def try_change_node(self, node1, candidates, insert, tolerance=0, change_first=False, **kwargs):
+    def try_change_node(self, node1, candidates, insert, temperature, tolerance=None, change_first=False, **kwargs):
         good_candidates = {}
         rotation = {}
+        weights = weights=kwargs.get('weights', None)
+        assert weights is not None, 'weights argument cannot be empty or None!'
+
         for node2 in candidates:
-            if node1.up == node2.up and insert:
+            siblings = node1.up == node2.up
+            if siblings and insert:
                 continue
             # if i'm swapping with a waste, it has to be a sister.
-            if node2.TYPE in [-1, -3] and not insert and node1.up != node2.up:
+            if node2.TYPE in [-1, -3] and not insert and not siblings:
                 continue
-            if node1.TYPE in [-1, -3] and node1.up != node2.up:
+            if node1.TYPE in [-1, -3] and not siblings:
                 continue
             # if insert_only=True, we insert node1 before node2 but we do not move node2
             self.check_assumptions_swap(node1, node2)
@@ -628,8 +653,8 @@ class ImproveHeuristic(sol.Solution):
                                                    try_rotation=kwargs.get('try_rotation', False))
             if result is None:
                 continue
-            balance = self.evaluate_swap(node1=node1, node2=node2, insert=insert, weights=kwargs.get('weights', None))
-            if balance <= tolerance:
+            balance = self.evaluate_swap(node1=node1, node2=node2, insert=insert, weights=weights)
+            if tolerance is not None and balance <= tolerance:
                 continue
             good_candidates[node2] = balance
             rotation[node2] = result
@@ -638,14 +663,21 @@ class ImproveHeuristic(sol.Solution):
         if len(good_candidates) == 0:
             return False
         node2, balance = max(good_candidates.items(), key=lambda x: x[1])
+        if self.acceptance_probability(balance, temperature=temperature) < rn.random():
+            return False
         rot = rotation[node2]
         # print("I want to swap nodes {} and {} for a gain of {}".format(node1.name, node2.name, balance))
         change = 'Insert'
         if not insert:
             change = 'Swap'
         print('Found! {} between nodes {} and {} for a gain of {}'.
-              format(change, node1.name, node2.name, balance))
+              format(change, node1.name, node2.name, round(balance)))
         self.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot)
+        new = self.evaluate_solution(weights)
+        old = self.best_solution.evaluate_solution(weights)
+        if new < old - 5000:  # only save if really different.
+            print('Best solution updated to {}!'.format(round(new)))
+            self.update_best_solution()
         return True
 
     def debug_nodes(self, node1, node2):
@@ -655,64 +687,74 @@ class ImproveHeuristic(sol.Solution):
             )
             print("")
 
-    def change_level_prec(self, level, max_iter=100, **kwargs):
+    def change_level_by_seq2(self, level, max_iter=100, **kwargs):
         prec = self.check_sequence().to_dict(result_col=1)
         i = count = 0
+        tolerance = None
         while count < max_iter and i < len(prec):
-            tolerance = 0
-            if rn.random() <= (max_iter - count)/max_iter * 0.5:
-                tolerance = -30000
+            # tolerance = 0
+            # if rn.random() <= (max_iter - count)/max_iter * 0.5:
+            #     tolerance = -30000
             count += 1
-            node = sorted([*prec], key=lambda x: x.name)[i]
+            # node = sorted([*prec], key=lambda x: x.name)[i]
+            node = [*prec][i]
+            i += 1
             node_level = nd.find_ancestor_level(node, level)
             if node_level is None:
                 continue
-            candidates = [s for p in prec[node]
-                          for s in nd.find_ancestor_level(p, level).up.get_children()]
-            # change = False
-            # when dealing with siblings... we do not insert!
-            change = self.try_change_node(node1=node_level, candidates=candidates,
-                                          tolerance=tolerance, insert=False, try_rotation=True,
-                                          **kwargs)
-            i += 1
+            other_nodes = [nd.find_ancestor_level(p, level) for p in prec[node]]
+            # other_node_levels = set([s for p in prec[node] for s in nd.find_ancestor_level(p, level)])
+            candidates = [s for p in other_nodes if p is not None and p.up is not None
+                          for s in p.up.get_children() if s != node_level]
+            for _insert in [True, False]:
+                # when dealing with siblings... we do not insert!
+                if _insert:
+                    candidates = [c for c in candidates if c not in node_level.get_sisters()]
+                candidates = [c for c in candidates if c in node_level.get_sisters()]
+                change = self.try_change_node(node1=node_level, candidates=candidates,
+                                              tolerance=tolerance, insert=_insert, try_rotation=True,
+                                              **kwargs)
+                if change:
+                    break
             if not change:
                 continue
             # made a swap: recalculate
             seq = self.check_sequence()
             prec = seq.to_dict(result_col=1)
-            print("There's {} incorrect sequences".format(len(seq)))
-            i = 0
 
-    def change_level(self, level, max_iter=100, **kwargs):
+    def change_level(self, node, level, **kwargs):
+        """
+        General function that searches nodes in the same level of the node and try to swap them
+        :param node:
+        :param level: cut level
+        :param kwargs: tolerance, temperature, ...
+        :return: True if swap was succesful
+        """
+        node_level = nd.find_ancestor_level(node, level)
+        if node_level is None:
+            return False
+        candidates = [ch for tree in self.trees for ch in tree.traverse(is_leaf_fn=lambda x: x.CUT == level)
+                      if ch != node_level and ch.CUT == level]
+        # always try insert first
+        for _insert in [True, False]:
+            change = self.try_change_node(node1=node_level, candidates=candidates, insert=_insert, **kwargs)
+            if change:
+                return True
+        return False
+
+    def change_level_by_seq(self, level, max_iter=100, **kwargs):
         rem = [n for tup in self.check_sequence() for n in tup]
         i = count = 0
         while count < max_iter and i < len(rem):
-            tolerance = 0
-            if rn.random() <= (max_iter - count)/max_iter * 0.6:
-                tolerance = rn.randint(-3000, 3000)
             count += 1
             node = rem[i]
-            node_level = nd.find_ancestor_level(node, level)
-            if node_level is None:
-                continue
-            candidates = [ch for tree in self.trees for ch in tree.traverse(is_leaf_fn=lambda x: x.CUT == level)
-                          if ch != node_level and ch.CUT == level]
-            change = False
-            # always try insert first
-            for _insert in [True, False]:
-                change = self.try_change_node(node1=node_level, candidates=candidates,
-                                              tolerance=tolerance, insert=_insert,
-                                              **kwargs)
-                if change:
-                    break
             i += 1
+            change = self.change_level(node, level, **kwargs)
             if not change:
                 continue
             # made a swap: recalculate
             seq = self.check_sequence()
             rem = [n for tup in seq for n in tup]
-            print("There's {} incorrect sequences".format(len(seq)))
-            i = 0
 
     def collapse_to_left(self, level, **kwargs):
         wastes = [n for tree in self.trees
@@ -722,37 +764,133 @@ class ImproveHeuristic(sol.Solution):
         candidates.sort(reverse=True, key=lambda x: (x.PLATE_ID * self.get_param('widthPlates') + x.X + x.Y) * x.HEIGHT * x.WIDTH)
         for c in candidates:
             w_not_sblings = [w for w in wastes if w.up != c.up]
-            w_sblings = [w for w in wastes if w.up == c.up]
-            change = self.try_change_node(node1=c, candidates=w_not_sblings, tolerance=0, insert=True, **kwargs)
-            change = self.try_change_node(node1=c, candidates=w_sblings, tolerance=0, insert=False, **kwargs)
+            # w_sblings = [w for w in wastes if w.up == c.up and w != c]
+            # if not siblings: I should be able to only insert
+            change = self.try_change_node(node1=c, candidates=w_not_sblings, insert=True, **kwargs)
+            # if siblings: I should be able to swap or insert
+            change = self.try_change_node(node1=c, candidates=wastes, insert=False, **kwargs)
+
+    def merge_wastes_tail(self):
+        for tree in self.trees:
+            for node in tree.traverse():
+                if node.children:
+                    self.join_blanks_tail(node)
+        return
+
+    def change_level_by_defects(self, level, max_iter=100, **kwargs):
+        defects = self.check_defects()
+        i = count = 0
+        while count < max_iter and i < len(defects):
+            count += 1
+            defect = defects[i]
+            node, actual_defect = defect
+            i += 1
+            change = self.change_level(node, level, **kwargs)
+            if not change:
+                continue
+            # made a swap: recalculate
+            defects = self.check_defects()
+        return True
+
+    def create_waste(self, node1, cut, **kwargs):
+        # first, we split one waste in two.
+        # then we make a swap to one of the nodes.
+        parent = node1.up
+        axis, dim = nd.get_orientation_from_cut(node1)
+        axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
+        attributes = [axis, axis_i, dim, dim_i]
+        size = getattr(node1, dim)
+        assert node1.TYPE == -1, "node {} needs to be waste!".format(node1.name)
+        assert size > cut, "cut for node {} needs to be smaller than size".format(node1.name)
+        node2 = node1.copy()
+        nodes = {1: node1, 2: node2}
+        pos = {k: {a: getattr(nodes[k], a) for a in attributes} for k in nodes}
+        pos[2][axis] = pos[1][axis] + cut
+        pos[2][dim] = pos[1][dim] - cut
+        pos[1][dim] = cut
+
+        for k, node in nodes.items():
+            setattr(node, axis, pos[k][axis])
+            setattr(node, dim, pos[k][dim])
+        node2.NODE_ID += 300
+        parent.add_child(node2)
+        nd.order_children(parent)
+        candidates = [n for n in node2.get_sisters() if n.TYPE not in [-1, -3]]
+        for node in nodes.values():
+            change = self.try_change_node(node, candidates, insert=False, **kwargs)
+            if change:
+                return True
+        return False
+
+    def search_waste_cuts(self, **kwargs):
+        defects = self.check_defects()
+        for node, defect in defects:
+            axis, dim = nd.get_orientation_from_cut(node)
+            waste = nd.find_waste(node)
+            if waste is None:
+                continue
+            cut = defect[axis] + defect[dim] + 1
+            cut2 = self.get_param('widthPlates') - cut
+            if cut > cut2:
+                cut = cut2
+            if getattr(waste, dim) <= cut:
+                return False
+            self.create_waste(waste, cut, **kwargs)
+        return
+
+    # Missing: function to move a little bit some plate by slicing wastes.
+
+        # for defect in defects:
+        #     node, actual_defect = defect
+        #     node_level1 = nd.find_ancestor_level(node, 1)
+        #     dist_x = actual_defect['X'] + actual_defect['WIDTH'] - node_level1.X
+        #     dist_y = min(actual_defect['Y'], node_level1.HEIGHT - actual_defect['Y'])
+        #     for sibling in node_level1.get_sisters():
+        #         if self.defects_in_node(sibling):
+        #             continue
+        #         candidates = [n for n in sibling.children if n.TYPE == -1 and n.HEIGHT >= dist_y]
+        #         if len(candidates) == 0:
+        #             continue
+        #         print('Found! Swapping {} and {}'.format(node_level1.name, sibling.name))
+        #         result = self.swap_nodes_same_level(node_level1, sibling)
+        #         break
 
 
 if __name__ == "__main__":
-    # TODO: correct defects:
-    # * rotating in place
-    # * sliding vertically or horizontally
-    # TODO: min wastes
-    # TODO: if possible, cut a vertical piece to get more waste
     import pprint as pp
-    e = '201804271903/'  # A6 base case
-    # e = '201805020012/'  # A6 this one was optimised for sequence.
+    # e = '201804271903/'  # A6 base case
+    e = '201805020012/'  # A6 this one was optimised for sequence.
     # e = '201805090409/'  # A20
     path = pm.PATHS['experiments'] + e
     # path = pm.PATHS['results'] + 'multi1/A1/'
     solution = sol.Solution.from_io_files(path=path)
 
     self = ImproveHeuristic(solution)
-    weights = {'space': 1 / 10000000, 'seq': 1000, 'defects': 10000}
-    iterations = 10
-    for x in range(10000):
+    weights = {'space': 1 / 1000000, 'seq': 10000, 'defects': 10000}
+    iterations = 100
+    temp = 1000
+    params = {'weights': weights, 'max_iter': iterations, 'temperature': temp}
+    coolingRate = 0.007
+    for x in range(100):
         for level in [1, 2]:
-            self.change_level_prec(level, weights=weights, max_iter=iterations)
-            self.change_level(level, weights=weights, max_iter=iterations)
-            self.collapse_to_left(level, weights=weights)
-            self.join_blanks()
-        self.move_item_inside_node()
-        self.exchange_level1_nodes_defects()
-        self.collapse_to_left(1, weights=weights)
+            self.change_level_by_seq2(level, **params)
+            self.change_level_by_seq(level, **params)
+            self.change_level_by_defects(level, **params)
+            self.search_waste_cuts(**params)
+            self.collapse_to_left(level, **params)
+            self.merge_wastes_tail()
+        temp *= 1 - coolingRate
+        if temp < 1:
+            break
+        seq = self.check_sequence()
+        defects = self.check_defects()
+        print("TEMP IS: {}".format(temp))
+        print("There's {} incorrect sequences".format(len(seq)))
+        print("There's {} remaining defects".format(len(defects)))
+        pass
+        # self.move_item_inside_node()
+        # for level in [1, 2]:
+        #     self.collapse_to_left(1, weights=weights, temperature=temp)
         # self.graph_solution(path, name="edited", dpi=50)
 
     print(self.check_sequence())

@@ -204,7 +204,7 @@ def del_child_waste(node):
 
 
 def get_node_position_cost_unit(node, plate_width):
-    return node.PLATE_ID * plate_width + node.X
+    return node.PLATE_ID * plate_width + node.X + node.Y/10
 
 
 def get_node_position_cost(node, plate_width):
@@ -214,7 +214,9 @@ def get_node_position_cost(node, plate_width):
 
 
 def filter_defects(node, defects, previous=True):
+    # filter defects if to the left of node.
+    # return defects to the right. Unless previous=False
     if previous:
-        return [d for d in defects if d['X'] >= node.X or d['Y'] >= node.Y]
-    return [d for d in defects if d['X'] <= node.X + node.WIDTH or d['Y'] <= node.Y + node.HEIGHT]
+        return [d for d in defects if d['X'] >= node.X and d['Y'] >= node.Y]
+    return [d for d in defects if d['X'] <= node.X + node.WIDTH and d['Y'] <= node.Y + node.HEIGHT]
 
