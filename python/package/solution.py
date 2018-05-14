@@ -319,8 +319,16 @@ class Solution(inst.Instance):
     def check_space_usage(self, solution=None):
         if solution is None:
             solution = self.trees
-        return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
-            for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
+        return sum(self.calculate_residual_plate(tree)**pos for pos, tree in enumerate(solution))
+        # return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
+        #     for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
+
+    def calculate_residual_plate(self, node):
+        waste = nd.find_waste(node, child=True)
+        if waste is None:
+            return 0
+        return waste.WIDTH
+
 
     def check_siblings(self):
         # siblings must share a dimension of size and a point dimension
@@ -339,9 +347,13 @@ class Solution(inst.Instance):
         # TODO: check the min waste, min size of piece.
         pass
 
-    def check_pieces_fit_in_plate(self):
-        # TODO: depending on the size, pieces can enter or not in the plate
-        pass
+    def check_nodes_fit(self):
+        nodes_poblems = []
+        for tree in self.trees:
+            for node in tree.traverse():
+                if not nd.check_children_fit(node):
+                    nodes_poblems.append(node)
+        return nodes_poblems
 
     def check_demand_satisfied(self):
         demand = self.input_data['batch']
@@ -408,12 +420,18 @@ class Solution(inst.Instance):
                 linewidth=3
             )
         )
+        more_info = ''
+        if leaf.TYPE >= 0:
+            more_info = "\nstack={}\npos={}\ntype={}".format(
+                stack.get(leaf.TYPE, ''),
+                sequence.get(leaf.TYPE, ''),
+                leaf.TYPE
+            )
         ax1.text(leaf.X + leaf.WIDTH / 2, leaf.Y + leaf.HEIGHT / 2,
-                 '{} x {}\nstack={}\npos={}\nnode={}'.
+                 '{} x {}{}\nnode={}'.
                  format(leaf.WIDTH,
                         leaf.HEIGHT,
-                        stack.get(leaf.TYPE, ''),
-                        sequence.get(leaf.TYPE, ''),
+                        more_info,
                         leaf.name),
                  horizontalalignment='center',
                  verticalalignment='center',
@@ -433,7 +451,29 @@ class Solution(inst.Instance):
             )
         )
 
-    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='', name='solution'):
+    def correct_plate_node_ids(self, solution):
+        if solution is None:
+            solution = self.trees
+        result = {}
+        order = 0
+        for tree in solution:
+            for v in tree.traverse("preorder"):
+                # rename the NODE_IDs
+                v.name = v.NODE_ID = order
+                # correct all wastes to -1 by default
+                if v.TYPE == -3:
+                    v.TYPE = -1
+                d = nd.get_features(v)
+                v.PARENT = d['PARENT']
+                result[int(v.NODE_ID)] = d
+                order += 1
+        # last waste is -3
+        if result[order-1]['TYPE'] == -1:
+            result[order - 1]['TYPE'] = -3
+        return result
+
+    def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='',
+                        name='solution', solution=None):
         """
         When creating the output forest:
         – The trees must be given in the correct sequence of plates, i.e. first
@@ -449,23 +489,11 @@ class Solution(inst.Instance):
         :param name: name after prefix. Without extension.
         :return:
         """
+        if solution is None:
+            solution = self.trees
         if not os.path.exists(path):
             os.mkdir(path)
-        result = {}
-        order = 0
-        for tree in self.trees:
-            for v in tree.traverse("preorder"):
-                # rename the NODE_IDs
-                v.NODE_ID = order
-                # correct all wastes to -1 by default
-                if v.TYPE == -3:
-                    v.TYPE = -1
-                d = nd.get_features(v)
-                result[int(v.NODE_ID)] = d
-                order += 1
-        # last waste is -3
-        if result[order-1]['TYPE'] == -1:
-            result[order - 1]['TYPE'] = -3
+        result = self.correct_plate_node_ids(solution)
         table = pd.DataFrame.from_dict(result, orient='index')
         col_order = ['PLATE_ID', 'NODE_ID', 'X', 'Y', 'WIDTH', 'HEIGHT', 'TYPE', 'CUT', 'PARENT']
         table = table[col_order]

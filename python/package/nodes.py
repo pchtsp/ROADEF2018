@@ -71,12 +71,21 @@ def get_descendant(node, which="first"):
 def find_waste(node, child=False):
     # We assume waste is at the end. Always.
     # If child=True we look in children instead of siblings
+
+    # special case! if the node IS a waste, I'll create a waste child
+    # and return it...
     if not child:
         node = node.up
     children = node.children
     if not children:
         return None
     waste = children[-1]
+    #     if node.TYPE not in [-1, -3]:
+    #         return None
+    #     else:
+    #         waste = duplicate_node_as_child(node)
+    # else:
+    #     waste = children[-1]
     if waste.TYPE not in [-1, -3]:
         return None
     return waste
@@ -137,7 +146,7 @@ def get_features(node):
     attrs = {k: int(getattr(node, k)) for k in features}
     parent = node.up
     if parent is not None:
-        parent = parent.NODE_ID
+        parent = int(parent.NODE_ID)
     attrs['PARENT'] = parent
     return attrs
 
@@ -251,3 +260,31 @@ def split_waste(node1, cut):
     parent.add_child(node2)
     order_children(parent)
     return nodes
+
+
+def reduce_children(node):
+    axis, dim = get_orientation_from_cut(node)
+    node_size = min_size = getattr(node, dim)
+    if not node.children:
+        return False
+    for ch in node.children:
+        waste = find_waste(ch, child=True)
+        if waste is None:
+            return False
+        size = getattr(waste, dim)
+        if size < min_size:
+            min_size = size
+    if min_size < 0:
+        return False
+    # ok: we got here: we reduce all children and the node.
+    for ch in node.children:
+        resize_node(ch, dim, -min_size)
+    setattr(node, dim, node_size - min_size)
+    return True
+
+
+def check_children_fit(node):
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    if not node.children:
+        return True
+    return sum(getattr(n, dim_i) for n in node.children) == getattr(node, dim_i)

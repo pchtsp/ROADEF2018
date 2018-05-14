@@ -1,5 +1,4 @@
 import package.solution as sol
-import package.solution as sol
 import package.params as pm
 import copy
 import package.superdict as sd
@@ -20,7 +19,7 @@ import math
 
 class ImproveHeuristic(sol.Solution):
 
-    def __init__(self, solution):
+    def __init__(self, solution, debug):
         self.trees = copy.deepcopy(solution.trees)
         self.input_data = copy.deepcopy(solution.input_data)
         self.order_all_children()
@@ -29,6 +28,9 @@ class ImproveHeuristic(sol.Solution):
         # we store the best solution:
         self.best_solution = copy.deepcopy(self.trees)
         self.best_objective = 0  # fix this.
+        self.best_solution_f = None  # fix this.
+        self.best_objective_f = 0  # fix this.
+        self.debug = debug
         return
 
     def update_best_solution(self, solution):
@@ -134,7 +136,6 @@ class ImproveHeuristic(sol.Solution):
         _, dim = nd.get_orientation_from_cut(node1)
         # TODO: if cut=4, there can be no waste
         axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
-
         wastes = {1: nd.find_waste(node1), 2: nd.find_waste(node2)}
         for w in wastes.values():
             if w is None:
@@ -196,23 +197,17 @@ class ImproveHeuristic(sol.Solution):
         if rotation is None:
             rotation = []
         axis, dim = nd.get_orientation_from_cut(node1)
-        parent1 = node1.up
-        parent2 = node2.up
+        nodes = {1: node1, 2: node2}
+        parents = {k: node.up for k, node in nodes.items()}
+        parent1 = parents[1]
+        parent2 = parents[2]
         plate1, ch_pos1 = nd.get_node_pos(node1)
         plate2, ch_pos2 = nd.get_node_pos(node2)
-        # since we're modifying the order while swapping
-        # we need to take it into account before the swap
-        # I think this should be included inside the
-        # insert_nod_at_position function.
-        # if node1.up == node2.up:
-        #     if ch_pos1 > ch_pos2 + 1:
-        #         # pass
-        #         ch_pos1 += 1
-        #     elif ch_pos1 < ch_pos2:
-        #         pass
-        #         # ch_pos2 -= 1
 
         if node1.up != parent2 or ch_pos1 != ch_pos2:
+            # attention! since we're taking the node *before* inserting it.
+            # we do not need to correct the relative positions.
+            # like we did before. In the case of siblings.
             node1_trimmed = self.extract_node_from_position(node1)
             if 1 in rotation:
                 nd.rotate_node(node1_trimmed)
@@ -229,8 +224,8 @@ class ImproveHeuristic(sol.Solution):
             return True
 
         change = self.calculate_change_of_linear_waste(node1, node2, rotation, insert)
-        nd.resize_node(parent1, dim, change[1])
-        nd.resize_node(parent2, dim, change[2])
+        for n in nodes:
+            nd.resize_node(parents[n], dim, change[n])
         return True
 
     def calculate_change_of_linear_waste(self, node1, node2, rotation, insert):
@@ -241,14 +236,16 @@ class ImproveHeuristic(sol.Solution):
         previous_size = dict(present_size)
 
         for n in rotation:
-            previous_size[n] = getattr(nodes[n], dim_i)
+            previous_size[n] = nd.get_size_without_waste(nodes[n], dim_i)
 
         if insert:
+            # if inserting, we only care about the first node.
+            # since it's the only one that moves
             previous_size[2] = present_size[2] = 0
 
         return {
             1: previous_size[1] - present_size[2],
-            2: -present_size[1] + previous_size[2],
+            2: previous_size[2] - present_size[1],
         }
 
     def calculate_change_of_area_waste(self, node1, node2, insert):
@@ -655,13 +652,17 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def try_change_node(self, node1, candidates, insert, temperature, tolerance=None, change_first=False, **kwargs):
+    def try_change_node(self, node, candidates, insert, temperature, tolerance=None, change_first=False,
+                        reverse=False, **kwargs):
         good_candidates = {}
         rotation = {}
-        weights = weights=kwargs.get('weights', None)
+        weights = kwargs.get('weights', None)
         assert weights is not None, 'weights argument cannot be empty or None!'
 
-        for node2 in candidates:
+        for candidate in candidates:
+            node1, node2 = node, candidate
+            if reverse:
+                node1, node2 = candidate, node
             siblings = node1.up == node2.up
             if siblings and insert:
                 continue
@@ -692,15 +693,20 @@ class ImproveHeuristic(sol.Solution):
         change = 'Insert'
         if not insert:
             change = 'Swap'
-        print('Found! {} between nodes {} and {} for a gain of {}'.
-              format(change, node1.name, node2.name, round(balance)))
+        if len(rot):
+            change += ' (rot={})'.format(rot)
+        if self.debug:
+            print('Found! {} between nodes {} and {} for a gain of {}'.
+                  format(change, node1.name, node2.name, round(balance)))
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
-        # self.draw(pos=node1.PLATE_ID)
+        # self.draw(pos=node1.PLATE_ID, attributes=['name','X', 'Y', 'WIDTH', 'HEIGHT'])
+        # self.draw(pos=node2.PLATE_ID, attributes=['name','X', 'Y', 'WIDTH', 'HEIGHT'])
         self.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot)
         # seq_after = self.check_sequence()
         # print('sequence after= {}'.format(len(seq_after)))
+        # len([n.name for tree in self.trees for n in tree.get_descendants() if n.Y < 0]) > 0
         new = self.evaluate_solution(weights)
         old = self.best_objective
         if new < old:  # only save if really different.
@@ -746,7 +752,7 @@ class ImproveHeuristic(sol.Solution):
                 if _insert:
                     candidates = [c for c in candidates if c not in node_level.get_sisters()]
                 candidates = [c for c in candidates if c in node_level.get_sisters()]
-                change = self.try_change_node(node1=node_level, candidates=candidates,
+                change = self.try_change_node(node=node_level, candidates=candidates,
                                               tolerance=tolerance, insert=_insert,
                                               **kwargs)
                 if change:
@@ -775,7 +781,7 @@ class ImproveHeuristic(sol.Solution):
         candidates = [c for c in self.get_nodes_by_level(level) if c != node_level]
         # always try insert first
         for _insert in [True, False]:
-            change = self.try_change_node(node1=node_level, candidates=candidates, insert=_insert, **kwargs)
+            change = self.try_change_node(node=node_level, candidates=candidates, insert=_insert, **kwargs)
             if change:
                 return True
         return False
@@ -810,9 +816,9 @@ class ImproveHeuristic(sol.Solution):
             w_not_sblings = [w for w in wastes if w.up != c.up]
             # w_sblings = [w for w in wastes if w.up == c.up and w != c]
             # if not siblings: I should be able to only insert
-            change = self.try_change_node(node1=c, candidates=w_not_sblings, insert=True, **kwargs)
+            change = self.try_change_node(node=c, candidates=w_not_sblings, insert=True, **kwargs)
             # if siblings: I should be able to swap or insert
-            change = self.try_change_node(node1=c, candidates=wastes, insert=False, **kwargs)
+            change = self.try_change_node(node=c, candidates=wastes, insert=False, **kwargs)
 
     def merge_wastes_tail(self):
         for tree in self.trees:
@@ -860,10 +866,12 @@ class ImproveHeuristic(sol.Solution):
                     return True
         return
 
-    def expand_wastes(self, level):
-        wastes1 = [w for w in self.get_nodes_by_level(1) if w.TYPE in [-1, -3] and w.is_leaf()]
-        for w in wastes1:
+    def expand_wastes(self, level, **kwargs):
+        wastes = [w for w in self.get_nodes_by_level(level) if w.TYPE in [-1, -3] and w.is_leaf()]
+        candidates = self.get_nodes_by_level(level+1)
+        for w in wastes:
             child = nd.duplicate_node_as_child(w)
+            change = self.try_change_node(node=child, candidates=candidates, insert=True, reverse=True, **kwargs)
         # rem = [n for tup in self.check_sequence() for n in tup]
         # i = count = 0
         # while count < max_iter and i < len(rem):
@@ -877,41 +885,52 @@ class ImproveHeuristic(sol.Solution):
         #             rem = [n for tup in seq for n in tup]
         #
 
+    def try_reduce_nodes(self, level):
+        candidates = self.get_nodes_by_level(level)
+        for c in candidates:
+            nd.reduce_children(c)
+        return True
+
 
 if __name__ == "__main__":
     # TODO: try to unify two 1-cuts. Or break them
-    # TODO: ther's some issues with the sequence evaluation.
-    # TODO: join_neighbors is doing weird things with the same node.
-    #   Probably caused by rotation
     # TODO: create a empty 1-cut when possible.
+    # TODO: build initial solution
+    # TODO:
     import pprint as pp
-    e = '201804271903/'  # A6 base case
+    # e = '201804271903/'  # A6 base case
     # e = '201805020012/'  # A6 this one was optimised for sequence.
-    # e = '201805090409/'  # A20
-    # e = '201805131744/'  #A3
+    e = '201805090409/'  # A20
     path = pm.PATHS['experiments'] + e
     # path = pm.PATHS['results'] + 'multi1/A1/'
     case = sol.Solution.search_case_in_options(path)
     solution = sol.Solution.from_io_files(path=path)
 
-    self = ImproveHeuristic(solution)
-    weights = {'space': 1 / 1000000, 'seq': 10000, 'defects': 10000}
+    self = ImproveHeuristic(solution, debug=False)
+    weights = {'space': 1 / 10000000, 'seq': 100000, 'defects': 10000}
     self.best_objective = self.evaluate_solution(weights)
-    iterations = 10
-    temp = 100
+    iterations = 100
+    temp = 1000
     # params = {'weights': weights, 'max_iter': iterations, 'temperature': temp}
-    params = {'weights': weights, 'max_iter': iterations, 'temperature': temp}
-    coolingRate = 0.01
+    params = {'weights': weights, 'max_iter': iterations, 'temperature': temp, 'try_rotation': True}
+    coolingRate = 0.003
     for x in range(100):
+        # self.expand_wastes(1, **params)
         for level in [1, 2]:
-            # self.expand_wastes(level)
             self.change_level_by_seq2(level, **params)
             self.change_level_by_seq(level, **params)
             self.change_level_by_defects(level, **params)
+            # print('change_level_by_defects')
             self.search_waste_cuts(**params)
+            # print('search_waste_cuts')
             self.collapse_to_left(level, **params)
+            # print('collapse left')
             self.merge_wastes_tail()
+            # print('merge_wastes')
             self.change_level_all(level, **params)
+            # print('change_level')
+            # self.clean_empty_cuts()
+        # self.try_reduce_nodes(1)
         temp *= 1 - coolingRate
         if temp < 1:
             break
@@ -926,9 +945,12 @@ if __name__ == "__main__":
         #     self.collapse_to_left(1, weights=weights, temperature=temp)
         # self.graph_solution(path, name="edited", dpi=50)
     # self.best_solution.export_solution(path=path, prefix=case + '_')
-    self.graph_solution(path, name="present", dpi=50)
-    self.graph_solution(path, name="best", dpi=50, solution=self.best_solution)
+    # self.graph_solution(path, name="present", dpi=50)
+    result = self.correct_plate_node_ids(solution=self.best_solution)
+    self.graph_solution(path, name="edited", dpi=50, solution=self.best_solution)
     print(self.check_sequence(solution=self.best_solution))
+    self.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution_heur")
+
 
     # self.graph_solution(path, name="edited", dpi=50)
 

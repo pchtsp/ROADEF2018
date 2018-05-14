@@ -16,7 +16,6 @@ import package.nodes as nd
 # TODO: add defects
 # TODO: add sequence
 # TODO: 4th cut
-# TODO: add rest of first cut to O.F.
 # TODO: add tolerances to cutting options
 #
 # TODO: add pricing model
@@ -393,18 +392,6 @@ class Model(sol.Solution):
             for node in waste_nodes:
                 node.add_features(TYPE=-1)
         return
-
-    def correct_plate_node_ids(self):
-        next_node_id = 0
-        for i, tree in enumerate(self.trees):
-            for n in tree.traverse():
-                n.add_features(PLATE_ID=i, NODE_ID=next_node_id)
-                if n.up is not None:
-                    n.add_features(PARENT=n.up.NODE_ID)
-                else:
-                    n.add_features(PARENT=None)
-                next_node_id += 1
-        return True
 
     @staticmethod
     def export_cuts(cuts, path=pm.PATHS['results'], name='cuts'):
