@@ -263,7 +263,8 @@ class Solution(inst.Instance):
         if solution is None:
             solution = self.trees
         wrong_order = []
-        for node, prec_nodes in self.get_previous_nodes(solution).items():
+        n_prec = self.get_previous_nodes(solution)
+        for node, prec_nodes in n_prec.items():
             for prec_node in prec_nodes:
                 # prec is in a previous plate: correct
                 if node.PLATE_ID > prec_node.PLATE_ID:
@@ -451,7 +452,7 @@ class Solution(inst.Instance):
             )
         )
 
-    def correct_plate_node_ids(self, solution):
+    def correct_plate_node_ids(self, solution=None):
         if solution is None:
             solution = self.trees
         result = {}

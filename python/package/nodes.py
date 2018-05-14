@@ -4,6 +4,33 @@ import ete3
 # TODO: this should be a subclass of TreeNode...
 
 
+def item_to_node(item):
+    args = {'WIDTH': item['WIDTH_ITEM'],
+            'HEIGHT': item['LENGTH_ITEM'],
+            'CUT': 0,
+            'X': 0,
+            'Y': 0,
+            'TYPE': item['ITEM_ID'],
+            'NODE_ID': item['ITEM_ID'],
+            'PLATE_ID': 0
+            }
+    return create_node(**args)
+
+
+def create_plate(width, height, id):
+    args = {'WIDTH': width,
+            'HEIGHT': height,
+            'CUT': 0,
+            'X': 0,
+            'Y': 0,
+            'TYPE': -3,
+            'NODE_ID': 0,
+            'PLATE_ID': id
+            }
+    return create_node(**args)
+
+
+
 def create_node(**kwargs):
     node = ete3.Tree(name=kwargs['NODE_ID'])
     node.add_features(**kwargs)
@@ -76,6 +103,9 @@ def find_waste(node, child=False):
     # and return it...
     if not child:
         node = node.up
+    # this means we were dealing with the plate already?
+    if node is None:
+        return None
     children = node.children
     if not children:
         return None
@@ -141,6 +171,10 @@ def node_to_square(node):
      {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
 
 
+def node_to_plate(node):
+    return (node.WIDTH, node.HEIGHT)
+
+
 def get_features(node):
     features = ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
     attrs = {k: int(getattr(node, k)) for k in features}
@@ -151,15 +185,25 @@ def get_features(node):
     return attrs
 
 
-def duplicate_node_as_child(node):
+def duplicate_node_as_child(node, node_mod=200):
     features = get_features(node)
-    features['NODE_ID'] += 200
+    features['NODE_ID'] += node_mod
     features['CUT'] += 1
     child = create_node(**features)
     node.add_child(child)
     node.TYPE = -2
     return child
 
+
+def duplicate_waste_into_children(node):
+    assert node.TYPE in [-1, -3], \
+        'node {} needs to be a waste!'.format(node.name)
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    child1 = duplicate_node_as_child(node, node_mod=200)
+    setattr(child1, dim_i, 0)
+    child2 = duplicate_node_as_child(node, node_mod=500)
+    child2.TYPE = -1
+    return child1
 
 def delete_only_child(node):
     if len(node.children) != 1:
