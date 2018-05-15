@@ -10,6 +10,7 @@ import copy
 import package.model_1 as mdl
 import copy
 import package.nodes as nd
+import package.geometry as geom
 
 
 # TODO: increase plate size
@@ -167,12 +168,12 @@ class Model(sol.Solution):
 
     def check_plate_can_fit_some_item(self, plate, items):
         for item in items:
-            result = self.plate_inside_plate(item, plate)
+            result = geom.plate_inside_plate(item, plate)
             if result == 1:
                 return True
             # if it doesn't fit, try rotating it
             if not result:
-                if self.plate_inside_plate(self.rotate_plate(item), plate) == 1:
+                if geom.plate_inside_plate(self.rotate_plate(item), plate) == 1:
                     return True
         return False
 
@@ -363,10 +364,10 @@ class Model(sol.Solution):
                 for k, v in demand.items():
                     found = False
                     if v == leaf_p or\
-                        (not strict and self.plate_inside_plate(v, leaf_p)):
+                        (not strict and geom.plate_inside_plate(v, leaf_p)):
                         found = True
                     elif self.rotate_plate(v) == leaf_p or\
-                        (not strict and self.plate_inside_plate(self.rotate_plate(v), leaf_p)):
+                        (not strict and geom.plate_inside_plate(self.rotate_plate(v), leaf_p)):
                         found = True
                     if found:
                         print('Match: {} and leaf: {} from tree: {}'.format(k, leaf, leaf.PLATE_ID))
