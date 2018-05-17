@@ -1,4 +1,5 @@
 import ete3
+import package.geometry as geom
 
 # These are auxiliary functions for nodes of trees (see ete3).
 # TODO: this should be a subclass of TreeNode...
@@ -30,18 +31,17 @@ def create_plate(width, height, id):
     return create_node(**args)
 
 
-
 def create_node(**kwargs):
     node = ete3.Tree(name=kwargs['NODE_ID'])
     node.add_features(**kwargs)
     return node
 
 
-def move_node(node, movement, axis):
-    node_pos = getattr(node, axis)
-    setattr(node, axis, node_pos + movement)
+def increase_feature_node(node, quantity, feature):
+    node_pos = getattr(node, feature)
+    setattr(node, feature, node_pos + quantity)
     for children in node.get_children():
-        move_node(children, movement, axis)
+        increase_feature_node(children, quantity, feature)
     return True
 
 
@@ -88,7 +88,7 @@ def get_descendant(node, which="first"):
         pos = 0
     else:
         pos = -1
-    children = node.children
+    children = node.get_children()
     if not children:
         return node
     else:
@@ -101,12 +101,14 @@ def find_waste(node, child=False):
 
     # special case! if the node IS a waste, I'll create a waste child
     # and return it...
+    parent = node
     if not child:
-        node = node.up
-    # this means we were dealing with the plate already?
-    if node is None:
-        return None
-    children = node.children
+        parent = node.up
+    if parent is None:
+        # this means we were dealing with the first node
+        children = [node]
+    else:
+        children = parent.get_children()
     if not children:
         return None
     waste = children[-1]
@@ -156,7 +158,10 @@ def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
 
 
 def get_node_pos(node):
-    return node.PLATE_ID, node.up.children.index(node)
+    pos = 0
+    if node.up is not None:
+        pos = node.up.get_children().index(node)
+    return node.PLATE_ID, pos
 
 
 def node_to_square(node):
@@ -185,12 +190,15 @@ def get_features(node):
     return attrs
 
 
-def duplicate_node_as_child(node, node_mod=200):
+def duplicate_node_as_child(node, node_mod=500):
     features = get_features(node)
     features['NODE_ID'] += node_mod
-    features['CUT'] += 1
     child = create_node(**features)
+    # we increase the cut recursively among all children
+    increase_feature_node(child, 1, "CUT")
     node.add_child(child)
+    # print('created in node ID={}, TYPE={} a child with ID={}, TYPE={}'.
+    #       format(node.NODE_ID, node.TYPE, child.NODE_ID, child.TYPE))
     node.TYPE = -2
     return child
 
@@ -201,14 +209,25 @@ def duplicate_waste_into_children(node):
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     child1 = duplicate_node_as_child(node, node_mod=200)
     setattr(child1, dim_i, 0)
-    child2 = duplicate_node_as_child(node, node_mod=500)
+    child2 = duplicate_node_as_child(node, node_mod=400)
     child2.TYPE = -1
     return child1
+
+
+# def get_sister_waste(node):
+#     assert node.TYPE in [-1, -3], \
+#         'node {} needs to be a waste!'.format(node.name)
+#     axis, dim = get_orientation_from_cut(node)
+#     child1 = duplicate_node_as_child(node, node_mod=200)
+#     setattr(child1, dim, 0)
+#     return child1
+
+
 
 def delete_only_child(node):
     if len(node.children) != 1:
         return False
-    child = node.children[0]
+    child = node.get_children()[0]
     features = get_features(child)
     features['CUT'] -= 1
     child.detach()
@@ -227,17 +246,21 @@ def add_child_waste(node, fill):
             delete_only_child(node)
         return False
     if node.is_leaf():
+        # not sure about this though...
+        if node.TYPE == -2:
+            node.TYPE = -1
         # sometimes we have a node without children
         # (because it had no waste and now it has).
-        duplicate_node_as_child(node)
+        duplicate_node_as_child(node, 600)
     features = get_features(node)
     features[axis] += node_size
     features[dim_i] = child_size
     features['TYPE'] = -1
     features['CUT'] += 1
-    # TODO: get a better NODE_ID
     features['NODE_ID'] += 100
     child = create_node(**features)
+    # print('created child in node {} with ID={}'.
+    #       format(node.NODE_ID, child.NODE_ID))
     node.add_child(child)
     setattr(node, dim_i, fill)
     return True
@@ -311,7 +334,7 @@ def reduce_children(node):
     node_size = min_size = getattr(node, dim)
     if not node.children:
         return False
-    for ch in node.children:
+    for ch in node.get_children():
         waste = find_waste(ch, child=True)
         if waste is None:
             return False
@@ -321,14 +344,33 @@ def reduce_children(node):
     if min_size < 0:
         return False
     # ok: we got here: we reduce all children and the node.
-    for ch in node.children:
+    for ch in node.get_children():
         resize_node(ch, dim, -min_size)
     setattr(node, dim, node_size - min_size)
     return True
 
 
 def check_children_fit(node):
-    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     if not node.children:
         return True
-    return sum(getattr(n, dim_i) for n in node.children) == getattr(node, dim_i)
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    return sum(getattr(n, dim_i) for n in node.get_children()) == getattr(node, dim_i)
+
+
+def node_inside_node(node1, node2, **kwargs):
+    square1 = node_to_square(node1)
+    square2 = node_to_square(node2)
+    return geom.square_inside_square(square1, square2, **kwargs)
+
+
+def check_children_inside(node):
+    return [n for n in node.get_children() if not node_inside_node(n, node, both_sides=False)]
+
+
+def assign_cut_numbers(node, cut=0, update=True):
+    result = {node: cut}
+    if update:
+        node.CUT = cut
+    for n in node.get_children():
+        result = {**result, **assign_cut_numbers(n, cut=cut+1, update=update)}
+    return result

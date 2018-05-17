@@ -75,13 +75,13 @@ class Solution(inst.Instance):
             return options.get('case_name', None)
 
     @classmethod
-    def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data']):
+    def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data'], solutionfile="solution"):
         if case_name is None:
             case_name = cls.search_case_in_options(path)
         if case_name is None:
             raise ImportError('case_name is None and options.json is not available')
         input_data = di.get_model_data(case_name, path)
-        solution = di.get_model_solution(case_name, path)
+        solution = di.get_model_solution(case_name, path, filename=solutionfile)
         return cls(input_data, solution)
 
     @classmethod
@@ -136,6 +136,17 @@ class Solution(inst.Instance):
             , 'sequence': self.check_sequence
             , 'defects': self.check_defects
             , 'demand': self.check_demand_satisfied
+        }
+        result = {k: v() for k, v in func_list.items()}
+        return {k: v for k, v in result.items() if len(v) > 0}
+
+    def check_consistency(self):
+        func_list = {
+            'size': self.check_nodes_fit
+            , 'inside': self.check_parent_of_children
+            , 'cuts': self.check_cuts_number
+            , 'position': self.check_nodes_inside_jumbo
+            , 'types': self.check_wrong_type
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
@@ -244,8 +255,43 @@ class Solution(inst.Instance):
         pass
 
     def check_cuts_number(self):
-        # TODO: this should check if there are no more than 3 cuts.
-        return True
+        """
+        This checks if the CUT property of each node really corresponds with
+        the node's level.
+        :return:
+        """
+        levels = {}
+        for tree in self.trees:
+            levels = {**levels, **nd.assign_cut_numbers(tree, update=False)}
+        bad_cut = []
+        for node, level in levels.items():
+            if node.CUT != level:
+                bad_cut.append((node, level))
+        return bad_cut
+
+    def check_max_cut(self):
+        """
+        check that the maximum achieved level is 4
+        :return:
+        """
+        levels = {}
+        for tree in self.trees:
+            levels = {**levels, **nd.assign_cut_numbers(tree, update=False)}
+        return [(node, level) for node, level in levels.items() if level > 4]
+
+    def check_nodes_inside_jumbo(self):
+        w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
+        plate_square = [{'X': 0, 'Y': 0}, {'X': w, 'Y': h}]
+        bad_position = []
+        for tree in self.trees:
+            for node in tree.iter_leaves():
+                square = nd.node_to_square(node)
+                if geom.square_inside_square(square,
+                                             plate_square,
+                                             both_sides=False):
+                    continue
+                bad_position.append(node)
+        return bad_position
 
     def check_cuts_guillotine(self):
         # TODO: this should check that the cuts are guillotine-type
@@ -255,6 +301,17 @@ class Solution(inst.Instance):
         # TODO: check the min waste, min size of piece.
         pass
 
+    def check_wrong_type(self):
+        wrong_type = []
+        for tree in self.trees:
+            for node in tree.traverse():
+                if node.is_leaf():
+                    if node.TYPE == -2:
+                        wrong_type.append((node, node.TYPE))
+                elif node.TYPE != -2:
+                    wrong_type.append((node, node.TYPE))
+        return wrong_type
+
     def check_nodes_fit(self):
         nodes_poblems = []
         for tree in self.trees:
@@ -263,7 +320,7 @@ class Solution(inst.Instance):
                     nodes_poblems.append(node)
         return nodes_poblems
 
-    def check_parent_of_children(self, parent):
+    def check_parent_of_children(self):
         """
         We want to check if each node is inside its parent.
         :return:

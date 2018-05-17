@@ -123,6 +123,7 @@ class Instance(object):
         return cls(di.get_model_data(case_name, path))
 
     def export_input_data(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix=''):
+        # TODO: order columns!!
         if not os.path.exists(path):
             os.mkdir(path)
         for val in ['defects', 'batch']:

@@ -59,15 +59,15 @@ def get_model_data(case_name, path=pm.PATHS['data']):
                          'global_param': sd.SuperDict.from_dict(parameters)})
 
 
-def get_model_solution(case_name, path=pm.PATHS['checker_data']):
+def get_model_solution(case_name, path=pm.PATHS['checker_data'], filename="solution"):
     # case_name = "A0"
     # path = pm.PATHS['checker_data']
-    input_files = ['solution']
+    input_files = [filename]
     filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
     tables = read_files_into_tables(filenames)
     result = \
-        tables['solution'].\
-            assign(index=tables['solution'].NODE_ID).\
+        tables[filename].\
+            assign(index=tables[filename].NODE_ID).\
             set_index('index').\
             to_dict(orient='index')
     return sd.SuperDict(result)
