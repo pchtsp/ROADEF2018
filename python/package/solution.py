@@ -238,7 +238,8 @@ class Solution(inst.Instance):
     def check_space_usage(self, solution=None):
         if solution is None:
             solution = self.trees
-        return sum(self.calculate_residual_plate(tree)**pos for pos, tree in enumerate(solution))
+        return sum(self.calculate_residual_plate(tree)**pos for pos, tree in enumerate(solution)) / \
+               (self.get_param('widthPlates') ** (len(solution) - 1))
         # return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
         #     for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
 
@@ -429,25 +430,30 @@ class Solution(inst.Instance):
             )
         )
 
-    def correct_plate_node_ids(self, solution=None):
+    def correct_plate_node_ids(self, solution=None, features=None):
+        if features is None:
+            features = nd.default_features()
         if solution is None:
             solution = self.trees
         result = {}
         order = 0
-        for tree in solution:
+        for pos, tree in enumerate(solution):
             for v in tree.traverse("preorder"):
-                # rename the NODE_IDs
-                v.name = v.NODE_ID = order
+                # rename the NODE_IDs and PLATE_ID
+                v.add_features(PLATE_ID=pos, NODE_ID=order)
+                v.name = v.NODE_ID
                 # correct all wastes to -1 by default
-                if v.TYPE == -3:
-                    v.TYPE = -1
-                d = nd.get_features(v)
-                v.PARENT = d['PARENT']
+                if 'TYPE' in features:
+                    if v.TYPE == -3:
+                        v.TYPE = -1
+                d = nd.get_features(v, features)
+                v.add_features(PARENT=d['PARENT'])
                 result[int(v.NODE_ID)] = d
                 order += 1
         # last waste is -3
-        if result[order-1]['TYPE'] == -1:
-            result[order - 1]['TYPE'] = -3
+        if 'TYPE' in features:
+            if result[order-1]['TYPE'] == -1:
+                result[order - 1]['TYPE'] = -3
         return result
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='',

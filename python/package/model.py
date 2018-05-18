@@ -340,7 +340,8 @@ class Model(sol.Solution):
         # we assign plate ids:
         # we also make node_ids absolute across trees
         # and parents accordingly
-        self.correct_plate_node_ids()
+        features = ['NODE_ID', 'X', 'Y', 'CUT', 'WIDTH', 'HEIGHT']
+        self.correct_plate_node_ids(features=features)
         for tree in self.trees:
             for n in tree.traverse():
                 n.add_features(TYPE=None)
