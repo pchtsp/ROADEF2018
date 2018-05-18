@@ -1,4 +1,5 @@
 import package.solution as sol
+import package.heuristic as heur
 import package.model as mod
 import package.params as pm
 import numpy as np
@@ -67,7 +68,7 @@ def test4():
 
 
 def test5():
-    e = '201805020012/'
+    e = '201805090409/'
     path = pm.PATHS['experiments'] + e
     solution = mod.Model.from_io_files(path=path)
     # plates = solution.arrange_plates()
@@ -81,15 +82,24 @@ def test5():
 def test6():
 
     e = '201804271903/'
-    e = 'multi2/A6/'
+    # e = 'multi2/A6/'
     path = pm.PATHS['experiments'] + e
-    path = pm.PATHS['results'] + e
-    solution = mod.Model.from_io_files(path=path)
-    solution = mod.Model.from_input_files(path=path)
-    demand = solution.get_demand_from_items(tol=50)
+    # path = pm.PATHS['results'] + e
+    solution = sol.Solution.from_io_files(path=path, solutionfile='solution_heur')
+    # solution.graph_solution(path, name="edited", dpi=50)
+    solution.check_all()
+    # solution = mod.Model.from_input_files(path=path)
+    # demand = solution.get_demand_from_items(tol=50)
     # items = solution.flatten_stacks(in_list=True)  # Ĵ in J
-
-
+    weights = {'space': 1 / 100000000, 'seq': 100000, 'defects': 1000}
+    params = {'weights': weights, 'max_iter': 100, 'temperature': 1000, 'try_rotation': True, 'main_iter': 100}
+    heuristic = heur.ImproveHeuristic(solution, debug=False)
+    heuristic.solve(params)
+    heuristic.trees = heuristic.best_solution
+    heuristic.check_all()
+    heuristic.graph_solution(path, name="edited", dpi=50)
+    heuristic.export_solution(path=path, prefix="A6" + '_', name="solution_heur")
+    # heuristic.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution_heur")
 
 if __name__ == "__main__":
     test6()

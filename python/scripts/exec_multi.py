@@ -6,19 +6,14 @@ import os
 
 if __name__ == "__main__":
 
-    cases = ['A{}'.format(case) for case in range(15, 21)]
-    directory = 'multi2'
-    base_path = os.path.join(pm.PATHS['results'], directory)
-
-    if not os.path.exists(base_path):
-        os.mkdir(base_path)
+    cases = ['A{}'.format(case) for case in range(1, 21)]
 
     for case in cases:
         options = pm.OPTIONS
         options['case_name'] = case
-        options['path'] = os.path.join(base_path, case) + '/'
+        options['path'] += case
 
         if not os.path.exists(options['path']):
             os.mkdir(options['path'])
-
-        exec.solve_case(options)
+        exec.solve_heuristic(options)
+        # exec.solve_case(options)

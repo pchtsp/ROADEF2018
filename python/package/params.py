@@ -24,14 +24,18 @@ cut_level_next_o = {
 OPTIONS = {
     'timeLimit': 3600
     , 'gap': 0.1
-    , 'solver': "CPLEXPY"
+    , 'solver': "HEUR"   # CPLEXPY, CPLEX_CMD, GUROBI, HEUR
     , 'integer': False
     , 'path': PATHS['experiments']
-    , 'case_name': 'A20'
+    , 'case_name': 'A1'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
+    , 'heur_weights': {'space': 100, 'seq': 100000, 'defects': 1000}
+    , 'heur_params': {'main_iter': 1000, 'max_iter': 100,
+                      'temperature': 1000, 'try_rotation': True}
+
     # , 'cluster_tolerance': 50
 }

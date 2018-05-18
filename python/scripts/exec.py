@@ -3,6 +3,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import importlib
 import package.data_input as di
 import package.model as md
+import package.heuristic as heur
 import argparse
 
 
@@ -71,12 +72,36 @@ def solve_case_iter(options):
     return True
 
 
+def solve_heuristic(options):
+    case = options['case_name']
+    path = options['path']
+    weights = options['heur_weights']
+    params = options['heur_params']
+    params['weights'] = weights
+
+    self = heur.ImproveHeuristic.from_input_files(case_name=case, path=path)
+    self.order_all_children()
+    self.clean_empty_cuts()
+    self.join_blanks()
+    params_init = dict(params)
+    self.get_initial_solution(params_init)
+    self.clean_empty_cuts_2()
+    self.correct_plate_node_ids()
+    self.solve(params)
+    self.correct_plate_node_ids(solution=self.best_solution)
+    self.graph_solution(path, name="edited", dpi=50, solution=self.best_solution)
+    print(self.check_sequence(solution=self.best_solution))
+    self.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution")
+
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
     parser.add_argument('-c', dest='file', default="package.params",
                         help='config file (default: package.params)')
     parser.add_argument('-a', dest='case', help='case name')
+    # parser.add_argument('-a', dest='case', help='case name')
 
     args = parser.parse_args()
     # if not os.path.exists(args.file):
@@ -90,7 +115,11 @@ if __name__ == "__main__":
 
     pm.OPTIONS['path'] += case + '/'
     pm.OPTIONS['case_name'] = case
-    solve_case_iter(pm.OPTIONS)
+
+    if pm.OPTIONS['solver'] == 'HEUR':
+        solve_heuristic(pm.OPTIONS)
+    else:
+        solve_case_iter(pm.OPTIONS)
     # solve_case(options=pm.OPTIONS)
         # checks = self.check_all()
         # checks_ = sd.SuperDict.from_dict(checks).to_dictdict()

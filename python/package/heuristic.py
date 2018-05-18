@@ -20,18 +20,26 @@ import package.geometry as geom
 
 class ImproveHeuristic(sol.Solution):
 
-    def __init__(self, solution, debug=False):
-        self.debug = debug
-        self.trees = copy.deepcopy(solution.trees)
-        self.input_data = copy.deepcopy(solution.input_data)
-        # we store the best solution:
-        self.best_solution = copy.deepcopy(self.trees)
-        self.best_objective = 999999  # fix this.
+    # @classmethod
+    # def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data'], solutionfile="solution"):
+    #     self.debug = debug
+    #     self.trees = copy.deepcopy(solution.trees)
+    #     self.input_data = copy.deepcopy(solution.input_data)
+    #     # we store the best solution:
+    #     self.best_solution = copy.deepcopy(self.trees)
+    #     self.best_objective = 999999
+    #     self.hist_objective = []
+    #     return
 
-        self.order_all_children()
-        self.clean_empty_cuts()
-        self.join_blanks()
-        return
+    def __init__(self, input_data, debug=False):
+        super().__init__(input_data, {})
+        self.debug = debug
+        self.trees = []
+        self.input_data = copy.deepcopy(input_data)
+        # we store the best solution:
+        self.best_solution = []
+        self.best_objective = 99999999
+        self.hist_objective = []
 
     def update_best_solution(self, solution):
         self.best_solution = copy.deepcopy(solution)
@@ -498,7 +506,7 @@ class ImproveHeuristic(sol.Solution):
                   for n in nodes
                   }
         gains = {n: values[n] * w_change_area[n] for n in nodes}
-        return sum(gains.values())
+        return sum(gains.values()) / (self.get_param('widthPlates')*self.get_param('heightPlates'))
 
     def check_swap_nodes_seq(self, node1, node2, insert=False):
         """
@@ -719,9 +727,6 @@ class ImproveHeuristic(sol.Solution):
             change = 'Swap'
         if len(rot):
             change += ' (rot={})'.format(rot)
-        if self.debug:
-            print('Found! {} between nodes {}/{} and {}/{} for a gain of {}'.
-                  format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID, round(balance)))
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
@@ -735,10 +740,15 @@ class ImproveHeuristic(sol.Solution):
             return True
         new = self.evaluate_solution(weights)
         old = self.best_objective
+        if self.debug:
+            print('{} nodes=({}/{}, {}/{}) gain={}, new={}, best={}'.
+                  format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID, round(balance), new, self.best_objective))
         if new < old:  # only save if really different.
             print('Best solution updated to {}!'.format(round(new)))
             self.update_best_solution(self.trees)
             self.best_objective = new
+        if self.debug:
+            self.hist_objective.append(old)
         return True
 
     def debug_nodes(self, node1, node2):
@@ -893,8 +903,34 @@ class ImproveHeuristic(sol.Solution):
                     return True
         return
 
-    def insert_node_somewhere(self):
-        pass
+    def get_max_space_usage(self, solution=None):
+        if solution is None:
+            solution = self.trees
+        return sum(self.get_param('widthPlates') ** pos
+                   for pos, tree in enumerate(solution))
+
+    def insert_nodes_somewhere(self, **params):
+        rem = [n for tup in self.check_sequence() for n in tup]
+        defects = self.check_defects()
+        candidates = set(rem) | set([d[0] for d in defects])
+        for c in candidates:
+            change = self.insert_node_somewhere(c, **params)
+        return
+
+    def insert_node_somewhere(self, node1, **params):
+        # ok, so... lets find a good candidate for node1.
+        i = 0
+        change = False
+        node_cut = node1.CUT
+        while i < len(self.trees) and not change:
+            tree = self.trees[i]
+            change = self.insert_node_inside_node(node1, tree, kwargs=params)
+            i += 1
+        if not change:
+            node1.CUT = node_cut
+        else:
+            print('worked insertion on random tree')
+        return change
 
     # def expand_wastes(self, level, **kwargs):
     #     wastes = [w for w in self.get_nodes_by_level(level) if w.TYPE in [-1, -3] and w.is_leaf()]
@@ -972,7 +1008,7 @@ class ImproveHeuristic(sol.Solution):
         params = dict(params)
         params['evaluate'] = False
         batch_data = self.get_batch()
-        items, values = zip(*sorted(batch_data.items(), key=lambda x: (x[1]['SEQUENCE'], x[1]['WIDTH_ITEM']*x[1]['LENGTH_ITEM'])))
+        items, values = zip(*sorted(batch_data.items(), key=lambda x: x[1]['SEQUENCE']))
         ordered_nodes = [nd.item_to_node(v) for v in values]
         for n in ordered_nodes:
             if n.WIDTH > n.HEIGHT:
@@ -989,7 +1025,7 @@ class ImproveHeuristic(sol.Solution):
                 change = self.insert_node_inside_node(n, tree, kwargs=params)
                 if change:
                     break
-            if not change:
+            while not change:
                 tree = nd.create_plate(width=self.get_param('widthPlates'),
                                        height=self.get_param('heightPlates'),
                                        id=len(self.trees))
@@ -1015,18 +1051,21 @@ class ImproveHeuristic(sol.Solution):
                 # print('collapse left')
                 self.merge_wastes_tail()
                 # print('merge_wastes')
-                self.change_level_all(level, **params, change_first=True, tolerance=10000)
+                self.change_level_all(level, **params, change_first=True)
                 # print('change_level')
+                # self.insert_nodes_somewhere(**params)
                 # self.clean_empty_cuts()
             # self.try_reduce_nodes(1)
-            temp *= 1 - coolingRate
+            temp *= (1 - coolingRate)
             if temp < 1:
                 break
             seq = self.check_sequence()
             defects = self.check_defects()
-            print("TEMP IS: {}".format(round(temp)))
-            print("There's {} incorrect sequences".format(len(seq)))
-            print("There's {} remaining defects".format(len(defects)))
+            print("TEMP={}, seq={}, def={}, best={}".
+                  format(round(temp),
+                         len(seq),
+                         len(defects),
+                         self.best_objective))
             pass
             # self.move_item_inside_node()
             # for level in [1, 2]:
@@ -1041,31 +1080,30 @@ if __name__ == "__main__":
     import pprint as pp
     # e = '201804271903/'  # A6 base case
     # e = '201805020012/'  # A6 this one was optimised for sequence.
-    e = '201805090409/'  # A20
-    path = pm.PATHS['experiments'] + e
-    # path = pm.PATHS['results'] + 'multi1/A1/'
-    case = sol.Solution.search_case_in_options(path)
-    solution = sol.Solution.from_io_files(path=path)
-
-    weights = {'space': 1 / 100000000, 'seq': 100000, 'defects': 1000}
-    params = {'main_iter': 1000, 'weights': weights, 'max_iter': 10, 'temperature': 1000, 'try_rotation': True}
-
-    self = ImproveHeuristic(solution, debug=False)
+    # e = '201805090409/'  # A20
+    case = 'A8'
+    # path = pm.PATHS['experiments'] + e
+    path = pm.PATHS['results'] + 'heuristic/' + case + '/'
+    # case = sol.Solution.search_case_in_options(path)
+    # solution = sol.Solution.from_input_files(path=path, case_name=case)
+    self = ImproveHeuristic.from_input_files(case_name=case, path=path)
+    weights = {'space': 10, 'seq': 100000, 'defects': 1000}
+    params = {'main_iter': 1000, 'weights': weights, 'max_iter': 100,
+              'temperature': 1000, 'try_rotation': False}
+    params_init = dict(params)
+    # params_init.pop('try_rotation')
     # self.check_parent_of_children()
-    self.get_initial_solution(params)
+    self.get_initial_solution(params_init)
     # result = self.check_cuts_number()
     self.clean_empty_cuts_2()
     self.correct_plate_node_ids()
-    # self.merge_wastes_tail()
-    # self.clean_empty_cuts()
-    # self.graph_solution(path, name="edited", dpi=50)
     self.solve(params)
     # self.best_solution.export_solution(path=path, prefix=case + '_')
     # self.graph_solution(path, name="present", dpi=50)
     result = self.correct_plate_node_ids(solution=self.best_solution)
     self.graph_solution(path, name="edited", dpi=50, solution=self.best_solution)
     print(self.check_sequence(solution=self.best_solution))
-    self.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution_heur")
+    self.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution")
 
     # self.graph_solution(path, name="edited", dpi=50)
 
