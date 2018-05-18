@@ -1,12 +1,9 @@
-import os
-import datetime as dt
-
 path_root = '/home/pchtsp/Documents/projects/ROADEF2018/'
 
 PATHS = {
     'root': path_root
     ,'results': path_root + 'results/'
-    ,'experiments': path_root + 'results/' + "experiments/"
+    ,'experiments': path_root + 'results/' + "heuristic/"
     ,'img': path_root + "OPTIMA/img/"
     ,'latex': path_root + "OPTIMA/latex/"
     ,'data': path_root + "resources/data/dataset_A/"
@@ -29,15 +26,12 @@ OPTIONS = {
     , 'gap': 0.1
     , 'solver': "CPLEXPY"
     , 'integer': False
-    , 'path': os.path.join(
-        PATHS['experiments'],
-        dt.datetime.now().strftime("%Y%m%d%H%M")
-    ) + '/'
+    , 'path': PATHS['experiments']
     , 'case_name': 'A20'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
     , 'max_iters': 200000
-    , 'ratio_plate_size': 1
+    , 'ratio_plate_size': 2
     # , 'cluster_tolerance': 50
 }

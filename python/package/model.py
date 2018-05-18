@@ -462,7 +462,7 @@ class Model(sol.Solution):
             for plate in plates:
                 movement = ref_pos - plate.X
                 ref_pos += plate.WIDTH
-                nd.move_node(plate, movement, "X")
+                nd.increase_feature_node(plate, movement, "X")
 
         # now I need to reconstruct the new trees merging the nodes,
         # and creating a root for each bin.

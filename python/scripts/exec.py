@@ -1,9 +1,9 @@
-import package.superdict as sd
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import importlib
 import package.data_input as di
 import package.model as md
-import package.params as pm
-import os
-import sys
+import argparse
 
 
 def solve_case(options):
@@ -72,6 +72,24 @@ def solve_case_iter(options):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
+    parser.add_argument('-c', dest='file', default="package.params",
+                        help='config file (default: package.params)')
+    parser.add_argument('-a', dest='case', help='case name')
+
+    args = parser.parse_args()
+    # if not os.path.exists(args.file):
+    #     raise FileNotFoundError("{} was not found".format(args.file))
+    print('Using config file in {}'.format(args.file))
+    pm = importlib.import_module(args.file)
+    # import package.params as params
+    case = args.case
+    if case is None:
+        case = pm.OPTIONS['case_name']
+
+    pm.OPTIONS['path'] += case + '/'
+
     solve_case_iter(pm.OPTIONS)
     # solve_case(options=pm.OPTIONS)
         # checks = self.check_all()
