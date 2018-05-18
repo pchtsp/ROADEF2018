@@ -180,8 +180,13 @@ def node_to_plate(node):
     return (node.WIDTH, node.HEIGHT)
 
 
-def get_features(node):
-    features = ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
+def default_features():
+    return ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
+
+
+def get_features(node, features=None):
+    if features is None:
+        features = default_features()
     attrs = {k: int(getattr(node, k)) for k in features}
     parent = node.up
     if parent is not None:
