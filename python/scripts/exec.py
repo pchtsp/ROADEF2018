@@ -46,7 +46,7 @@ def solve_case(options):
 
 def solve_case_iter(options):
     case = options['case_name']
-    self = md.Model.from_input_files(case)
+    self = md.Model.from_input_files(case, path=options['path'])
     prefix = case + '_'
 
     if not os.path.exists(options['path']):
