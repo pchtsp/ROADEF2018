@@ -89,7 +89,7 @@ if __name__ == "__main__":
         case = pm.OPTIONS['case_name']
 
     pm.OPTIONS['path'] += case + '/'
-
+    pm.OPTIONS['case_name'] = case
     solve_case_iter(pm.OPTIONS)
     # solve_case(options=pm.OPTIONS)
         # checks = self.check_all()
