@@ -6,14 +6,8 @@ import os
 
 if __name__ == "__main__":
 
-    cases = ['A{}'.format(case) for case in range(1, 21)]
+    # cases = ['A{}'.format(case) for case in range(1, 21)]
+    cases = ['A{}'.format(case) for case in range(4, 21)]
 
     for case in cases:
-        options = pm.OPTIONS
-        options['case_name'] = case
-        options['path'] += case
-
-        if not os.path.exists(options['path']):
-            os.mkdir(options['path'])
-        exec.solve_heuristic(options)
-        # exec.solve_case(options)
+        exec.solve(pm.OPTIONS, case)
