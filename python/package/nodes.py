@@ -57,6 +57,9 @@ def resize_node(node, dim, quantity):
     if waste is None:
         return False
     setattr(waste, dim, getattr(waste, dim) + quantity)
+    # if we eliminate the waste to 0, we delete the node.
+    if not getattr(waste, dim):
+        waste.detach()
     return True
 
 
@@ -193,6 +196,16 @@ def get_features(node, features=None):
         parent = int(parent.NODE_ID)
     attrs['PARENT'] = parent
     return attrs
+
+
+def duplicate_node_as_its_parent(node, node_mod=900):
+    features = get_features(node)
+    features['NODE_ID'] += node_mod
+    parent = create_node(**features)
+    increase_feature_node(node=node, quantity=1, feature="CUT")
+    parent.add_child(node)
+    parent.TYPE = -2
+    return parent
 
 
 def duplicate_node_as_child(node, node_mod=500):
@@ -370,6 +383,11 @@ def node_inside_node(node1, node2, **kwargs):
 
 def check_children_inside(node):
     return [n for n in node.get_children() if not node_inside_node(n, node, both_sides=False)]
+
+
+# def check_children_sibling(node):
+#
+#     return [n for n in node.get_children() if not node_inside_node(n, node, both_sides=False)]
 
 
 def assign_cut_numbers(node, cut=0, update=True):

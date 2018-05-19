@@ -85,12 +85,12 @@ class Solution(inst.Instance):
         return cls(input_data, solution)
 
     @classmethod
-    def from_input_files(cls, case_name=None, path=pm.PATHS['data']):
+    def from_input_files(cls, case_name=None, path=pm.PATHS['data'], **kwargs):
         if case_name is None:
             case_name = cls.search_case_in_options(path)
         if case_name is None:
             raise ImportError('case_name is None and options.json is not available')
-        return cls(di.get_model_data(case_name, path), {})
+        return cls(di.get_model_data(case_name, path), **kwargs)
 
     def get_cuts(self):
         # for each node, we get the cut that made it.
@@ -136,17 +136,26 @@ class Solution(inst.Instance):
             , 'sequence': self.check_sequence
             , 'defects': self.check_defects
             , 'demand': self.check_demand_satisfied
+            , 'ch_size': self.check_nodes_fit
+            , 'inside': self.check_parent_of_children
+            , 'cuts': self.check_cuts_number
+            , 'position': self.check_nodes_inside_jumbo
+            , 'types': self.check_wrong_type
+            , 'ch_order': self.check_children_order
+            , 'node_size': self.check_sizes
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
 
     def check_consistency(self):
         func_list = {
-            'size': self.check_nodes_fit
+            'ch_size': self.check_nodes_fit
             , 'inside': self.check_parent_of_children
             , 'cuts': self.check_cuts_number
             , 'position': self.check_nodes_inside_jumbo
             , 'types': self.check_wrong_type
+            , 'ch_order': self.check_children_order
+            , 'node_size': self.check_sizes
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
@@ -320,6 +329,36 @@ class Solution(inst.Instance):
                 if not nd.check_children_fit(node):
                     nodes_poblems.append(node)
         return nodes_poblems
+
+    def check_children_order(self):
+        bad_order = []
+        for tree in self.trees:
+            for node in tree.traverse():
+                axis, dim = nd.get_orientation_from_cut(node, inv=True)
+                axis_i, dim_i = nd.get_orientation_from_cut(node)
+                children = node.get_children()
+                if len(children) < 2:
+                    continue
+                for ch1, ch2 in zip(children, children[1:]):
+                    # For now, if one of the two children has dist=0
+                    # I'll ignore it... but I should change this.
+                    if not getattr(ch1, dim) or not getattr(ch2, dim):
+                        continue
+                    correct = getattr(ch1, axis) + getattr(ch1, dim) ==\
+                        getattr(ch2, axis)
+                    correct &= getattr(ch1, axis_i) == getattr(ch2, axis_i)
+                    correct &= getattr(ch1, dim_i) == getattr(ch2, dim_i)
+                    if not correct:
+                        bad_order.append((ch1, ch2))
+        return bad_order
+
+    def check_sizes(self):
+        bad_size = []
+        for tree in self.trees:
+            for node in tree.traverse():
+                if node.WIDTH < 0 or node.HEIGHT < 0:
+                    bad_size.append(node)
+        return bad_size
 
     def check_parent_of_children(self):
         """
