@@ -68,10 +68,11 @@ def solve_heuristic(options):
     case = options['case_name']
     self = heur.ImproveHeuristic.from_input_files(case_name=case, path=path)
     self.solve(options)
-    self.correct_plate_node_ids(solution=self.best_solution)
-    self.graph_solution(path, name="edited", dpi=50, solution=self.best_solution)
-    print(self.check_sequence(solution=self.best_solution))
-    self.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution")
+    # self.trees = self.best_solution
+    self.correct_plate_node_ids()
+    self.graph_solution(path, name="edited", dpi=50)
+    # print(self.check_sequence(solution=self.best_solution))
+    self.export_solution(path=path, prefix=case + '_', name="solution")
 
 
 def solve(options, case=None):
@@ -95,7 +96,7 @@ def solve(options, case=None):
         solve_case_iter(options)
 
 if __name__ == "__main__":
-
+    import pprint as pp
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
     parser.add_argument('-c', dest='file', default="package.params",
                         help='config file (default: package.params)')

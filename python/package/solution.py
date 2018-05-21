@@ -34,6 +34,8 @@ class Solution(inst.Instance):
             tree = self.get_tree_from_solution_data(plate)
             self.trees.append(tree)
 
+        self.order_all_children()
+
     @staticmethod
     def get_tree_from_solution_data(solution_data):
         parent_child = [(int(v['PARENT']), int(k), 1) for k, v in solution_data.items()
@@ -98,6 +100,10 @@ class Solution(inst.Instance):
         # each cut wll have as property the first and second piece
 
         pass
+
+    def order_all_children(self):
+        for tree in self.trees:
+            nd.order_children(tree)
 
     def get_pieces_by_type(self, by_plate=False, pos=None, min_type=0, solution=None):
         """
@@ -207,6 +213,7 @@ class Solution(inst.Instance):
                 n1ancestors = set([node] + node.get_ancestors())
                 n2ancestors = set([prec_node] + prec_node.get_ancestors())
                 for n in ancestor.iter_descendants():
+                    # print(n)
                     if n in n1ancestors:
                         wrong_order.append((node, prec_node))
                         break
@@ -244,11 +251,23 @@ class Solution(inst.Instance):
                 defects_in_node.append(defect)
         return defects_in_node
 
+    def get_defects_nodes(self):
+        # TODO: I could give a level as argument to filter when searching.
+        defect_node = []
+        defects_by_plate = self.get_defects_per_plate()
+        for pos, tree in enumerate(self.trees):
+            if pos not in defects_by_plate:
+                continue
+            for key, defect in defects_by_plate[pos].items():
+                node = nd.search_node_of_defect(tree, defect)
+                defect_node.append((node, defect))
+        return defect_node
+
     def check_space_usage(self, solution=None):
         if solution is None:
             solution = self.trees
-        return sum(self.calculate_residual_plate(tree)**pos for pos, tree in enumerate(solution)) / \
-               (self.get_param('widthPlates') ** (len(solution) - 1))
+        return sum(self.calculate_residual_plate(tree)*(pos+1)**2 for pos, tree in enumerate(solution)) / \
+               (self.get_param('widthPlates') * len(solution)**2)
         # return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
         #     for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
 
@@ -388,7 +407,7 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=90, fontsize=30, solution=None):
+    def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=50, fontsize=30, solution=None):
         if solution is None:
             solution = self.trees
         batch_data = self.get_batch()
@@ -491,7 +510,7 @@ class Solution(inst.Instance):
                 order += 1
         # last waste is -3
         if 'TYPE' in features:
-            if result[order-1]['TYPE'] == -1:
+            if result[order-1]['TYPE'] == -1 and result[order-1]['CUT'] == 1:
                 result[order - 1]['TYPE'] = -3
         return result
 

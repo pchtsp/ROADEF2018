@@ -37,11 +37,11 @@ def create_node(**kwargs):
     return node
 
 
-def increase_feature_node(node, quantity, feature):
+def mod_feature_node(node, quantity, feature):
     node_pos = getattr(node, feature)
     setattr(node, feature, node_pos + quantity)
     for children in node.get_children():
-        increase_feature_node(children, quantity, feature)
+        mod_feature_node(children, quantity, feature)
     return True
 
 
@@ -60,6 +60,7 @@ def resize_node(node, dim, quantity):
     # if we eliminate the waste to 0, we delete the node.
     if not getattr(waste, dim):
         waste.detach()
+    delete_only_child(node)
     return True
 
 
@@ -133,7 +134,9 @@ def order_children(node):
         # we inverse this condition because we're dealing
         # with the children
         axis, dim = get_orientation_from_cut(v, inv=True)
-        v.children.sort(key=lambda x: getattr(x, axis))
+        # I sort mainly according to axis but I want the empty cuts to
+        # come before... (that's why the dim in second place)
+        v.children.sort(key=lambda x: (getattr(x, axis), getattr(x, dim)))
     return True
 
 
@@ -202,7 +205,7 @@ def duplicate_node_as_its_parent(node, node_mod=900):
     features = get_features(node)
     features['NODE_ID'] += node_mod
     parent = create_node(**features)
-    increase_feature_node(node=node, quantity=1, feature="CUT")
+    mod_feature_node(node=node, quantity=1, feature="CUT")
     parent.add_child(node)
     parent.TYPE = -2
     return parent
@@ -213,7 +216,7 @@ def duplicate_node_as_child(node, node_mod=500):
     features['NODE_ID'] += node_mod
     child = create_node(**features)
     # we increase the cut recursively among all children
-    increase_feature_node(child, 1, "CUT")
+    mod_feature_node(child, 1, "CUT")
     node.add_child(child)
     # print('created in node ID={}, TYPE={} a child with ID={}, TYPE={}'.
     #       format(node.NODE_ID, node.TYPE, child.NODE_ID, child.TYPE))
@@ -241,15 +244,27 @@ def duplicate_waste_into_children(node):
 #     return child1
 
 
-
 def delete_only_child(node):
     if len(node.children) != 1:
         return False
     child = node.get_children()[0]
-    features = get_features(child)
-    features['CUT'] -= 1
-    child.detach()
-    node.add_features(**features)
+    parent = node.up
+    if parent is None:
+        return False
+    # copying features is not enough.
+    # I have to move the childe one level above.
+    # and delete the node
+    mod_feature_node(child, quantity=-1, feature='CUT')
+    if child.children:
+        mod_feature_node(child, quantity=-1, feature='CUT')
+        for ch in child.get_children():
+            ch.detach()
+            parent.add_child(ch)
+    else:
+        child.detach()
+        parent.add_child(child)
+    parent.remove_child(node)
+    order_children(parent)
     return True
 
 
@@ -323,12 +338,11 @@ def filter_defects(node, defects, previous=True):
 def split_waste(node1, cut):
     # first, we split one waste in two.
     # then we make a swap to one of the nodes.
-    # if child=True: the resulting wastes are children of the first waste
-    assert node1.TYPE == -1, "node {} needs to be waste!".format(node1.name)
+    assert node1.TYPE in [-1, -3], "node {} needs to be waste!".format(node1.name)
     parent = node1.up
     axis, dim = get_orientation_from_cut(node1)
-    axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
-    attributes = [axis, axis_i, dim, dim_i]
+    # axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
+    attributes = [axis, dim]
     size = getattr(node1, dim)
     assert size > cut, "cut for node {} needs to be smaller than size".format(node1.name)
     node2 = node1.copy()
@@ -350,21 +364,42 @@ def split_waste(node1, cut):
 def reduce_children(node):
     axis, dim = get_orientation_from_cut(node)
     node_size = min_size = getattr(node, dim)
-    if not node.children:
+    if len(node.children) < 2:
         return False
     for ch in node.get_children():
-        waste = find_waste(ch, child=True)
+        # if it has a children which is already a item... nothing to do
+        waste = None
+        if ch.TYPE >= 0:
+            return False
+        elif ch.TYPE in [-1, -3]:
+            waste = ch
+        elif ch.TYPE == -2:
+            waste = find_waste(ch, child=True)
         if waste is None:
             return False
         size = getattr(waste, dim)
         if size < min_size:
             min_size = size
-    if min_size < 0:
+    if min_size <= 0:
         return False
     # ok: we got here: we reduce all children and the node.
+    # print("node and children {} are being reduced by {}".
+    #       format(node.name, min_size))
     for ch in node.get_children():
-        resize_node(ch, dim, -min_size)
+        # print("redimensiono {}".format(ch.name))
+        setattr(ch, dim, getattr(ch, dim) - min_size)
+        if ch.TYPE == -2:
+            resize_node(ch, dim, -min_size)
     setattr(node, dim, node_size - min_size)
+    # now we need to create a sibling waste with the correct size:
+    features = get_features(node)
+    features[axis] += features[dim]
+    features[dim] = min_size
+    features['NODE_ID'] += 700
+    features['TYPE'] = -1
+    node2 = create_node(**features)
+    node.add_sister(node2)
+    order_children(node.up)
     return True
 
 
@@ -397,3 +432,34 @@ def assign_cut_numbers(node, cut=0, update=True):
     for n in node.get_children():
         result = {**result, **assign_cut_numbers(n, cut=cut+1, update=update)}
     return result
+
+
+def search_node_of_defect(node, defect):
+    def before_defect(_node):
+        axis, dim = get_orientation_from_cut(_node)
+        return defect[axis] > getattr(_node, axis) + getattr(_node, dim)
+        # return getattr(node, axis) < defect['X'] < getattr(node, axis) + getattr(node, dim)
+    for n in node.traverse('preorder', is_leaf_fn=before_defect):
+        # print(n.name)
+        if before_defect(n):
+            continue
+        if n.TYPE != -2:
+            return n
+
+
+def get_node_pos_tup(node):
+    return (node.PLATE_ID, node.X, node.Y)
+
+if __name__ == "__main__":
+
+    import package.params as pm
+    import package.solution as sol
+
+    case = 'A2'
+    path = pm.PATHS['experiments'] + case + '/'
+    solution = sol.Solution.from_io_files(path=path, case_name=case)
+    defects = solution.get_defects_per_plate()
+    defect = defects[0][0]
+    node = solution.trees[0]
+
+    search_node_of_defect(node, defect)
