@@ -88,18 +88,27 @@ def test6():
     solution = sol.Solution.from_io_files(path=path, solutionfile='solution_heur')
     # solution.graph_solution(path, name="edited", dpi=50)
     solution.check_all()
-    # solution = mod.Model.from_input_files(path=path)
-    # demand = solution.get_demand_from_items(tol=50)
-    # items = solution.flatten_stacks(in_list=True)  # Ĵ in J
-    weights = {'space': 1 / 100000000, 'seq': 100000, 'defects': 1000}
-    params = {'weights': weights, 'max_iter': 100, 'temperature': 1000, 'try_rotation': True, 'main_iter': 100}
-    heuristic = heur.ImproveHeuristic(solution, debug=False)
-    heuristic.solve(params)
-    heuristic.trees = heuristic.best_solution
-    heuristic.check_all()
-    heuristic.graph_solution(path, name="edited", dpi=50)
-    heuristic.export_solution(path=path, prefix="A6" + '_', name="solution_heur")
-    # heuristic.export_solution(path=path, prefix=case + '_', solution=self.best_solution, name="solution_heur")
+
+
+def stats():
+    cases = ["A{}".format(n) for n in range(1, 21)]
+    errors = {}
+    errors_len = {}
+    solution = {}
+
+    for case in cases:
+    # case = cases[0]
+        path = pm.PATHS['experiments'] + case + '/'
+        solution[case] = sol.Solution.from_io_files(path=path, case_name=case)
+        errors[case] = sd.SuperDict(solution[case].check_all())
+        errors_len[case] = errors[case].to_lendict()
+
+    [n for n in errors_len if errors_len[n]]
+    # [n[0].PLATE_ID for n in errors['A13']['sequence']]
+    # defect_nodes = solution['A2'].get_defects_nodes()
+    # solution['A20'].check_all()
+
+    pp.pprint(errors_len)
 
 if __name__ == "__main__":
-    test6()
+    stats()
