@@ -180,23 +180,24 @@ class Solution(inst.Instance):
                         overlapped.append((leaf1, leaf2))
         return overlapped
 
-    def get_previous_nodes(self, solution=None):
-        if solution is None:
-            solution = self.trees
+    def get_previous_nodes(self, solution=None, type_node_dict=None):
+        """
+        :param solution: forest: a list of trees.
+        :return:
+        """
+        if type_node_dict is None or solution is not None:
+            type_node_dict = self.get_pieces_by_type(solution=solution)
         prev_items = self.get_previous_items()
-        code_leaf = self.get_pieces_by_type(solution=solution)
         prev_nodes = {}
         for k, v in prev_items.items():
-            prev_nodes[code_leaf[k]] = []
+            prev_nodes[type_node_dict[k]] = []
             for i in v:
-                prev_nodes[code_leaf[k]].append(code_leaf[i])
+                prev_nodes[type_node_dict[k]].append(type_node_dict[i])
         return sd.SuperDict(prev_nodes)
 
-    def check_sequence(self, solution=None):
-        if solution is None:
-            solution = self.trees
+    def check_sequence(self, solution=None, type_node_dict=None):
         wrong_order = []
-        n_prec = self.get_previous_nodes(solution)
+        n_prec = self.get_previous_nodes(solution=solution, type_node_dict=type_node_dict)
         for node, prec_nodes in n_prec.items():
             for prec_node in prec_nodes:
                 # prec is in a previous plate: correct
@@ -225,40 +226,29 @@ class Solution(inst.Instance):
         """
         :return: [(node, defect), ()]
         """
-        plate_cuts = self.get_pieces_by_type(by_plate=True, solution=solution)
-        pieces_with_defects = []
-        for plate, piece_dict in plate_cuts.items():
-            defects_dict = self.get_defects_per_plate(plate)
-            for k, piece in piece_dict.items():
-                defects = self.defects_in_node(piece, defects=defects_dict)
-                for defect in defects:
-                    pieces_with_defects.append((piece, defect))
-        return pieces_with_defects
+        node_defect = self.get_nodes_defects(solution)
+        return [(node, defect) for node, defect in node_defect if node.TYPE >= 0]
+        # plate_cuts = self.get_pieces_by_type(by_plate=True, solution=solution)
+        # pieces_with_defects = []
+        # for plate, piece_dict in plate_cuts.items():
+        #     defects_list = self.get_defects_plate(plate)
 
-    def defects_in_node(self, node, defects=None):
-        """
-        :param node:
-        :param defects: defects to check
-        :return: [defect1, defect2]
-        """
-        square = nd.node_to_square(node)
-        defects_in_node = []
-        if defects is None:
-            defects = self.get_defects_per_plate(plate=node.PLATE_ID)
-        for k, defect in defects.items():
-            square2 = geom.defect_to_square(defect)
-            if geom.square_intersects_square(square2, square):
-                defects_in_node.append(defect)
-        return defects_in_node
+            # for k, item in piece_dict.items():
+            #     defects = nd.defects_in_node(item, defects=defects_list)
+            #     for defect in defects:
+            #         pieces_with_defects.append((item, defect))
+        # return pieces_with_defects
 
-    def get_defects_nodes(self):
+    def get_nodes_defects(self, solution=None):
         # TODO: I could give a level as argument to filter when searching.
+        if solution is None:
+            solution = self.trees
         defect_node = []
         defects_by_plate = self.get_defects_per_plate()
-        for pos, tree in enumerate(self.trees):
+        for pos, tree in enumerate(solution):
             if pos not in defects_by_plate:
                 continue
-            for key, defect in defects_by_plate[pos].items():
+            for defect in defects_by_plate[pos]:
                 node = nd.search_node_of_defect(tree, defect)
                 defect_node.append((node, defect))
         return defect_node
@@ -393,7 +383,7 @@ class Solution(inst.Instance):
         return nodes_poblems
 
     def check_demand_satisfied(self):
-        demand = self.input_data['batch']
+        demand = self.get_batch()
         produced = []
         pieces = self.get_pieces_by_type()
         for k, leaf in pieces.items():
@@ -432,7 +422,7 @@ class Solution(inst.Instance):
             for waste in wastes:
                 self.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
             # graph defects
-            for defect in self.get_defects_per_plate(plate).values():
+            for defect in self.get_defects_plate(plate):
                 self.draw_defect(ax1, defect)
             fig_path = os.path.join(path, '{}_{}.png'.format(name, plate))
             fig1.savefig(fig_path, dpi=dpi, bbox_inches='tight')

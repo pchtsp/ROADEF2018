@@ -201,13 +201,20 @@ def get_features(node, features=None):
     return attrs
 
 
-def duplicate_node_as_its_parent(node, node_mod=900):
+def duplicate_node_as_its_parent(node, node_mod=900, return_both=False):
     features = get_features(node)
     features['NODE_ID'] += node_mod
     parent = create_node(**features)
     mod_feature_node(node=node, quantity=1, feature="CUT")
+    grandparent = node.up
+    node.detach()
     parent.add_child(node)
     parent.TYPE = -2
+    if grandparent is not None:
+        grandparent.add_child(parent)
+        order_children(grandparent)
+    if return_both:
+        return node, parent
     return parent
 
 
@@ -269,6 +276,7 @@ def delete_only_child(node):
 
 
 def add_child_waste(node, fill):
+    recalculate = False
     axis, dim_i = get_orientation_from_cut(node, inv=True)
     node_size = getattr(node, dim_i)
     child_size = fill - node_size
@@ -277,7 +285,7 @@ def add_child_waste(node, fill):
         # (because it had waste as only other child and now it hasn't).
         if len(node.children) == 1:
             delete_only_child(node)
-        return False
+        return False, recalculate
     if node.is_leaf():
         # not sure about this though...
         if node.TYPE == -2:
@@ -285,6 +293,7 @@ def add_child_waste(node, fill):
         # sometimes we have a node without children
         # (because it had no waste and now it has).
         duplicate_node_as_child(node, 600)
+        recalculate = True
     features = get_features(node)
     features[axis] += node_size
     features[dim_i] = child_size
@@ -296,7 +305,7 @@ def add_child_waste(node, fill):
     #       format(node.NODE_ID, child.NODE_ID))
     node.add_child(child)
     setattr(node, dim_i, fill)
-    return True
+    return True, recalculate
 
 
 def get_size_without_waste(node, dim):
@@ -438,9 +447,7 @@ def search_node_of_defect(node, defect):
     def before_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
         return defect[axis] > getattr(_node, axis) + getattr(_node, dim)
-        # return getattr(node, axis) < defect['X'] < getattr(node, axis) + getattr(node, dim)
     for n in node.traverse('preorder', is_leaf_fn=before_defect):
-        # print(n.name)
         if before_defect(n):
             continue
         if n.TYPE != -2:
@@ -449,6 +456,23 @@ def search_node_of_defect(node, defect):
 
 def get_node_pos_tup(node):
     return (node.PLATE_ID, node.X, node.Y)
+
+
+def defects_in_node(node, defects):
+    """
+    :param node:
+    :param defects: defects to check
+    :return: [defect1, defect2]
+    """
+    square = node_to_square(node)
+    defects_in_node = []
+    for defect in defects:
+        square2 = geom.defect_to_square(defect)
+        if geom.square_intersects_square(square2, square):
+            defects_in_node.append(defect)
+    return defects_in_node
+
+
 
 if __name__ == "__main__":
 

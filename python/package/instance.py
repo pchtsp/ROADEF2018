@@ -14,44 +14,58 @@ class Instance(object):
 
     def __init__(self, model_data):
         self.input_data = model_data
+        self.previous_items = self.calc_previous_items()
+        self.next_items = self.previous_items.list_reverse()
 
     def get_batch(self):
-        return self.input_data['batch']
+        data = self.input_data['batch']
+        dict_out = {v['ITEM_ID']: v for stack, items in data.items() for v in items}
+        return sd.SuperDict(dict_out)
 
     def get_items_per_stack(self, stack=None):
-        # TODO: use SuperDict.index_by_property instead
-        batch_data = {v['STACK']: {} for v in self.input_data['batch'].values()}
-        for k, v in self.input_data['batch'].items():
-            batch_data[v['STACK']][k] = v
-        batch_data = sd.SuperDict.from_dict(batch_data)
+        data = self.input_data['batch']
         if stack is None:
-            return batch_data
-        if stack not in batch_data:
+            return data
+        if stack not in data:
             IndexError('STACK={} was not found in batch'.format(stack))
-        return batch_data[stack]
+        return {stack: data[stack]}
 
-    def get_previous_items(self):
+    def calc_previous_items(self):
         # for each item: we get the items that need to go out first
-        item_prec = {}
-        for stack, items_dict in self.get_items_per_stack().items():
-            items = sorted([*items_dict.values()], key=lambda x: x['SEQUENCE'])
+        item_prec = sd.SuperDict()
+        for stack, items in self.get_items_per_stack().items():
             prec = []
             for i in items:
                 item_prec[i['ITEM_ID']] = prec[:]
                 prec.append(i['ITEM_ID'])
         return item_prec
 
-    def get_defects_per_plate(self, plate=None):
-        # TODO: use SuperDict.index_by_property instead
-        defects = self.input_data['defects']
-        defects_plate = {int(v['PLATE_ID']): {} for v in defects.values()}
-        for k, v in defects.items():
-            defects_plate[v['PLATE_ID']][k] = v
-        if plate is None:
-            return defects_plate
-        if plate not in defects_plate:
-            return {}
-        return defects_plate[plate]
+    def get_previous_items(self, get_next_items=False):
+        if get_next_items:
+            return self.next_items
+        return self.previous_items
+        # # for each item: we get the items that need to go out first
+        # item_prec = {}
+        # for stack, items in self.get_items_per_stack(stack).items():
+        #     prec = []
+        #     for i in items:
+        #         item_prec[i['ITEM_ID']] = prec[:]
+        #         prec.append(i['ITEM_ID'])
+        # return item_prec
+
+    def get_defects_plate(self, plate):
+        data = self.input_data['defects']
+        if plate not in data:
+            return []
+        return data[plate]
+
+    def get_defects_per_plate(self, plates=None):
+        # optional filter to tell range of plates.
+        # this stops the procedure when we have passed the max one.
+        data = self.input_data['defects']
+        if plates is None:
+            return data
+        return {k: data[k] for k in plates if k in data}
 
     def get_param(self, name=None):
         params = self.input_data['global_param']
@@ -81,7 +95,7 @@ class Instance(object):
         of two dimentions. The first one is always smaller.
         """
         pieces = {k: (v['WIDTH_ITEM'], v['LENGTH_ITEM'])
-                 for k, v in self.input_data['batch'].items()}
+                 for k, v in self.get_batch().items()}
         for k, v in pieces.items():
             if v[0] > v[1]:
                 pieces[k] = v[1], v[0]

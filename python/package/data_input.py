@@ -25,15 +25,21 @@ def get_model_data(case_name, path=pm.PATHS['data']):
 
     defects = \
         tables['defects']. \
-            assign(index=tables['defects'].DEFECT_ID). \
-            set_index('index').\
+            assign(index=tables['defects'].DEFECT_ID,
+                   index2=tables['defects'].PLATE_ID). \
+            set_index(['index2', 'index']).\
             to_dict(orient='index')
+    defects = sd.SuperDict(defects).to_tuplist().to_dict(result_col=[2], indices=[0])
 
     batch = \
         tables['batch'].\
-            assign(index=tables['batch'].ITEM_ID).\
-            set_index('index').\
+            assign(index=tables['batch'].ITEM_ID,
+                   index2=tables['batch'].STACK).\
+            set_index(['index2', 'index']).\
             to_dict(orient='index')
+    batch = sd.SuperDict(batch).to_tuplist().to_dict(result_col=[2], indices=[0])
+    for stack in batch:
+        batch[stack].sort(key=lambda x: x['SEQUENCE'])
 
     params_filenames = {file: path + file + '.csv' for file in ['global_param']}
     if os.path.exists(params_filenames['global_param']):
@@ -54,8 +60,8 @@ def get_model_data(case_name, path=pm.PATHS['data']):
             , 'minWaste': 20
         }
 
-    return sd.SuperDict({'batch': sd.SuperDict.from_dict(batch),
-                         'defects': sd.SuperDict.from_dict(defects),
+    return sd.SuperDict({'batch': batch,
+                         'defects': defects,
                          'global_param': sd.SuperDict.from_dict(parameters)})
 
 
