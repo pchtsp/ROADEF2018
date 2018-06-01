@@ -5,7 +5,7 @@ import package.instance as inst
 import package.params as pm
 import numpy as np
 import matplotlib
-matplotlib.use('Qt5Agg', warn=False, force=True)
+# matplotlib.use('Qt5Agg', warn=False, force=True)
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import palettable as pal
@@ -250,6 +250,7 @@ class Solution(inst.Instance):
                 continue
             for defect in defects_by_plate[pos]:
                 node = nd.search_node_of_defect(tree, defect)
+                assert node is not None, 'defect {} doesnt have node'.format(defect)
                 defect_node.append((node, defect))
         return defect_node
 

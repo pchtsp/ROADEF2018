@@ -21,17 +21,6 @@ import time
 
 class ImproveHeuristic(sol.Solution):
 
-    # @classmethod
-    # def from_io_files(cls, case_name=None, path=pm.PATHS['checker_data'], solutionfile="solution"):
-    #     self.debug = debug
-    #     self.trees = copy.deepcopy(solution.trees)
-    #     self.input_data = copy.deepcopy(solution.input_data)
-    #     # we store the best solution:
-    #     self.best_solution = copy.deepcopy(self.trees)
-    #     self.best_objective = 999999
-    #     self.hist_objective = []
-    #     return
-
     def __init__(self, input_data, solution_data=None):
         if solution_data is None:
             solution_data = {}
@@ -122,7 +111,7 @@ class ImproveHeuristic(sol.Solution):
         # 3. update parents order:
         nd.order_children(destination)
 
-        return True
+        return recalculate
 
     def check_node_in_space(self, node_space, free_space, insert):
         """
@@ -140,7 +129,7 @@ class ImproveHeuristic(sol.Solution):
             if insert:
                 continue
             dif = free_space[1][d] - node_space[2][d]
-            if dif != 0 or dif < self.get_param('minWaste'):
+            if dif != 0 and dif < self.get_param('minWaste'):
                 return False
         return True
 
@@ -160,12 +149,19 @@ class ImproveHeuristic(sol.Solution):
             k: nd.get_orientation_from_cut(node)[1]
             for k, node in nodes.items()
         }
-        # _, dim = nd.get_orientation_from_cut(node1)
-        # axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
-        # wastes = {1: nd.find_waste(node1), 2: nd.find_waste(node2)}
-        if None in wastes.values():
-            # no waste in node2 or waste1. cannot do the change
-            return False
+        # if there's no waste, I'll just say it's a 0 length node?
+        null_waste = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
+        for k, waste in wastes.items():
+            if waste is None:
+                wastes[k] = null_waste
+        # if None in wastes.values():
+        #     # no waste in node2 or waste1. cannot do the change
+        #     # Special condition:
+        #     # if they are the same CUT, same dim and real swap and no rotation...
+        #     # then I'll say it's okay.
+        #     if not (not insert and not len(rotate) and nodes[2].CUT == nodes[1].CUT and
+        #                     getattr(nodes[1], dims[1]) == getattr(nodes[2], dims[2])):
+        #         return False
         node_space = {
             k: {
                 dims[k]: getattr(node, dims[k]),
@@ -181,11 +177,6 @@ class ImproveHeuristic(sol.Solution):
             }
             for k, node in nodes.items()
         }
-        # for pos, node in enumerate([node1, node2], start=1):
-        #     space[pos] = {
-        #         dim_i: getattr(node, dim_i),
-        #         dim: getattr(wastes[pos], dim) + node_space[pos][dim]
-        #     }
         # if not swapping, we have less space in node2
         if insert:
             space[2][dims[2]] -= node_space[2][dims[2]]
@@ -233,7 +224,7 @@ class ImproveHeuristic(sol.Solution):
         parent2 = parents[2]
         plate1, ch_pos1 = nd.get_node_pos(node1)
         plate2, ch_pos2 = nd.get_node_pos(node2)
-
+        recalculate = False
         if node1.up != parent2 or ch_pos1 != ch_pos2:
             # attention! since we're taking the node *before* inserting it.
             # we do not need to correct the relative positions.
@@ -241,13 +232,13 @@ class ImproveHeuristic(sol.Solution):
             node1_trimmed = self.extract_node_from_position(node1)
             if 1 in rotation:
                 nd.rotate_node(node1_trimmed)
-            self.insert_node_at_position(node1_trimmed, parent2, ch_pos2)
+            recalculate |= self.insert_node_at_position(node1_trimmed, parent2, ch_pos2)
         if not insert:
             if node2.up != parent1 or ch_pos1 + 1 != ch_pos2:
                 node2_trimmed = self.extract_node_from_position(node2)
                 if 2 in rotation:
                     nd.rotate_node(node2_trimmed)
-                self.insert_node_at_position(node2_trimmed, parent1, ch_pos1)
+                recalculate |= self.insert_node_at_position(node2_trimmed, parent1, ch_pos1)
 
         # we need to update the waste at both sides
         if parent1 == parent2:
@@ -255,7 +246,7 @@ class ImproveHeuristic(sol.Solution):
                 consist = self.check_consistency()
                 if len(consist):
                     pass
-            return True
+            return recalculate
 
         change = self.calculate_change_of_linear_waste(node1, node2, rotation, insert, parents)
         for n in nodes:
@@ -455,6 +446,7 @@ class ImproveHeuristic(sol.Solution):
                         continue
                     c = candidates_s.pop(0)
                     self.swap_nodes_same_level(children[pos], c)
+                    pos -= 1
                 candidates = children[min_pos:]
                 while len(candidates) > 1:
                     self.join_neighbors(candidates[0], candidates[1])
@@ -549,7 +541,7 @@ class ImproveHeuristic(sol.Solution):
                 1: {'X': nodes[2].X - nodes[1].X, 'Y': nodes[2].Y - nodes[1].Y},
                 2: {'X': - nodes[2].X + nodes[1].X, 'Y': - nodes[2].Y + nodes[1].Y}
             }
-            # TODO: apparently I need to sum or substract depending if node1 is the first node??
+            # this works but does not make *any* sense:
             if siblings:
                 pos_dif[first_node][axiss[first_node]] -= move_neighbors[first_node] * (2*(first_node == 1)-1)
 
@@ -839,7 +831,6 @@ class ImproveHeuristic(sol.Solution):
             if siblings and insert:
                 continue
             # if i'm swapping with a waste, it has to be a sister.
-            # TODO: why??
             if node2.TYPE in [-1, -3] and not insert and not siblings:
                 continue
             if node1.TYPE in [-1, -3] and not siblings:
@@ -877,7 +868,7 @@ class ImproveHeuristic(sol.Solution):
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
         # self.draw(pos=node1.PLATE_ID, attributes=['name','X', 'Y', 'WIDTH', 'HEIGHT'])
         # self.draw(pos=node2.PLATE_ID, attributes=['name','X', 'Y', 'WIDTH', 'HEIGHT'])
-        self.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot, node2_is_destination=node2_is_destination)
+        recalculate = self.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot, node2_is_destination=node2_is_destination)
         # seq_after = self.check_sequence()
         # print('sequence after= {}'.format(len(seq_after)))
         # len([n.name for tree in self.trees for n in tree.get_descendants() if n.Y < 0]) > 0
@@ -895,7 +886,8 @@ class ImproveHeuristic(sol.Solution):
             self.best_objective = new
 
         # update previous and next nodes:
-        self.update_precedence_nodes()
+        if recalculate:
+            self.update_precedence_nodes()
 
         # if self.debug:
         #     self.hist_objective.append(old)
@@ -909,12 +901,14 @@ class ImproveHeuristic(sol.Solution):
             print("")
 
     def get_node_by_name(self, name):
+        nodes = []
         for tree in self.trees:
-            nodes = tree.search_nodes(name=name)
-            if len(nodes) == 1:
-                return nodes[0]
-            else:
-                return nodes
+            found = tree.search_nodes(name=name)
+            nodes.extend(found)
+        if len(nodes) == 1:
+            return nodes[0]
+        else:
+            return nodes
 
     def change_level_by_seq2(self, level, max_iter=100, max_candidates=50, **kwargs):
 
@@ -922,6 +916,7 @@ class ImproveHeuristic(sol.Solution):
         # TODO: iterate over the nodes of the level.
         # add nodes that are siblings of the nodes in question. At least siblings of the same
         # stack??
+        fails, successes = 0, 0
         i = count = 0
         while count < max_iter and i < len(prec):
             count += 1
@@ -933,23 +928,28 @@ class ImproveHeuristic(sol.Solution):
             other_nodes = [nd.find_ancestor_level(p, level) for p in prec[node]]
             # other_node_levels = set([s for p in prec[node] for s in nd.find_ancestor_level(p, level)])
             candidates = [s for p in other_nodes if p is not None and p.up is not None
-                          for s in p.get_sisters()]
+                          for s in p.up.get_children()]
             if len(candidates) > max_candidates:
                 candidates = rn.sample(candidates, max_candidates)
-            for _insert in [True, False]:
+            for _insert in [False]:
+                # TODO: fix to make it work with insert also.
+                # TODO: not sure why the below commented code was there in the first place
                 # when dealing with siblings... we do not insert!
-                if _insert:
-                    candidates = [c for c in candidates if c not in node_level.get_sisters()]
-                candidates = [c for c in candidates if c in node_level.get_sisters()]
+                # if _insert:
+                #     candidates = [c for c in candidates if c not in node_level.get_sisters()]
+                # candidates = [c for c in candidates if c in node_level.get_sisters()]
                 change = self.try_change_node(node=node_level, candidates=candidates,
                                               insert=_insert, **kwargs)
                 if change:
+                    successes += 1
                     break
+                fails += 1
             if not change:
                 continue
             # made a swap: recalculate
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             prec = seq.to_dict(result_col=1)
+        return fails, successes
 
     def get_nodes_by_level(self, level, filter_fn=None):
         if filter_fn is None:
@@ -957,18 +957,18 @@ class ImproveHeuristic(sol.Solution):
         return [ch for tree in self.trees for ch in tree.traverse(is_leaf_fn=lambda x: x.CUT == level)
             if ch.CUT == level and filter_fn(ch)]
 
-
     def change_level(self, node, level, max_candidates=50, siblings_only=False, **kwargs):
         """
         General function that searches nodes in the same level of the node and try to swap them
         :param node:
         :param level: cut level
         :param kwargs: tolerance, temperature, ...
-        :return: True if swap was succesful
+        :return: True if swap was successful
         """
+        fails = successes = 0
         node_level = nd.find_ancestor_level(node, level)
         if node_level is None:
-            return False
+            return fails, successes
         if siblings_only:
             candidates = [c for c in node.get_sisters()]
         else:
@@ -978,33 +978,57 @@ class ImproveHeuristic(sol.Solution):
         # always try insert first
         for _insert in [True, False]:
             change = self.try_change_node(node=node_level, candidates=candidates, insert=_insert, **kwargs)
+            fails += not change
+            successes += change
             if change:
-                return True
-        return False
+                return fails, successes
+        return fails, successes
 
-    def change_level_by_seq(self, level, max_iter=100, **kwargs):
-        rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
+    def change_level_by_seq(self, level, max_iter=100, include_sisters=False, **kwargs):
+        fails = successes = 0
+        seq = self.check_sequence(type_node_dict=self.type_node_dict)
+        # we search all the nodes that have a seq problem
+        rem = [nd.find_ancestor_level(n, level) for tup in seq for n in tup]
+        rem = [n for n in rem if n is not None]
+        # we also search for all the neighbors of these nodes
+        if include_sisters:
+            rem_2 = [n2 for n in rem for n2 in n.get_sisters()]
+            rem_2 = [n for n in rem_2 if n is not None]
+            rem.extend(rem_2)
+        rem = list(set(rem))
         i = count = 0
         while count < max_iter and i < len(rem):
             count += 1
             node = rem[i]
             i += 1
-            change = self.change_level(node, level, **kwargs)
-            if not change:
+            _fails, _successes = self.change_level(node, level, **kwargs)
+            fails += _fails
+            successes += _successes
+            if not _successes:
                 continue
             # made a swap: recalculate
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             rem = [n for tup in seq for n in tup]
+            if include_sisters:
+                rem_2 = [n2 for n in rem for n2 in n.get_sisters()]
+                rem_2 = [n for n in rem_2 if n is not None]
+                rem.extend(rem_2)
+            rem = list(set(rem))
+        return fails, successes
 
     def change_level_all(self, level, max_candidates=50, **kwargs):
+        fails = successes = 0
         candidates = [c for c in self.get_nodes_by_level(level)]
         if len(candidates) > max_candidates:
             candidates = rn.sample(candidates, max_candidates)
         for c in candidates:
-            change = self.change_level(c, level, **kwargs)
-        return True
+            _fails, _successes = self.change_level(c, level, **kwargs)
+            fails += _fails
+            successes += _successes
+        return fails, successes
 
     def collapse_to_left(self, level, **kwargs):
+        fails = successes = 0
         wastes = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE in [-1, -3])
         wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
         candidates = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE not in [-1, -3])
@@ -1016,10 +1040,15 @@ class ImproveHeuristic(sol.Solution):
                           and nd.get_node_pos_tup(w) < nd.get_node_pos_tup(c)]
             # if siblings: I should be able to swap or insert
             change = self.try_change_node(node=c, candidates=w_siblings, insert=False, **kwargs)
+            fails += not change
+            successes += change
             if change:
                 continue
             # if not siblings: I should be able to only insert
             change = self.try_change_node(node=c, candidates=w_not_siblings, insert=True, **kwargs)
+            fails += not change
+            successes += change
+            return fails, successes
 
     def merge_wastes_seq(self):
         for tree in self.trees:
@@ -1031,6 +1060,7 @@ class ImproveHeuristic(sol.Solution):
         return
 
     def change_level_by_defects(self, level, max_iter=100, **kwargs):
+        fails = successes = 0
         defects = self.check_defects()
         i = count = 0
         while count < max_iter and i < len(defects):
@@ -1039,14 +1069,25 @@ class ImproveHeuristic(sol.Solution):
             node, actual_defect = defect
             i += 1
             # first, we try siblings:
-            change = self.change_level(node, level, siblings_only=True, **kwargs)
-            if not change:
-                change = self.change_level(node, level, **kwargs)
-            if not change:
+            _fails, _successes = self.change_level(node, level, siblings_only=True, **kwargs)
+            fails += _fails
+            successes += _successes
+            if _successes:
+                # made a swap: recalculate
+                defects = self.check_defects()
                 continue
+            _fails, _successes = self.change_level(node, level, **kwargs)
+            fails += _fails
+            successes += _successes
+            if not _successes:
+                continue
+            # I want to give it a try doing some local changes afterwards.
+            _fails, _successes = self.change_level(node, level, siblings_only=True, **kwargs)
+            fails += _fails
+            successes += _successes
             # made a swap: recalculate
             defects = self.check_defects()
-        return True
+        return fails, successes
 
 
     def search_waste_cuts(self, level, **kwargs):
@@ -1058,6 +1099,7 @@ class ImproveHeuristic(sol.Solution):
         :param kwargs:
         :return:
         """
+        fails = successes = 0
         defects = self.check_defects()
         for node, defect in defects:
             node_level = nd.find_ancestor_level(node, level)
@@ -1073,33 +1115,55 @@ class ImproveHeuristic(sol.Solution):
                 cut = cut2
             cut += defect[dim] + 1
             if getattr(waste, dim) <= cut:
-                return False
-            nodes = nd.split_waste(waste, cut)
+                return fails, successes
+            nodes = nd.split_waste(waste, cut, min_size=self.get_param('minWaste'))
+            if not len(nodes):
+                return fails, successes
             candidates = [n for n in nodes[2].get_sisters() if n.TYPE not in [-1, -3]]
             for node_level in nodes.values():
                 change = self.try_change_node(node_level, candidates, insert=False, **kwargs)
+                fails += not change
+                successes += change
                 if change:
-                    return True
-        return
+                    return fails, successes
+        return fails, successes
 
     def search_waste_cuts_2(self, level, **kwargs):
         # this finds wastes that have defects and tries to cut them
         # so that they incircle the defect
+        # We first make a cut so the waste is in the first of the pieces.
+        # Then we *should* make another cut so it lands in the second!
+        fails = successes = 0
         node_defect = [(n, d) for n, d in self.get_nodes_defects()
                         if n.TYPE in [-1, -3] and n.CUT == level]
-
+        def_min_size = self.get_param('minWaste')
         for waste, defect in node_defect:
-            axis, dim = nd.get_orientation_from_cut(waste)
-            cut = defect[axis] - getattr(waste, axis) + defect[dim] + 1
-            if getattr(waste, dim) <= cut:
-                return False
-            nodes = nd.split_waste(waste, cut)
-            candidates = [n for n in nodes[2].get_sisters() if n.TYPE not in [-1, -3]]
-            for waste in nodes.values():
+            wastes = []
+            for i in range(2):
+                axis, dim = nd.get_orientation_from_cut(waste)
+                if i == 0:
+                    cut = defect[axis] - getattr(waste, axis) + max(defect[dim] + 1, def_min_size - 1)
+                else:
+                    cut = defect[axis] - getattr(waste, axis) - 1
+                nodes = {}
+                if getattr(waste, dim) > cut:
+                    nodes = nd.split_waste(waste, cut, min_size=def_min_size)
+                wastes.extend(nodes.values())
+
+            if not len(wastes):
+                return fails, successes
+            if len(wastes) == 4: #  I've added the node 1 two times
+                wastes.pop(2)
+
+            # Here we try to swap the nodes with their siblings:
+            candidates = [n for n in wastes[0].get_sisters() if n.TYPE not in [-1, -3]]
+            for waste in wastes:
                 change = self.try_change_node(waste, candidates, insert=False, **kwargs)
+                fails += not change
+                successes += change
                 if change:
-                    return True
-        return
+                    return fails, successes
+        return fails, successes
 
     def get_max_space_usage(self, solution=None):
         if solution is None:
@@ -1107,23 +1171,29 @@ class ImproveHeuristic(sol.Solution):
         return sum(self.get_param('widthPlates') ** pos
                    for pos, tree in enumerate(solution))
 
-    def insert_nodes_somewhere(self, level, max_iter=100, **params):
+    def insert_nodes_somewhere(self, level, max_iter=100, include_sisters=False, **params):
+        fails = successes = 0
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         candidates = set(rem) | set([d[0] for d in defects])
         # candidates = set(rem)
         level_cand = [nd.find_ancestor_level(n, level) for n in candidates]
+        if include_sisters:
+            level_cand = [n for n in set(level_cand) if n is not None]
+            level_cand_s = [s for n in level_cand for s in n.get_sisters()]
+            level_cand.extend(level_cand_s)
         level_cand = [n for n in set(level_cand) if n is not None]
         # candidates = [ch for tree in self.trees for ch in tree.get_children() if tree.get_children()]
         candidates = self.get_nodes_by_level(level=level-1, filter_fn=lambda x: x.TYPE in [-1, -3])
-        change = False
         i = 0
         for c in level_cand:
             if i >= max_iter:
                 break
-            change |= self.try_change_node(c, candidates, insert=True, **params)
+            change = self.try_change_node(c, candidates, insert=True, **params)
+            fails += not change
+            successes += change
             i += 1
-        return
+        return fails, successes
 
     # def insert_node_somewhere(self, node1, **params):
     #     _params = dict(params)
@@ -1338,7 +1408,9 @@ class ImproveHeuristic(sol.Solution):
         self.next_nodes = self.previous_nodes.list_reverse()
         return True
 
-    def solve(self, options):
+    def solve(self, options, warm_start=False):
+        import pprint as pp
+
         now = time.time()
         end = options['timeLimit']
         self.debug = options.get('debug', False)
@@ -1348,57 +1420,78 @@ class ImproveHeuristic(sol.Solution):
         params['weights'] = weights
 
         params_init = dict(params)
-        self.get_initial_solution(params_init)
+        if not warm_start:
+            self.get_initial_solution(params_init)
+            self.add_jumbo(params['extra_jumbos'])
         self.order_all_children()
         self.clean_empty_cuts()
         self.join_blanks()
         self.clean_empty_cuts_2()
         self.correct_plate_node_ids()
-        self.add_jumbo(params['extra_jumbos'])
         self.jumbos_mirroring(params)
         assert 'weights' in params
         temp = params['temperature']
         # params = {'weights': weights, 'max_iter': iterations, 'temperature': temp}
         coolingRate = params['cooling_rate']
+        fail_success_cat = {}
+        fail_success_acum = []
+        cats = ['cuts', 'cuts2', 'seq', 'def',
+                'all', 'interlevel', 'seq2']
+        fail_success_acum_cat = {c: (0, 0) for c in cats}
+        count = 0
         while True:
+            # TODO: add 'try to make swaps between siblings' move.
             # self.jumbos_swapping(params)
             for level in [1, 2]:
                 self.collapse_to_left(level, **params)
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
-                self.search_waste_cuts(1, **params)
                 for level in [1, 2]:
-                    self.search_waste_cuts_2(level, **params)
+                    fail_success_cat['cuts'] = 0, 0
+                    if level == 1:
+                        fail_success_cat['cuts'] = self.search_waste_cuts(1, **params)
+                    include_sisters = True
+                    fail_success_cat['cuts2'] = self.search_waste_cuts_2(level, **params)
                     # print('search_waste_cuts')
-                    self.change_level_by_seq2(level, **params)
-                    self.change_level_by_seq(level, **params)
-                    self.change_level_by_defects(level, **params)
+                    fail_success_cat['seq2'] = self.change_level_by_seq2(level, **params)
+                    fail_success_cat['seq'] = self.change_level_by_seq(level, include_sisters=False, **params)
+                    fail_success_cat['def'] = self.change_level_by_defects(level, **params)
+                    fail_success_cat['def'] += self.change_level_by_defects(level+1, **params)
                     # print('change_level_by_defects')
-                    self.change_level_all(level, **params)
+                    fail_success_cat['all'] = self.change_level_all(level, **params)
                     # print('collapse left')
                     self.merge_wastes_seq()
                     # print('merge_wastes')
                     self.clean_empty_cuts_2()
                     self.add_1cut()
-                    self.insert_nodes_somewhere(level + 1, **params)
-            # self.try_reduce_nodes(1)
+                    fail_success_cat['interlevel'] = self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, **params)
+                    # fails, successes = zip(*fail_success_cat.values())
+                    fail_success_acum.append(tuple(map(sum, zip(*fail_success_cat.values()))))
+                    fail_success_acum_cat = {c: tuple(map(sum, zip(v, fail_success_cat[c])))
+                                             for c, v in fail_success_acum_cat.items()}
+                    count += 1
             temp *= (1 - coolingRate)
             clock = time.time() - now
             if temp < 1 or clock > end:
                 break
-            # TODO: try to collapse to left here?
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             defects = self.check_defects()
-            print("TEMP={}, seq={}, def={}, best={}, time={}".
+            fails, successes = tuple(map(sum, zip(*fail_success_acum)))
+            print("TEMP={}, seq={}, def={}, best={}, time={}, fails={}, succ={}".
                   format(round(temp),
                          len(seq),
                          len(defects),
                          round(self.best_objective),
-                         clock))
+                         round(clock),
+                         fails,
+                         successes))
+            if count % 100 == 0:
+                pp.pprint(fail_success_acum_cat)
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
         self.trees = [tree for tree in self.trees if nd.get_node_leaves(tree)]
+        # pp.pprint(fail_success_acum_cat)
         pass
 
 
@@ -1407,6 +1500,7 @@ if __name__ == "__main__":
     # TODO: make better the self.search_waste_cuts(1, **params)
     # TODO: try to make level=2 and 3 search_waste_cuts_2(level, **params)
     # TODO: rotation still does not work!
+    # TODO: when making swap or insert, consider make node bigger to make it fit.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

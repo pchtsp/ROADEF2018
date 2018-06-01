@@ -54,8 +54,16 @@ def change_feature(node, feature, value):
 
 def resize_node(node, dim, quantity):
     waste = find_waste(node, child=True)
+    # if we need to create a waste: no problemo.
     if waste is None:
-        return False
+        if quantity <= 0:
+            return False
+        # We need to add a waste at the end...
+        if not node.children:
+            return False
+        last = node.children[-1]
+        add_sibling_waste(last, quantity, dim)
+        return True
     setattr(waste, dim, getattr(waste, dim) + quantity)
     # if we eliminate the waste to 0, we delete the node.
     if not getattr(waste, dim):
@@ -77,8 +85,7 @@ def rotate_node(node, subnodes=True):
 
 
 def find_ancestor_level(node, level, incl_node=True):
-    if incl_node:
-        if node.CUT == level:
+    if incl_node and node.CUT == level:
             return node
     for anc in node.iter_ancestors():
         if anc.CUT == level:
@@ -116,12 +123,6 @@ def find_waste(node, child=False):
     if not children:
         return None
     waste = children[-1]
-    #     if node.TYPE not in [-1, -3]:
-    #         return None
-    #     else:
-    #         waste = duplicate_node_as_child(node)
-    # else:
-    #     waste = children[-1]
     if waste.TYPE not in [-1, -3]:
         return None
     return waste
@@ -152,6 +153,14 @@ def get_orientation_from_cut(node, inv=False):
         dim = 'HEIGHT'
         axis = 'Y'
     return axis, dim
+
+
+def get_axis_of_dim(dim):
+    r = {
+        'HEIGHT': 'Y',
+        'WIDTH': 'X'
+    }
+    return r[dim]
 
 
 def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
@@ -259,7 +268,7 @@ def delete_only_child(node):
     if parent is None:
         return False
     # copying features is not enough.
-    # I have to move the childe one level above.
+    # I have to move the child one level above.
     # and delete the node
     mod_feature_node(child, quantity=-1, feature='CUT')
     if child.children:
@@ -272,6 +281,18 @@ def delete_only_child(node):
         parent.add_child(child)
     parent.remove_child(node)
     order_children(parent)
+    return True
+
+
+def add_sibling_waste(node, size, dim):
+    axis = get_axis_of_dim(dim)
+    features = get_features(node)
+    features[axis] += getattr(node, dim)
+    features[dim] = size
+    features['TYPE'] = -1
+    features['NODE_ID'] += 100
+    waste = create_node(**features)
+    node.add_sister(waste)
     return True
 
 
@@ -344,27 +365,31 @@ def filter_defects(node, defects, previous=True):
     return [d for d in defects if d['X'] <= node.X + node.WIDTH and d['Y'] <= node.Y + node.HEIGHT]
 
 
-def split_waste(node1, cut):
+def split_waste(node1, cut, min_size):
     # first, we split one waste in two.
     # then we make a swap to one of the nodes.
     assert node1.TYPE in [-1, -3], "node {} needs to be waste!".format(node1.name)
     parent = node1.up
     axis, dim = get_orientation_from_cut(node1)
-    # axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
     attributes = [axis, dim]
     size = getattr(node1, dim)
     assert size > cut, "cut for node {} needs to be smaller than size".format(node1.name)
-    node2 = node1.copy()
+    features = get_features(node1)
+    features['NODE_ID'] += 300
+    node2 = create_node(**features)
     nodes = {1: node1, 2: node2}
-    pos = {k: {a: getattr(nodes[k], a) for a in attributes} for k in nodes}
-    pos[2][axis] = pos[1][axis] + cut
-    pos[2][dim] = pos[1][dim] - cut
-    pos[1][dim] = cut
+    attr = {k: {a: getattr(nodes[k], a) for a in attributes} for k in nodes}
+    attr[2][axis] = attr[1][axis] + cut
+    attr[2][dim] = attr[1][dim] - cut
+    attr[1][dim] = cut
+
+    for k, info in attr.items():
+        if info[dim] < min_size:
+            return {}
 
     for k, node in nodes.items():
-        setattr(node, axis, pos[k][axis])
-        setattr(node, dim, pos[k][dim])
-    node2.NODE_ID += 300
+        setattr(node, axis, attr[k][axis])
+        setattr(node, dim, attr[k][dim])
     parent.add_child(node2)
     order_children(parent)
     return nodes
@@ -444,6 +469,7 @@ def assign_cut_numbers(node, cut=0, update=True):
 
 
 def search_node_of_defect(node, defect):
+    # TODO: I could give a max_level. If I arrive, I return the type=2 node
     def before_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
         return defect[axis] > getattr(_node, axis) + getattr(_node, dim)
@@ -452,6 +478,7 @@ def search_node_of_defect(node, defect):
             continue
         if n.TYPE != -2:
             return n
+    return None
 
 
 def get_node_pos_tup(node):
