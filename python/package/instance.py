@@ -44,14 +44,10 @@ class Instance(object):
         if get_next_items:
             return self.next_items
         return self.previous_items
-        # # for each item: we get the items that need to go out first
-        # item_prec = {}
-        # for stack, items in self.get_items_per_stack(stack).items():
-        #     prec = []
-        #     for i in items:
-        #         item_prec[i['ITEM_ID']] = prec[:]
-        #         prec.append(i['ITEM_ID'])
-        # return item_prec
+
+    def get_items_area(self):
+        items = self.get_batch()
+        return sum(i['LENGTH_ITEM']*i['WIDTH_ITEM'] for i in items.values())
 
     def get_defects_plate(self, plate):
         data = self.input_data['defects']

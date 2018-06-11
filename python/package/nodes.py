@@ -1,5 +1,6 @@
 import ete3
 import package.geometry as geom
+import logging as log
 
 # These are auxiliary functions for nodes of trees (see ete3).
 # TODO: this should be a subclass of TreeNode...
@@ -38,6 +39,8 @@ def create_node(**kwargs):
 
 
 def mod_feature_node(node, quantity, feature):
+    if not quantity:
+        return True
     node_pos = getattr(node, feature)
     setattr(node, feature, node_pos + quantity)
     for children in node.get_children():
@@ -99,7 +102,7 @@ def get_descendant(node, which="first"):
         pos = 0
     else:
         pos = -1
-    children = node.get_children()
+    children = node.children
     if not children:
         return node
     else:
@@ -119,11 +122,13 @@ def find_waste(node, child=False):
         # this means we were dealing with the first node
         children = [node]
     else:
-        children = parent.get_children()
+        children = parent.children
     if not children:
         return None
     waste = children[-1]
     if waste.TYPE not in [-1, -3]:
+        return None
+    if waste == node:
         return None
     return waste
 
@@ -175,7 +180,7 @@ def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
 def get_node_pos(node):
     pos = 0
     if node.up is not None:
-        pos = node.up.get_children().index(node)
+        pos = node.up.children.index(node)
     return node.PLATE_ID, pos
 
 
@@ -234,8 +239,9 @@ def duplicate_node_as_child(node, node_mod=500):
     # we increase the cut recursively among all children
     mod_feature_node(child, 1, "CUT")
     node.add_child(child)
-    # print('created in node ID={}, TYPE={} a child with ID={}, TYPE={}'.
-    #       format(node.NODE_ID, node.TYPE, child.NODE_ID, child.TYPE))
+    log.debug('created in node ID={}, TYPE={} a child with ID={}, TYPE={}'.format(
+        node.NODE_ID, node.TYPE, child.NODE_ID, child.TYPE)
+    )
     node.TYPE = -2
     return child
 
@@ -260,13 +266,28 @@ def duplicate_waste_into_children(node):
 #     return child1
 
 
-def delete_only_child(node):
+def collapse_node(node):
+    parent = node.up
+    assert parent is not None
+    mod_feature_node(node, quantity=-1, feature='CUT')
+    children = node.children
+    node.delete()
+    order_children(parent)
+    return children
+
+
+def delete_only_child(node, check_parent=True):
+    # TODO: I think this is easier if I use node.delete()
     if len(node.children) != 1:
-        return False
-    child = node.get_children()[0]
+        return node
+    child = node.children[0]
     parent = node.up
     if parent is None:
-        return False
+        if check_parent:
+            return node
+        else:
+            node.delete()
+            return child
     # copying features is not enough.
     # I have to move the child one level above.
     # and delete the node
@@ -281,7 +302,7 @@ def delete_only_child(node):
         parent.add_child(child)
     parent.remove_child(node)
     order_children(parent)
-    return True
+    return child
 
 
 def add_sibling_waste(node, size, dim):
@@ -322,8 +343,8 @@ def add_child_waste(node, fill):
     features['CUT'] += 1
     features['NODE_ID'] += 100
     child = create_node(**features)
-    # print('created child in node {} with ID={}'.
-    #       format(node.NODE_ID, child.NODE_ID))
+    log.debug('created child in node {} with ID={}'.
+              format(node.NODE_ID, child.NODE_ID))
     node.add_child(child)
     setattr(node, dim_i, fill)
     return True, recalculate
@@ -348,7 +369,7 @@ def del_child_waste(node):
 
 
 def get_node_position_cost_unit(node, plate_width):
-    return node.PLATE_ID * plate_width + node.X + node.Y/10
+    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
 
 
 def get_node_position_cost(node, plate_width):
@@ -417,10 +438,10 @@ def reduce_children(node):
     if min_size <= 0:
         return False
     # ok: we got here: we reduce all children and the node.
-    # print("node and children {} are being reduced by {}".
-    #       format(node.name, min_size))
+    log.debug("node and children {} are being reduced by {}".format(
+        node.name, min_size)
+    )
     for ch in node.get_children():
-        # print("redimensiono {}".format(ch.name))
         setattr(ch, dim, getattr(ch, dim) - min_size)
         if ch.TYPE == -2:
             resize_node(ch, dim, -min_size)
@@ -482,7 +503,7 @@ def search_node_of_defect(node, defect):
 
 
 def get_node_pos_tup(node):
-    return (node.PLATE_ID, node.X, node.Y)
+    return node.PLATE_ID, node.X, node.Y
 
 
 def defects_in_node(node, defects):

@@ -58,7 +58,7 @@ class Solution(inst.Instance):
                     node.add_feature(k, int(v))
         return tree
 
-    def draw(self, attributes=None, pos=0):
+    def draw(self, pos=0, *attributes):
         if attributes is None:
             attributes = ['NODE_ID']
         print(self.trees[pos].get_ascii(show_internal=True, attributes=attributes))
@@ -136,6 +136,10 @@ class Solution(inst.Instance):
     def get_plate_production(self):
         return [(leaf.WIDTH, leaf.HEIGHT) for tree in self.trees for leaf in tree.get_leaves()]
 
+    def count_errors(self):
+        checks = self.check_all()
+        return len([i for k, v in checks.items() for i in v])
+
     def check_all(self):
         func_list = {
             'overlapping': self.check_overlapping
@@ -162,9 +166,18 @@ class Solution(inst.Instance):
             , 'types': self.check_wrong_type
             , 'ch_order': self.check_children_order
             , 'node_size': self.check_sizes
+            , 'only_child': self.check_only_child
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
+
+    def check_only_child(self):
+        only_1_child = []
+        for tree in self.trees:
+            for n in tree.traverse():
+                if len(n.get_children()) == 1 and n.CUT > 0:
+                    only_1_child.append(n)
+        return only_1_child
 
     def check_overlapping(self):
         plate_leaves = self.get_pieces_by_type(by_plate=True)
@@ -257,10 +270,11 @@ class Solution(inst.Instance):
     def check_space_usage(self, solution=None):
         if solution is None:
             solution = self.trees
-        return sum(self.calculate_residual_plate(tree)*(pos+1)**2 for pos, tree in enumerate(solution)) / \
-               (self.get_param('widthPlates') * len(solution)**2)
-        # return sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
-        #     for n in nd.get_node_leaves(tree, type_options=[-1, -3]))
+        return sum(self.calculate_residual_plate(tree)*(pos+1)**4 for pos, tree in enumerate(solution)) / \
+               (self.get_param('widthPlates') * len(solution)**4) + \
+                sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
+                    for n in nd.get_node_leaves(tree, type_options=[-1, -3])) / \
+                ((self.get_param('widthPlates') * len(solution))**2 *self.get_param('widthPlates')*self.get_param('heightPlates'))
 
     def calculate_residual_plate(self, node):
         waste = nd.find_waste(node, child=True)
@@ -341,6 +355,10 @@ class Solution(inst.Instance):
         return nodes_poblems
 
     def check_children_order(self):
+        # This checks that the order of the children
+        # follows the positions.
+        # meaining: if children A is before B
+        # it is lower or more to the left
         bad_order = []
         for tree in self.trees:
             for node in tree.traverse():
@@ -397,6 +415,17 @@ class Solution(inst.Instance):
             if geom.plate_inside_plate(plate1, plate2):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
+
+    def calculate_objective(self):
+        if not self.trees:
+            return None
+        heigth, width = self.get_param('heightPlates'), self.get_param('widthPlates')
+        items_area = self.get_items_area()
+        last_tree_children = self.trees[-1].get_children()
+        last_waste_width = 0
+        if last_tree_children and last_tree_children[-1].TYPE == -3:
+            last_waste_width = last_tree_children[-1].WIDTH
+        return len(self.trees) * heigth * width - last_waste_width * heigth - items_area
 
     def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=50, fontsize=30, solution=None):
         if solution is None:
