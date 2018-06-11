@@ -1,0 +1,36 @@
+I start with a CUT=2 node:
+
+## insert same level:
+
+1. Take out children waste.
+1. Insert node
+1. Add children waste.
+1. Modify sister waste.
+
+## insert same level: + rotation:
+
+1. Take out children waste.
+1. Rotate.
+1. Insert node.
+1. increase CUT and take greatest LVL.
+1. Add children waste to each node.
+1. Modify sister waste.
+
+## level=-1:
+
+1. Take out children waste.
+2. Insert node.
+1. Create child node, reduce all CUTs.
+1. Add children waste.
+1. Modify sister waste.
+
+## level=-1 + rotation: (GENERALIZATION)
+
+1. Take out children waste.
+1. If only child, take out.
+ROT?2. Rotate.
+3. Insert node.
+LOW_CUT?4. Create child node, reduce all CUTs.
+ROT?5. increase CUT and take greatest LVL.
+ROT?6. Add children waste (multiple?).
+7. Modify sister waste.
