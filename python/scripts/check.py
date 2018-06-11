@@ -5,6 +5,7 @@ import package.params as pm
 import numpy as np
 import pprint as pp
 import package.superdict as sd
+import pandas as pd
 
 
 def test1():
@@ -80,14 +81,22 @@ def test5():
 
 
 def test6():
+    import package.heuristic as heur
+    import package.data_input as di
+    path = '/home/pchtsp/Documents/projects/ROADEF2018/results/heuristic1800/A13/'
+    self = heur.ImproveHeuristic.from_io_files(path=path)
 
-    e = '201804271903/'
-    # e = 'multi2/A6/'
-    path = pm.PATHS['experiments'] + e
-    # path = pm.PATHS['results'] + e
-    solution = sol.Solution.from_io_files(path=path, solutionfile='solution_heur')
-    # solution.graph_solution(path, name="edited", dpi=50)
-    solution.check_all()
+    # re-execute
+
+    options = di.load_data(path=path + 'options.json')
+    options['timeLimit'] = 300
+    # options['debug'] = True
+    self.solve(options, warm_start=True)
+    # self.trees = self.best_solution
+    self.correct_plate_node_ids()
+    # self.export_solution(path=path, prefix=options['case_name'] + '_', name="solution")
+    # self.graph_solution(path, name="edited", dpi=50)
+    # print(self.check_sequence(solution=self.best_solution
 
 
 def stats():
@@ -110,5 +119,66 @@ def stats():
 
     pp.pprint(errors_len)
 
+
+def benchmarking():
+    others_path = pm.PATHS['data'] + 'solutions_A.csv'
+    table1 = pd.DataFrame.from_csv(others_path, sep=';')
+    table1.columns = ['others', 'TEAM']
+
+    cases = ["A{}".format(n) for n in range(1, 21)]
+    experiments = {'1': pm.PATHS['results'] + "heuristic1/",
+                   '2': pm.PATHS['results'] + "heuristic2/"}
+    exp_paths = {c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases}
+
+    solutions = \
+        {c: {
+            exp: sol.Solution.from_io_files(path=p, case_name=c)
+            for exp, p in experiments.items()
+        }
+            for c, experiments in exp_paths.items()
+        }
+
+    objectives = \
+        {c: {
+            exp: s.calculate_objective()
+            for exp, s in experiments.items()
+        }
+            for c, experiments in solutions.items()
+        }
+
+    feasibility = \
+        {c: {
+            exp: s.count_errors()
+            for exp, s in experiments.items()
+        }
+            for c, experiments in solutions.items()
+        }
+
+    f_experiment = [*experiments.keys()][0]
+    items_area = {c: s[f_experiment].get_items_area() for c, s in solutions.items()}
+
+    table_items = pd.DataFrame.from_dict(items_area, orient='index').\
+        rename(columns={0: 'items'})
+    table_obj = pd.DataFrame.from_dict(objectives, orient='index').\
+        rename(columns={'1': 'obj_1', '2': 'obj_2'})
+    table_feas = pd.DataFrame.from_dict(feasibility, orient='index')
+    # table2.columns = ['INSTANCE', 'me']
+
+    # df_final = reduce(lambda left, right: pd.merge(left, right, on='name'), dfs)
+    params = {'left_index': True, 'right_index': True}
+    summary = \
+        table1[['others']].\
+            merge(table_obj, **params).\
+            merge(table_items, **params).\
+            merge(table_feas, **params)
+
+    summary['dif_1'] = (summary.obj_1 - summary.others) / summary.others * 100
+    summary['dif_2'] = (summary.obj_2 - summary.others) / summary.others * 100
+    # summary[["INSTANCE", 'others', 'me', 'dif']]
+
+    # {solutions['A4']['1800'].}
+
+
+
 if __name__ == "__main__":
-    stats()
+    test6()
