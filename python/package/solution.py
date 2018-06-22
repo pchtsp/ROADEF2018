@@ -59,9 +59,8 @@ class Solution(inst.Instance):
         return tree
 
     def draw(self, pos=0, *attributes):
-        if attributes is None:
-            attributes = ['NODE_ID']
-        print(self.trees[pos].get_ascii(show_internal=True, attributes=attributes))
+        node = self.trees[pos]
+        nd.draw(node, *attributes)
         return
 
     def draw_interactive(self, pos=0):
@@ -271,10 +270,10 @@ class Solution(inst.Instance):
         if solution is None:
             solution = self.trees
         return sum(self.calculate_residual_plate(tree)*(pos+1)**4 for pos, tree in enumerate(solution)) / \
-               (self.get_param('widthPlates') * len(solution)**4) + \
-                sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
-                    for n in nd.get_node_leaves(tree, type_options=[-1, -3])) / \
-                ((self.get_param('widthPlates') * len(solution))**2 *self.get_param('widthPlates')*self.get_param('heightPlates'))
+               (self.get_param('widthPlates') * len(solution)**4)
+                # sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
+                #     for n in nd.get_node_leaves(tree, type_options=[-1, -3])) / \
+                # ((self.get_param('widthPlates') * len(solution))**2 *self.get_param('widthPlates')*self.get_param('heightPlates'))
 
     def calculate_residual_plate(self, node):
         waste = nd.find_waste(node, child=True)
@@ -479,10 +478,16 @@ class Solution(inst.Instance):
         )
         more_info = ''
         if leaf.TYPE >= 0:
-            more_info = "\nstack={}\npos={}\ntype={}".format(
+            parent = leaf.up
+            if parent is None:
+                parent = ""
+            else:
+                parent = parent.name
+            more_info = "\nstack={}\npos={}\ntype={}\nparent={}".format(
                 stack.get(leaf.TYPE, ''),
                 sequence.get(leaf.TYPE, ''),
-                leaf.TYPE
+                leaf.TYPE,
+                parent
             )
         ax1.text(leaf.X + leaf.WIDTH / 2, leaf.Y + leaf.HEIGHT / 2,
                  '{} x {}{}\nnode={}'.

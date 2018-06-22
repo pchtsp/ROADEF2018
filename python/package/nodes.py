@@ -55,6 +55,20 @@ def change_feature(node, feature, value):
     return True
 
 
+def resize_waste(waste, dim, quantity):
+    assert is_waste(waste), "following node is not a waste! {}".format(waste.name)
+    parent = waste.up
+    if parent is None:
+        return False
+    setattr(waste, dim, getattr(waste, dim) + quantity)
+    if not getattr(waste, dim):
+        waste.detach()
+    plate, pos = get_node_pos(waste)
+    for ch in parent.children[pos+1:]:
+        mod_feature_node(ch, quantity, get_axis_of_dim(dim))
+    return True
+
+
 def resize_node(node, dim, quantity):
     waste = find_waste(node, child=True)
     # if we need to create a waste: no problemo.
@@ -153,10 +167,9 @@ def get_orientation_from_cut(node, inv=False):
         result = not result
     if result:  # cuts 1 and 3
         dim = 'WIDTH'
-        axis = 'X'
     else:  # cut 2 and 4
         dim = 'HEIGHT'
-        axis = 'Y'
+    axis = get_axis_of_dim(dim)
     return axis, dim
 
 
@@ -267,6 +280,16 @@ def duplicate_waste_into_children(node):
 
 
 def collapse_node(node):
+    # I will only collapse it if it has incorrect children
+    if len(node.children) <= 1:
+        # node has only on child, cannot collapse
+        return [node]
+    axis, dim = get_orientation_from_cut(node)
+    if getattr(node, dim) == getattr(node.children[0], dim):
+        # child is okay: no need to collapse
+        return [node]
+    log.debug('We collapse node {} into its children: {}'.
+              format(node.name, get_children_names(node)))
     parent = node.up
     assert parent is not None
     mod_feature_node(node, quantity=-1, feature='CUT')
@@ -520,6 +543,20 @@ def defects_in_node(node, defects):
             defects_in_node.append(defect)
     return defects_in_node
 
+
+def is_waste(node):
+    return node.TYPE in [-1, -3]
+
+
+def get_children_names(node):
+    return [ch.name for ch in node.children]
+
+
+def draw(node, *attributes):
+    if attributes is None:
+        attributes = ['NODE_ID']
+    print(node.get_ascii(show_internal=True, attributes=attributes))
+    return
 
 
 if __name__ == "__main__":
