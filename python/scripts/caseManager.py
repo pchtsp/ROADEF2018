@@ -5,7 +5,7 @@ import shutil
 
 
 def separate_cases():
-    destination = pm.PATHS['results'] + 'heuristic/'
+    destination = pm.PATHS['results'] + 'heuristic1800/'
 
     files = os.listdir(pm.PATHS['data'])
     cases = ["A{}".format(n) for n in range(1, 21)]
@@ -23,11 +23,17 @@ def separate_cases():
 ############################################
 
 def move_case_checker():
-    origin = pm.PATHS['results'] + 'heuristic/'
+    origin = pm.PATHS['results'] + 'heuristic1800/'
     cases = ["A{}".format(n) for n in range(1, 21)]
     _files = [os.path.join(origin, f, f + '_{}.csv'.format(f_type))
-              for f in cases for f_type in ['solution', 'defects', 'batch']]
+              for f in cases for f_type in ['solution']]
     destination = pm.PATHS['checker_data']
     for _f in _files:
         if os.path.exists(_files[0]):
             shutil.copy(_f, destination)
+
+
+if __name__ == "__main__":
+    separate_cases()
+
+

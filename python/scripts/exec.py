@@ -5,7 +5,9 @@ import package.data_input as di
 import package.model as md
 import package.heuristic as heur
 import argparse
-import logging
+import logging as log
+import copy
+
 
 def solve_case(options):
 
@@ -78,7 +80,7 @@ def solve_heuristic(options):
 def solve(options, case=None):
 
     # case = args.case
-    options = dict(options)
+    options = copy.deepcopy(options)
     if case is None:
         case = options['case_name']
 
@@ -91,19 +93,30 @@ def solve(options, case=None):
 
     di.export_data(output_path, options, name="options", file_type='json')
 
-    level = logging.INFO
+    level = log.INFO
     if options.get('debug', False):
-        level = logging.DEBUG
+        level = log.DEBUG
     logFile = os.path.join(output_path, 'output.log')
+    logFormat = '%(asctime)s %(levelname)s:%(message)s'
     open(logFile, 'w').close()
-    logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
-                        filename=logFile,
-                        level=level)
+    fileh = log.FileHandler(logFile, 'a')
+    formatter = log.Formatter(logFormat)
+    fileh.setFormatter(formatter)
+    _log = log.getLogger()
+    _log.handlers = [fileh]
+    _log.setLevel(level)
 
-    if options['solver'] == 'HEUR':
-        solve_heuristic(options)
-    else:
-        solve_case_iter(options)
+    # log.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
+    #                 filename=logFile,
+    #                 level=level)
+
+    try:
+        if options['solver'] == 'HEUR':
+            solve_heuristic(options)
+        else:
+            solve_case_iter(options)
+    except:
+        log.exception("message")
 
 
 if __name__ == "__main__":

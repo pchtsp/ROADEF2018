@@ -3,6 +3,9 @@ import package.model as md
 import package.params as pm
 import scripts.exec as exec
 import os
+import logging as log
+import sys
+
 
 if __name__ == "__main__":
 
@@ -12,6 +15,7 @@ if __name__ == "__main__":
     hard = ['A14', 'A15', 'A13']
 
     cases = ['A{}'.format(case) for case in range(1, 21)]
+    cases = ['A{}'.format(case) for case in range(8, 21)]
     # cases = hard
     c_errors = {}
     for case in cases:
@@ -20,6 +24,6 @@ if __name__ == "__main__":
             exec.solve(pm.OPTIONS, case)
         except:
             c_errors[case] = True
-            pass
+            log.error(sys.exc_info()[0])
 
     print(c_errors)
