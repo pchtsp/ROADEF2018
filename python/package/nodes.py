@@ -1,6 +1,7 @@
 import ete3
 import package.geometry as geom
 import logging as log
+import random as rn
 
 # These are auxiliary functions for nodes of trees (see ete3).
 # TODO: this should be a subclass of TreeNode...
@@ -56,16 +57,18 @@ def change_feature(node, feature, value):
 
 
 def resize_waste(waste, dim, quantity):
-    assert is_waste(waste), "following node is not a waste! {}".format(waste.name)
+    assert is_waste(waste), "node is not a waste! {}".format(waste.name)
     parent = waste.up
     if parent is None:
         return False
+    log.debug('waste {} is being reduced by {}'.format(waste.name, quantity))
     setattr(waste, dim, getattr(waste, dim) + quantity)
-    if not getattr(waste, dim):
-        waste.detach()
     plate, pos = get_node_pos(waste)
     for ch in parent.children[pos+1:]:
         mod_feature_node(ch, quantity, get_axis_of_dim(dim))
+    if not getattr(waste, dim):
+        log.debug('waste {} is being removed'.format(waste.name))
+        waste.detach()
     return True
 
 
@@ -87,6 +90,10 @@ def resize_node(node, dim, quantity):
         waste.detach()
     delete_only_child(node)
     return True
+
+#
+# def resize_node_2(node, dim, quantity):
+#
 
 
 def rotate_node(node, subnodes=True):
@@ -146,6 +153,14 @@ def find_waste(node, child=False):
         return None
     return waste
 
+
+def find_all_wastes(node):
+    # same as find_waste but returns all wastes
+    return [w for w in node.children if is_waste(w)]
+
+
+def get_code_node(node):
+    return rn.randint(1, 100000)
 
 def order_children(node):
     for v in node.traverse():
@@ -230,7 +245,7 @@ def get_features(node, features=None):
 
 def duplicate_node_as_its_parent(node, node_mod=900, return_both=False):
     features = get_features(node)
-    features['NODE_ID'] += node_mod
+    features['NODE_ID'] = get_code_node(node)
     parent = create_node(**features)
     mod_feature_node(node=node, quantity=1, feature="CUT")
     grandparent = node.up
@@ -247,7 +262,7 @@ def duplicate_node_as_its_parent(node, node_mod=900, return_both=False):
 
 def duplicate_node_as_child(node, node_mod=500):
     features = get_features(node)
-    features['NODE_ID'] += node_mod
+    features['NODE_ID'] = get_code_node(node)
     child = create_node(**features)
     # we increase the cut recursively among all children
     mod_feature_node(child, 1, "CUT")
@@ -295,6 +310,7 @@ def collapse_node(node):
     mod_feature_node(node, quantity=-1, feature='CUT')
     children = node.children
     node.delete()
+    # TODO: the following I can avoid I think:
     order_children(parent)
     return children
 
@@ -329,22 +345,27 @@ def delete_only_child(node, check_parent=True):
 
 
 def add_sibling_waste(node, size, dim):
+    log.debug('adding a waste on node {}'.format(node.name))
     axis = get_axis_of_dim(dim)
     features = get_features(node)
     features[axis] += getattr(node, dim)
     features[dim] = size
     features['TYPE'] = -1
-    features['NODE_ID'] += 100
+    features['NODE_ID'] = get_code_node(node)
     waste = create_node(**features)
     node.add_sister(waste)
     return True
 
 
-def add_child_waste(node, fill):
+def add_child_waste(node, child_size, waste_pos=None, increase_node=True):
     recalculate = False
-    axis, dim_i = get_orientation_from_cut(node, inv=True)
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     node_size = getattr(node, dim_i)
-    child_size = fill - node_size
+    # child_size = fill - node_size
+    if increase_node:
+        fill = node_size + child_size
+    else:
+        fill = node_size
     if child_size <= 0:
         # sometimes we want a node without children
         # (because it had waste as only other child and now it hasn't).
@@ -360,13 +381,16 @@ def add_child_waste(node, fill):
         duplicate_node_as_child(node, 600)
         recalculate = True
     features = get_features(node)
-    features[axis] += node_size
+    if waste_pos is None:
+        # if position not assigned, we assume is at the end
+        waste_pos = node_size
+    features[axis_i] += waste_pos
     features[dim_i] = child_size
     features['TYPE'] = -1
     features['CUT'] += 1
-    features['NODE_ID'] += 100
+    features['NODE_ID'] = get_code_node(node)
     child = create_node(**features)
-    log.debug('created child in node {} with ID={}'.
+    log.debug('created waste inside node {} with ID={}'.
               format(node.NODE_ID, child.NODE_ID))
     node.add_child(child)
     setattr(node, dim_i, fill)
@@ -419,7 +443,7 @@ def split_waste(node1, cut, min_size):
     size = getattr(node1, dim)
     assert size > cut, "cut for node {} needs to be smaller than size".format(node1.name)
     features = get_features(node1)
-    features['NODE_ID'] += 300
+    features['NODE_ID'] = get_code_node(node1)
     node2 = create_node(**features)
     nodes = {1: node1, 2: node2}
     attr = {k: {a: getattr(nodes[k], a) for a in attributes} for k in nodes}
@@ -473,7 +497,7 @@ def reduce_children(node):
     features = get_features(node)
     features[axis] += features[dim]
     features[dim] = min_size
-    features['NODE_ID'] += 700
+    features['NODE_ID'] = get_code_node(node)
     features['TYPE'] = -1
     node2 = create_node(**features)
     node.add_sister(node2)
@@ -482,10 +506,7 @@ def reduce_children(node):
 
 
 def check_children_fit(node):
-    if not node.children:
-        return True
-    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
-    return sum(getattr(n, dim_i) for n in node.get_children()) == getattr(node, dim_i)
+    return get_surplus_dim(node) == 0
 
 
 def node_inside_node(node1, node2, **kwargs):
@@ -557,6 +578,52 @@ def draw(node, *attributes):
         attributes = ['NODE_ID']
     print(node.get_ascii(show_internal=True, attributes=attributes))
     return
+
+
+def extract_node_from_position(node):
+    # take node out from where it is (detach and everything)
+    # update all the positions of siblings accordingly
+    parent = node.up
+    plate, ch_pos = get_node_pos(node)
+    axis, dim = get_orientation_from_cut(node)
+    for sib in parent.children[ch_pos+1:]:
+        mod_feature_node(node=sib, quantity=-getattr(node, dim), feature=axis)
+    log.debug('We extract node {} from its parent: {}'.
+              format(node.name, parent.name))
+    node.detach()
+    # In case there's any waste at the end: I want to trim it.
+    del_child_waste(node)
+    return node
+
+
+def get_surplus_dim(node):
+    if node.is_leaf():
+        return 0
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
+
+
+def repair_dim_node(node):
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    change = get_surplus_dim(node)
+    node_size = getattr(node, dim_i)
+    # if surplus is negative: we need to add a waste, it's easier
+    # if surplus is positive: we start deleting wastes.
+    if change < 0:
+        add_child_waste(node, child_size=-change,
+                        waste_pos=node_size+change,
+                        increase_node=False)
+        return True
+    wastes = find_all_wastes(node)
+    # we want the smallest at the end:
+    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
+    remaining = change
+    while wastes and remaining:
+        waste = wastes.pop()
+        quantity = min(remaining, getattr(waste, dim_i))
+        resize_waste(waste, dim_i, -quantity)
+        remaining -= quantity
+    return True
 
 
 if __name__ == "__main__":

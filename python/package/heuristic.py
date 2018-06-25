@@ -34,21 +34,6 @@ class ImproveHeuristic(sol.Solution):
     def update_best_solution(self, solution):
         self.best_solution = copy.deepcopy(solution)
 
-    def extract_node_from_position(self, node):
-        # take node out from where it is (detach and everything)
-        # update all the positions of siblings accordingly
-        parent = node.up
-        plate, ch_pos = nd.get_node_pos(node)
-        axis, dim = nd.get_orientation_from_cut(node)
-        for sib in parent.children[ch_pos+1:]:
-            nd.mod_feature_node(node=sib, quantity=-getattr(node, dim), feature=axis)
-        log.debug('We extract node {} from its parent: {}'.
-                  format(node.name, parent.name))
-        node.detach()
-        # In case there's any waste at the end: I want to trim it.
-        nd.del_child_waste(node)
-        return node
-
     def insert_node_at_position(self, node, destination, position):
         """
         :param node: node I'm going to insert.
@@ -189,11 +174,26 @@ class ImproveHeuristic(sol.Solution):
 
         return self.check_node_in_space(node_space, space, insert)
 
-    def check_assumptions_swap(self, node1, node2):
+    @staticmethod
+    def check_assumptions_swap(node1, node2, insert):
         # for now, the only requisite is to have the same level.
         # Maybe this will be relaxed in the future.
-        assert node1.CUT == node2.CUT, \
-            'nodes {} and {} need to have the same level'.format(node1.name, node2.name)
+        siblings = node1.up == node2.up
+        if siblings and insert:
+            return False
+        if node1.TYPE in [-1, -3] and node2.TYPE in [-1, -3]:
+            return False
+        if node1.TYPE in [-1, -3] and insert:
+            return False
+        if node1.up == node2 or node1 == node2.up:
+            return False
+        # for now, we do not allow swapping between different levels
+        # or inserting a node from a higher to a lower level
+        if node1.CUT != node2.CUT and not insert:
+            return False
+        if node1.CUT < node2.CUT:
+            return False
+        return True
 
     def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False):
         if node1.up == node2.up:
@@ -202,8 +202,9 @@ class ImproveHeuristic(sol.Solution):
         rotations = [[]]
         if try_rotation:
             rotations_av = [[], [1], [2], [1, 2]]
-            rotations = np.random.choice(a=rotations_av, p=[0.8, 0.1, 0.05, 0.05],
-                             size=2, replace=False)
+            probs = [0.8, 0.1, 0.05, 0.05]
+            # probs = [0.8, 0.2, 0, 0]
+            rotations = np.random.choice(a=rotations_av, p=probs, size=2, replace=False)
         for rotation in rotations:
             result = self.check_swap_size(node1, node2, insert, rotate=rotation)
             if result:
@@ -229,10 +230,11 @@ class ImproveHeuristic(sol.Solution):
         recalculate = False
         nodes_to_move = []
         if self.debug:
+            pass
             # self.draw(node1.PLATE_ID, 'name')
             # self.draw(node2.PLATE_ID, 'name')
-            self.draw(node1.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
-            self.draw(node2.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
+            # self.draw(node1.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
+            # self.draw(node2.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
         if node1.up != parent2 or ch_pos[1] != ch_pos[2]:
             nodes_to_move.append(1)
         if not insert and (node2.up != parent1 or ch_pos[1] + 1 != ch_pos[2]):
@@ -243,38 +245,35 @@ class ImproveHeuristic(sol.Solution):
             other_k = other_node[k]
             destination = parents[other_k]
             ch_pos_dest = ch_pos[other_k]
-            node = self.extract_node_from_position(node)  # 1: take out children waste
+            node = nd.extract_node_from_position(node)  # 1: take out children waste
             node = nd.delete_only_child(node, check_parent=False)  # 1.5: collapse if only child
             if k in rotation:
                 nd.rotate_node(node)  # 2: rotate
             node = self.insert_node_at_position(node, destination, ch_pos_dest)  # 3, 4: insert+child
 
-            # 5: if rotation, we open the node to its children
-            # TODO: we need to check the orientation of the node and correct it.
-            for ch in node.children:
-                nd.collapse_node(ch)
+            # 5: if necessary, we open the node to its children
             inserted_nodes = nd.collapse_node(node)
+            for _node in inserted_nodes:
+                for ch in _node.children:
+                    nd.collapse_node(ch)
 
             # 6: now we check if we need to create a waste children on the node:
             _, dest_dim = nd.get_orientation_from_cut(destination)
             for _node in inserted_nodes:
-                status, recalculate = nd.add_child_waste(_node, fill=getattr(destination, dest_dim))
+                dest_size = getattr(destination, dest_dim)
+                node_size = getattr(node, dest_dim)
+                status, recalculate = nd.add_child_waste(node=_node, child_size=dest_size-node_size)
             nodes[k] = node
 
         # 7: we need to update the waste at both sides
         if parent1 != parent2:
-            change = self.calculate_change_of_linear_waste(nodes, rotation, insert, parents)
-            for n in nodes:
-                _axis, _dim = nd.get_orientation_from_cut(parents[n], inv=True)
-                worked = nd.resize_node(parents[n], _dim, change[n])
-                if not worked and nd.is_waste(nodes[n]):
-                    nd.resize_waste(nodes[n], _dim, change[n])
-# self.graph_solution()
+            for parent in parents.values():
+                nd.repair_dim_node(parent)
+
         if self.debug:
             consist = self.check_consistency()
             if len(consist):
                 pass
-
         return True
         # return recalculate
 
@@ -291,7 +290,8 @@ class ImproveHeuristic(sol.Solution):
 
         # not sure about this.
         for k, node in nodes.items():
-            if not (node.CUT - previous_parents[k].CUT) % 2:
+            if not (node.CUT - previous_parents[k].CUT) % 2 and not rotation:
+                log.debug("we're doing sonme weird check here")
             # this means we did some weird level changing, probably:
                 _dim = dims[k]
                 present_size[k][_dim] = nd.get_size_without_waste(node, _dim)
@@ -849,23 +849,8 @@ class ImproveHeuristic(sol.Solution):
             node1, node2 = node, candidate
             if reverse:
                 node1, node2 = candidate, node
-            siblings = node1.up == node2.up
-            if siblings and insert:
+            if not self.check_assumptions_swap(node1, node2, insert):
                 continue
-            if node1.TYPE in [-1, -3] and node2.TYPE in [-1, -3]:
-                continue
-            if node1.TYPE in [-1, -3] and insert:
-                continue
-            if node1.up == node2 or node1 == node2.up:
-                continue
-            # for now, we do not allow swapping between different levels
-            # or inserting a node from a higher to a lower level
-            if node1.CUT != node2.CUT and not insert:
-                continue
-            if node1.CUT < node2.CUT:
-                continue
-            # if insert_only=True, we insert node1 before node2 but we do not move node2
-            # self.check_assumptions_swap(node1, node2)
             result = self.check_swap_size_rotation(node1, node2, insert=insert,
                                                    try_rotation=kwargs.get('try_rotation', False))
             if result is None:
@@ -894,6 +879,9 @@ class ImproveHeuristic(sol.Solution):
             change = 'Swap'
         if len(rot):
             change += ' (rot={})'.format(rot)
+        log.debug('Started {} nodes=({}/{}, {}/{}) gain={}'.
+                  format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
+                      round(balance)))
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
@@ -908,7 +896,7 @@ class ImproveHeuristic(sol.Solution):
             self.update_precedence_nodes()
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        log.debug('{} nodes=({}/{}, {}/{}) gain={}, new={}, best={}'.
+        log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
                       round(balance), round(new), round(self.best_objective)))
         if new < old:
@@ -1496,28 +1484,30 @@ class ImproveHeuristic(sol.Solution):
                 if not changed_flag and self.best_objective < weights['defects']:
                     try_rotation = True
                     params['try_rotation'] = True
-                    for k in weights:
-                        weights[k] *= 1000000
+                    weights['defects'] *= 10000
+                    weights['space'] *= 10000000
+                    # for k in weights:
+                    #     weights[k] *= 1000000
                         # coolingRate /= 5
-                    # params['max_candidates'] *= 2
+                    params['max_candidates'] = 30
                     changed_flag = True
                     log.info('activate rotation')
-                log.debug('collapse left')
+                log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, **params)
-                log.debug('merge_wastes')
+                log.debug('DO: merge_wastes')
                 self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
                 if level == 1:
                     fsc['cuts'] = self.search_waste_cuts(1, **params)
                 include_sisters = True
                 fsc['cuts2'] = self.search_waste_cuts_2(level, **params)
-                log.debug('collapse left')
+                log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, **params)
-                log.debug('search_waste_cuts')
+                log.debug('DO: search_waste_cuts')
                 fsc['seq2'] = self.change_level_by_seq2(level, **params)
                 fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, **params)
                 fsc['def'] = self.change_level_by_defects(level, **params)
-                log.debug('change_level_by_defects')
+                log.debug('DO: change_level_by_defects')
                 fsc['all'] = self.change_level_all(level, **params)
                 self.clean_empty_cuts_2()
                 self.add_1cut()
@@ -1535,7 +1525,7 @@ class ImproveHeuristic(sol.Solution):
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)
             b_accepted = self.accepted
             b_improved = self.improved
-            if new_imp_ratio < 50:
+            if new_imp_ratio < 60:
                 temp *= (1 - coolingRate)
             clock = time.time() - now
             if temp < 1 or clock > end:
@@ -1566,7 +1556,7 @@ class ImproveHeuristic(sol.Solution):
 
 if __name__ == "__main__":
     # TODO: when making swap or insert, consider make node bigger to make it fit.
-    # TODO: there's still some problem with multi-level swapping in some cases. A2 or A20
+    # TODO: to calculate space use the sum of all available spaces.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
