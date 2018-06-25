@@ -116,7 +116,7 @@ def solve(options, case=None):
         else:
             solve_case_iter(options)
     except:
-        log.exception("message")
+        log.exception("error while executing solve")
 
 
 if __name__ == "__main__":
