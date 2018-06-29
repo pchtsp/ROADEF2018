@@ -240,16 +240,6 @@ class Solution(inst.Instance):
         """
         node_defect = self.get_nodes_defects(solution)
         return [(node, defect) for node, defect in node_defect if node.TYPE >= 0]
-        # plate_cuts = self.get_pieces_by_type(by_plate=True, solution=solution)
-        # pieces_with_defects = []
-        # for plate, piece_dict in plate_cuts.items():
-        #     defects_list = self.get_defects_plate(plate)
-
-            # for k, item in piece_dict.items():
-            #     defects = nd.defects_in_node(item, defects=defects_list)
-            #     for defect in defects:
-            #         pieces_with_defects.append((item, defect))
-        # return pieces_with_defects
 
     def get_nodes_defects(self, solution=None):
         # TODO: I could give a level as argument to filter when searching.

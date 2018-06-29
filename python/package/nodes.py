@@ -404,6 +404,12 @@ def get_size_without_waste(node, dim):
     return getattr(node, dim) - getattr(waste, dim)
 
 
+def get_size_without_wastes(node, dim):
+    wastes = find_all_wastes(node)
+    sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
+    return getattr(node, dim) - sum_waste_dims
+
+
 def del_child_waste(node):
     axis, dim_i = get_orientation_from_cut(node, inv=True)
     child = find_waste(node, child=True)
@@ -615,8 +621,8 @@ def repair_dim_node(node):
                         increase_node=False)
         return True
     wastes = find_all_wastes(node)
-    # we want the smallest at the end:
-    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
+    # we want the farthest at the end:
+    wastes.sort(key=lambda x: getattr(x, axis_i))
     remaining = change
     while wastes and remaining:
         waste = wastes.pop()
