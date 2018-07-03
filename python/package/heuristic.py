@@ -1481,7 +1481,7 @@ class ImproveHeuristic(sol.Solution):
                     params['try_rotation'] = False
                 else:
                     params['try_rotation'] = try_rotation
-                if not changed_flag and self.best_objective < weights['defects']:
+                if not changed_flag and self.best_objective < weights['defects']//2:
                     try_rotation = True
                     params['try_rotation'] = True
                     weights['defects'] *= 10000
@@ -1489,7 +1489,7 @@ class ImproveHeuristic(sol.Solution):
                     # for k in weights:
                     #     weights[k] *= 1000000
                         # coolingRate /= 5
-                    params['max_candidates'] = 30
+                    # params['max_candidates'] = 30
                     changed_flag = True
                     log.info('activate rotation')
                 log.debug('DO: collapse left')
