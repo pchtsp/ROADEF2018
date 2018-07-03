@@ -277,71 +277,6 @@ class ImproveHeuristic(sol.Solution):
         return True
         # return recalculate
 
-    def calculate_change_of_linear_waste(self, nodes, rotation, insert, previous_parents):
-        # axis, dim = nd.get_orientation_from_cut(node1)
-        # axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
-        # nodes = {1: node1, 2: node2}
-        dims = {k: nd.get_orientation_from_cut(node, inv=True)[1] for k, node in previous_parents.items()}
-        dims_i = {k: nd.get_orientation_from_cut(node)[1] for k, node in previous_parents.items()}
-
-        present_size = {
-            n: {dim: getattr(node, dim) for dim in dims.values()}
-            for n, node in nodes.items()}
-
-        # not sure about this.
-        for k, node in nodes.items():
-            if not (node.CUT - previous_parents[k].CUT) % 2 and not rotation:
-                log.debug("we're doing sonme weird check here")
-            # this means we did some weird level changing, probably:
-                _dim = dims[k]
-                present_size[k][_dim] = nd.get_size_without_waste(node, _dim)
-        previous_size = copy.deepcopy(present_size)
-
-        for n in rotation:
-            _node = nodes[n]
-            _dim = nd.get_orientation_from_cut(_node)[1]
-            _dim_i = nd.get_orientation_from_cut(_node, inv=True)[1]
-            previous_size[n][_dim] = nd.get_size_without_waste(_node, _dim_i)
-            # previous_size[n][dims[n]] = nd.get_size_without_waste(nodes[n], dims_i[n])
-            previous_size[n][_dim_i] = getattr(_node, _dim)
-
-        if insert:
-            # if inserting, we only care about the first node.
-            # since it's the only one that moves
-            for dim in dims.values():
-                previous_size[2][dim] = present_size[2][dim] = 0
-        change = {
-            1: previous_size[1][dims[1]] - present_size[2][dims[1]],
-            2: previous_size[2][dims[2]] - present_size[1][dims[2]],
-        }
-        return change
-
-    def calculate_change_of_area_waste(self, node1, node2, insert):
-        # axis_i, dim_i = nd.get_orientation_from_cut(node1, inv=True)
-        nodes = {1: node1, 2: node2}
-        parents = {k: node.up for k, node in nodes.items()}
-        dims_i = {k: nd.get_orientation_from_cut(node, inv=True)[1] for k, node in nodes.items()}
-        change_linear = {1: 0, 2: 0}
-        if parents[1] != parents[2]:
-            change_linear = self.calculate_change_of_linear_waste(nodes, [], insert, parents)
-        change_area = {n: v * getattr(nodes[n], dims_i[n]) for n, v in change_linear.items()}
-
-        # I have to add the smaller parts of waste that are also moved:
-        waste = \
-            {n:
-                sum(n.HEIGHT * n.WIDTH
-                    for n in nd.get_node_leaves(nodes[n], type_options=[-1, -3]))
-             for n in nodes}
-        if insert:
-            waste[2] = 0
-
-        add_waste = {
-            1: - waste[1] + waste[2],
-            2: - waste[2] + waste[1]
-        }
-
-        return {n: change_area[n] + add_waste[n] for n in nodes}
-
     def clean_empty_cuts(self):
         """
         An empty cut is a cut with a 0 distance in a dimension
@@ -716,11 +651,8 @@ class ImproveHeuristic(sol.Solution):
                )
         return balance
 
-    def evaluate_swap(self, weights=None, **kwargs):
+    def evaluate_swap(self, weights, **kwargs):
         # the bigger the better
-        if weights is None:
-            # weights = {'space': 1/10000, 'seq': 100000, 'defects': 1000}
-            weights = {'space': 1 / 100000, 'seq': 100000, 'defects': 10000}
         components = {
             'space': self.check_swap_space(**kwargs)
             ,'seq': self.check_swap_nodes_seq(**kwargs)
@@ -1340,11 +1272,17 @@ class ImproveHeuristic(sol.Solution):
             self.best_objective = new
         return True
 
-    def jumbos_swapping(self, params):
+    def jumbos_swapping(self, params, max_jumbos=None):
         change = False
-        for pos1, tree1 in enumerate(self.trees):
-            for pos2, tree2 in enumerate(self.trees[pos1+1:], start=pos1+1):
-                change |= self.try_swap_jumbo(pos1, pos2, **params)
+        count = 0
+        jumbo_pairs = [(pos1, pos2) for pos1, tree1 in enumerate(self.trees)
+                       for pos2, tree2 in enumerate(self.trees[pos1+1:], start=pos1+1)]
+        rn.shuffle(jumbo_pairs)
+        for pos1, pos2 in jumbo_pairs:
+            change |= self.try_swap_jumbo(pos1, pos2, **params)
+            count += 1
+            if max_jumbos is not None and count >= max_jumbos:
+                return change
         return change
 
     def mirror_jumbo_x(self, jumbo):
@@ -1385,10 +1323,16 @@ class ImproveHeuristic(sol.Solution):
             self.best_objective = new
         return True
 
-    def jumbos_mirroring(self, params):
+    def jumbos_mirroring(self, params, max_jumbos=None):
         change = False
-        for pos1, tree1 in enumerate(self.trees):
+        count = 0
+        enumeration = [pos1 for pos1, tree1 in enumerate(self.trees)]
+        rn.shuffle(enumeration)
+        for pos1 in enumeration:
             change |= self.try_mirror_jumbo_x(pos1, **params)
+            count += 1
+            if max_jumbos is not None and count >= max_jumbos:
+                return change
         return change
 
     def get_initial_solution(self, params):
@@ -1472,8 +1416,8 @@ class ImproveHeuristic(sol.Solution):
         changed_flag = False
         b_accepted = b_improved = 0
         while True:
-            # self.jumbos_swapping(params)
-            # self.jumbos_mirroring(params)
+            self.jumbos_swapping(params, 5)
+            self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=[0.4, 0.4, 0.2])
@@ -1557,6 +1501,7 @@ class ImproveHeuristic(sol.Solution):
 if __name__ == "__main__":
     # TODO: when making swap or insert, consider make node bigger to make it fit.
     # TODO: to calculate space use the sum of all available spaces.
+    # TODO: when taking out empty slots, I cannot end up with a slot less than 20.s
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
