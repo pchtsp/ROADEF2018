@@ -621,8 +621,12 @@ def repair_dim_node(node):
                         increase_node=False)
         return True
     wastes = find_all_wastes(node)
-    # we want the farthest at the end:
-    wastes.sort(key=lambda x: getattr(x, axis_i))
+    # we revert to the previous change
+    # # we want the farthest at the end:
+    # wastes.sort(key=lambda x: getattr(x, axis_i))
+
+    # we want the smallest at the end:
+    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
     while wastes and remaining:
         waste = wastes.pop()

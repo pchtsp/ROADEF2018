@@ -67,3 +67,15 @@ Check: https://stackoverflow.com/a/32064281
 ## Configuration
 
 It's important to edit the params.py file to get the absolute path correctly. We could potentially solve this in the future by using relative paths correctly...
+
+## Use pypy
+
+### Ubuntu
+
+Following http://doc.pypy.org/en/latest/install.html and https://askubuntu.com/questions/441981/how-to-install-pypy3-on-ubuntu-for-nebies
+
+<!-- pip install git+https://bitbucket.org/pypy/numpy.git -->
+
+    virtualenv -p /path/to/pypy/tarball/ venv_pypy
+    source venv_pypy/bin/activate
+    pip install -r requirements.txt

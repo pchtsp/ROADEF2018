@@ -4,8 +4,10 @@ import re
 import shutil
 
 
-def separate_cases():
-    destination = pm.PATHS['results'] + 'heuristic1800/'
+def separate_cases(name):
+    destination = pm.PATHS['results'] + name + '/'
+    if not os.path.exists(destination):
+        os.makedirs(destination)
 
     files = os.listdir(pm.PATHS['data'])
     cases = ["A{}".format(n) for n in range(1, 21)]
@@ -34,6 +36,6 @@ def move_case_checker():
 
 
 if __name__ == "__main__":
-    separate_cases()
+    separate_cases('template')
 
 

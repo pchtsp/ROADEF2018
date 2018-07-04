@@ -1416,8 +1416,8 @@ class ImproveHeuristic(sol.Solution):
         changed_flag = False
         b_accepted = b_improved = 0
         while True:
-            self.jumbos_swapping(params, 5)
-            self.jumbos_mirroring(params, 5)
+            # self.jumbos_swapping(params, 5)
+            # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=[0.4, 0.4, 0.2])
