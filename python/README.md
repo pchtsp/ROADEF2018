@@ -72,7 +72,9 @@ It's important to edit the params.py file to get the absolute path correctly. We
 
 ### Ubuntu
 
-Following http://doc.pypy.org/en/latest/install.html and https://askubuntu.com/questions/441981/how-to-install-pypy3-on-ubuntu-for-nebies
+Following http://doc.pypy.org/en/latest/install.html and https://askubuntu.com/questions/441981/how-to-install-pypy3-on-ubuntu-for-nebies.
+
+For distributions that are not Ubuntu: https://github.com/squeaky-pl/portable-pypy#portable-pypy-distribution-for-linux
 
 <!-- pip install git+https://bitbucket.org/pypy/numpy.git -->
 
