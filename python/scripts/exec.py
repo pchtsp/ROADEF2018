@@ -72,7 +72,8 @@ def solve_heuristic(options):
     self.solve(options)
     # self.trees = self.best_solution
     self.correct_plate_node_ids()
-    self.graph_solution(path, name="edited", dpi=50)
+    if options.get('graph', False):
+        self.graph_solution(path, name="edited", dpi=50)
     # print(self.check_sequence(solution=self.best_solution))
     self.export_solution(path=path, prefix=case + '_', name="solution")
 
