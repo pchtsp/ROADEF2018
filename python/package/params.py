@@ -5,7 +5,7 @@ PATHS = {
     'root': path_root
     ,'results': results_root
     # ,'results': path_root + 'results/'
-    ,'experiments': results_root + "heuristics_20180703/"
+    ,'experiments': results_root + "heuristics_20180706/"
     ,'img': path_root + "OPTIMA/img/"
     ,'latex': path_root + "OPTIMA/latex/"
     ,'data': path_root + "resources/data/dataset_A/"
@@ -35,14 +35,15 @@ OPTIONS = {
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
-    , 'heur_weights': {'space': 0.0001, 'seq': 100000, 'defects': 100}
+    , 'heur_weights': {'space': 0.0001, 'seq': 100000, 'defects': 1000}
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
                       'temperature': 8000, 'try_rotation': False,
-                      'max_candidates': 10, 'extra_jumbos': 2,
+                      'max_candidates': 5, 'extra_jumbos': 2,
                       'cooling_rate': 0.001,
                       'change_first': False, 'tolerance': None}
-    , 'debug': False
+    , 'debug': True
+    , 'graph': True
     # putting a tolerance on the heuristic seems horrible for finding good solutions.
     # putting change_first is also a very bad idea.
     # , 'cluster_tolerance': 50
