@@ -23,6 +23,7 @@ class ImproveHeuristic(sol.Solution):
         # we store the best solution:
         self.best_solution = []
         self.best_objective = 99999999
+        self.last_objective = 99999999
         self.hist_objective = []
         self.type_node_dict = None
         self.previous_nodes = None
@@ -828,9 +829,11 @@ class ImproveHeuristic(sol.Solution):
             self.update_precedence_nodes()
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}'.
+        log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
-                      round(balance), round(new), round(self.best_objective)))
+                      round(balance), round(new), round(self.best_objective), round(self.last_objective)
+                         ))
+        self.last_objective = new
         if new < old:
             log.info('Best solution updated to {}!'.format(round(new)))
             self.update_best_solution(self.trees)
@@ -1262,10 +1265,11 @@ class ImproveHeuristic(sol.Solution):
         # if self.acceptance_probability(balance, temperature=temperature) < rn.random():
             self.swap_jumbo(jumbo1, jumbo2)
             return False
-        log.debug('I just swapped jumbos {} and {}: gain={}, new={}, best={}'.format(
+        log.debug('I just swapped jumbos {} and {}: gain={}, new={}, best={}, last={}'.format(
             jumbo1, jumbo2, round(balance),
-            round(new), round(self.best_objective))
-        )
+            round(new), round(self.best_objective), round(self.last_objective)
+        ))
+        self.last_objective = new
         if new < old:
             log.info('Best solution updated to {}!'.format(round(new)))
             self.update_best_solution(self.trees)
@@ -1428,7 +1432,7 @@ class ImproveHeuristic(sol.Solution):
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     try_rotation = True
                     params['try_rotation'] = True
-                    weights['defects'] *= 10000
+                    weights['defects'] *= 1000
                     weights['space'] *= 10000000
                     # for k in weights:
                     #     weights[k] *= 1000000
@@ -1500,8 +1504,8 @@ class ImproveHeuristic(sol.Solution):
 
 if __name__ == "__main__":
     # TODO: when making swap or insert, consider make node bigger to make it fit.
-    # TODO: to calculate space use the sum of all available spaces.
-    # TODO: when taking out empty slots, I cannot end up with a slot less than 20.s
+    # TODO: (this is not correct) to calculate space use the sum of all available spaces that don't have defects
+    # TODO: when taking out empty slots, I have to deal with defects...
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

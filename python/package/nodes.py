@@ -622,15 +622,25 @@ def repair_dim_node(node):
         return True
     wastes = find_all_wastes(node)
     # we revert to the previous change
-    # # we want the farthest at the end:
-    # wastes.sort(key=lambda x: getattr(x, axis_i))
+    # we want the farthest at the end:
+    wastes.sort(key=lambda x: getattr(x, axis_i))
 
-    # we want the smallest at the end:
-    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
+    # # we want the smallest at the end:
+    # wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
+    # TODO: check this, change the 20
+    min_width = 20
     while wastes and remaining:
         waste = wastes.pop()
-        quantity = min(remaining, getattr(waste, dim_i))
+        size = getattr(waste, dim_i)
+        quantity = size
+        if remaining < size:
+            waste_rem = size - remaining
+            if min_width > waste_rem > 0:
+                quantity = size - min_width
+            else:
+                quantity = remaining
+        # quantity = min(remaining, )
         resize_waste(waste, dim_i, -quantity)
         remaining -= quantity
     return True
