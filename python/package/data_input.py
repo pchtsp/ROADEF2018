@@ -11,6 +11,13 @@ import package.auxiliar as aux
 import pprint as pp
 
 
+def dir_has_solution(path):
+    for p in os.listdir(path):
+        if re.search(r"solution.csv$", p):
+            return True
+    return False
+
+
 def read_files_into_tables(filenames):
     for file, path in filenames.items():
         if not os.path.exists(path):
