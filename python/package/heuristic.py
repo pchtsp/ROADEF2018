@@ -196,14 +196,15 @@ class ImproveHeuristic(sol.Solution):
             return False
         return True
 
-    def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False):
+    def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False, probs=None):
         if node1.up == node2.up:
             return []
         result = False
         rotations = [[]]
         if try_rotation:
             rotations_av = [[], [1], [2], [1, 2]]
-            probs = [0.8, 0.1, 0.05, 0.05]
+            if probs is not None:
+                probs = [0.8, 0.1, 0.05, 0.05]
             # probs = [0.8, 0.2, 0, 0]
             rotations = np.random.choice(a=rotations_av, p=probs, size=2, replace=False)
         for rotation in rotations:
@@ -1505,7 +1506,9 @@ class ImproveHeuristic(sol.Solution):
 if __name__ == "__main__":
     # TODO: when making swap or insert, consider make node bigger to make it fit.
     # TODO: (this is not correct) to calculate space use the sum of all available spaces that don't have defects
-    # TODO: when taking out empty slots, I have to deal with defects...
+    #     TODO: only if there are no defects in the destination node.
+    # TODO: when taking out empty slots, I have to deal with defects
+    #     TODO: for example, if the destination has no defects, I get the smallest one.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

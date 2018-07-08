@@ -1,6 +1,7 @@
 ---
 title:  ROADEF 2018 technical documentation
 author: Franco Peschiera
+documentclass: report
 ...
 
 ## Introduction
@@ -19,22 +20,22 @@ For example:
 
 ## Definitions
 
-<!-- TODO -->
-
 Most definitions are common to 'tree' graphs representations. There are still some specific things that are particular for this implementation.
 
-* Jumbo
-* Stack
-* Batch
-* Item
-* Waste
-* node
-* tree
-* forest
-* solution
-* cut
-* child
-* leaf
+* **Jumbo**: the plates used in order to produce the items by cutting them.
+* **Stack**: a group of items that need to be cut in order.
+* **Batch**: an instance to solve.
+* **Item**: a piece with height, width.
+* **Waste**: a part of a jumbo that is not used for a piece.
+* **node**: the result of cutting a node. Can be a leaf (waste, item) or an intermediate node.
+* **tree**: first node. Corresponds to a jumbo.
+* **forest**: a list of trees, corresponding to the solution for an instance or Batch.
+* **solution**: same as forest. The result of an instance. Should comply with constraints.
+* **cut**: the action of separating a node into two nodes. Can be vertical or horizontal. It needs to go along one of the two dimensions.
+* **child**: a node that is obtained by cutting a bigger node. All nodes are children of another node except the tree or first node.
+* **leaf**: a node that has no children. Corresponds to an item or to a waste. Or to a residual (which is kind of a waste too).
+* **swap**: the act of taking two nodes and switching their places, while taking into account the differences in space. The result needs to still keep the logic of the jumbo / tree structure.
+* **insert**: just like the swap but only the first one is inserted just before the second node. The second node is not moved.
 
 ## Data structures
 
@@ -121,6 +122,8 @@ I'll put the pseudocode:
 
 ### Main loop
 
+The following code is executed in an infinite loop:
+
 ```
 for x in num_iterations:
     try to reduce nodes/ width in level 1
@@ -177,6 +180,23 @@ This is the basic logic to insert a node inside a destination node. This is use 
 5. if the node corresponds to actually several nodes, get them out and re-insert them.
 6. if needed, add a children waste on the node(s) that has /have just been inserted.
 7. Since I just inserted a node, modify the residual waste at the end of the destination node.
+
+#### Regular insert
+
+The following is an example of a level 2 insert.
+The node 110 (red) is inserted just before the node 107 (yellow). This is a move that is also beneficial because it takes wastes to the right.
+
+![before swap level 2](swap_2_before.png)
+![After swap level 2](swap_2_after.png)
+
+## Complex insert
+
+The following example shows an insert from a level 3 node (node 88, red) just before a level 2 (node 74, yellow) node while swapping it before insertion.
+
+
+![before swap level 3](swap_3_rot_before.png)
+![After swap level 3](swap_3_rot_after.png)
+
 
 ## Configuration, Storage and experimentation
 
