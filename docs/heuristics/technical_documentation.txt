@@ -1,0 +1,246 @@
+---
+title:  ROADEF 2018 technical documentation
+author: Franco Peschiera
+...
+
+## Introduction
+
+Ok, so this is an attempt to explain what I have been doing regarding the ROADEF challenge. The idea is to explain the implementations in all of its dimensions. 
+
+For example:
+
+* the data structures built, main classes, ...
+* the heuristics involved.
+* the resolution approach.
+* the storage, instances, etc. that are being used.
+* the installation, deployment and portability.
+* the implementation, files, classes, etc.
+* the future, remaining work to be done.
+
+## Definitions
+
+<!-- TODO -->
+
+Most definitions are common to 'tree' graphs representations. There are still some specific things that are particular for this implementation.
+
+* Jumbo
+* Stack
+* Batch
+* Item
+* Waste
+* node
+* tree
+* forest
+* solution
+* cut
+* child
+* leaf
+
+## Data structures
+
+The solution is stored as a forest. A forest means a list of trees. A tree represents a Jumbo.
+
+### Trees and nodes
+
+If a node is not a *leaf*, then it has been cut. Its children represent the number of cuts it has received, following the rules of guillotine cuts.
+Each children node has a level that is 1 bigger than its parent. This way we can track the level a node is in (and the number of cuts we had to do to arrive to the node).
+
+For example, the following solution is represented by the following tree:
+
+![case1 solution](case1_heur.png)
+
+          /-2
+         |
+       /1|--3
+      |  |
+      |  |   /-5
+      |   \4|
+      |      \-6
+      |
+      |   /-8
+      |-7|
+      |   \-9
+    -0|
+      |   /-11
+      |  |
+      |  |   /-13
+      |-10-12
+      |  |   \-14
+      |  |
+      |   \-15
+      |
+       \-16
+
+At the moment of writing this document, nodes are not defined explictely in a class that represents the logic of this problem. They are just `treenode` objects from the tree library (see *implementation*). Subclassing the `treenode` class is already planned. In practice, it would imply going to a specific `nodes.py` file and formalize all the functions that are present there as methods of the nodes class.
+
+So, all improved logic for a node is done in the **Nodes** file (soon Nodes class I hope).
+
+In any case, the information present in a node, besides the regular graph information, is:
+
+* *Size*: `WIDTH`, `HEIGHT`
+* *Position*: `PLATE_ID`, `X`, `Y`
+* `CUT`: the number of cuts needed to make to arrive to the node.
+* `TYPE`: following the specified format: waste, intermediate node or an item.
+
+### Instance, solution, model and heuristic
+
+There are auxiliary classes that are used to handle the modeling, verification and solving part of the problem. These classes are used in a hierarchical way. 
+
+The most basic one (and higher) is the **Instance** class. This class just handles the reading of the input data, the transformation of some of the data and querying of the read data.
+
+Following, the **Solution** class. This one implements a complete 'input + output' object. It inherits all the input data treatment from the `Instance` class but in addition to this it's able to:
+
+* store a solution as a forest.
+* check if a solution is feasible or not.
+* export a solution.
+* graph and draw a solution.
+* calculate the quality of a solution.
+
+Finally, there are two other objects that come as subclasses of `Solution`.
+
+The first one is  **ImproveHeuristic**. This one implements all the logic to calculate a solution. It's main functionalities are:
+
+* get an initial partially feasible solution.
+* improve the solution by doing swaps of nodes.
+
+Finally, the **Model** class is used to configure and prepare the data to be fed to an optimization solver via a model. This is part of an old implementation and is not used currently.
+
+## The solving approach
+
+### Initialization
+
+At the moment, there is a simulated annealing that has been developed to solve the problem. It's just an infinite loop with many attempts inside to do swaps.
+
+I'll put the pseudocode:
+
+1. Get an initial solution without complying with the sequence or the 
+1. Add slack empty jumbos.
+2. clean solution
+3. try to mirror jumbos horizontally.
+4. main solving loop.
+
+### Main loop
+
+```
+for x in num_iterations:
+    try to reduce nodes/ width in level 1
+    choose a random level (1, 2, 3) with probs (0.4, 0.4, 0.2)
+    push wastes to the right
+    try to merge wastes that are neighbors
+    create waste cuts 
+    push wastes to the right
+    do swapping in same level to correct sequence.
+    do another swapping in same level to correct sequence.
+    do swapping to correct defects.
+    do swapping in the same level from random nodes
+    delete empty cuts
+    add a cut to empty jumbos
+    make interlevel swaps of 1 level difference
+    make interlevel swaps of 2 level difference
+reduce temp (unless the number of accepted solutions is greater than 60%)
+if no temp or no time: stop
+report status
+```
+
+### Swaps
+
+Swaps can be "real swaps" or just "an insertion".
+Also, they can include the rotation of none, left, right, or both nodes.
+Finally, the nodes can be in the same level or in different levels.
+
+#### Checking swaps
+
+We need to check the following to see if the swap is feasible:
+
+* In a swap: each node, without its waste, is smaller than the space left by the other node.
+* In an insert: the inserted node needs to be smaller than the available waste at the end of the destination.
+
+If there's space, in theory we should be able to do it.
+
+To evaluate the improvement of the swap we need to:
+
+1. Calculate the balance in terms of sequences violated.
+2. Calculate the balance in terms of defects violated.
+3. Calculate the balance in terms of waste moved to the right.
+
+These three terms, weighted by some parameters, will determine if the swap makes sense to be done.
+
+#### Inserting a node somewhere
+
+This is the basic logic to insert a node inside a destination node. This is use as the base for all the swappings.
+
+1. Take out children waste from each node. This is the waste that's at the end if any.
+1. If only child, take out and decrease level.
+2. If rotation is needed, rotate the whole node.
+3. Insert node in its destination parent.
+4. If the level of the node has just changed, update it.
+5. if the node corresponds to actually several nodes, get them out and re-insert them.
+6. if needed, add a children waste on the node(s) that has /have just been inserted.
+7. Since I just inserted a node, modify the residual waste at the end of the destination node.
+
+## Configuration, Storage and experimentation
+
+Each execution instance should be included in a specific directory. Before execution, two files are needed:
+
+* XX_batch.csv
+* XX_defects.csv
+
+Given these are the base parameters to solve an instance.
+
+The output files that are produced by the application once executed are the following:
+
+* XX_solution.csv
+* options.json
+
+The first one corresponds to the requested format. The second one is a list with all the configuration to solve the instance so it can be, in theory, reproducible.
+
+In addition to this four files, sometimes there are some images representing the solution. These files are optional given that they can be produced reading the input and output files.
+
+Normally, a scenario has the execution of all files at the same time. Like the following structure:
+
+    - scenario1:
+        - A1:
+            + A1_batch.csv
+            + A1_defects.csv
+            + A1_solution.csv
+            + options.json
+        - ...
+        - ANN:
+            + ANN_batch.csv
+            + ANN_defects.csv
+            + ANN_solution.csv
+            + options.json
+        - ...
+        - A20:
+            + A20_batch.csv
+            + A20_defects.csv
+            + A20_solution.csv
+            + options.json
+    - scenario2:
+        - A1
+        - A2
+
+## Implementation
+
+All the code is built in the python programming language (tested with versions 3.5 and 3.6). For the tree support, the following library was used: https://pypi.python.org/pypi/ete3
+It is both possible to install it in Windows and Linux.
+
+In addition to trying the `CPython` implementation, tests have been made with the `pypy` JIT implementation. It appears to be faster in some cases.
+The deployment depends on which version of python is being used but it's not so different one from the other. It usually just implies getting the good distribution of python, creating a virtual environment, installing the necessary packages, modifying the parameters file, and running the code via command line.
+
+For more details, there is a requirements file and a README with instructions on how to get all the necessary files to use the code.
+
+## Remaining work
+
+There is still a lot to do in this project. For instance, the solutions I get are horrible. In some cases I'm not able to get a feasible solution but in the cases I get one quickly (which mostly all are) I'm not able to improve the solutions. This is weird given that when representing the solutions I'm able to see they're quite easily improvable.
+
+Here's a graph with, for each case, the performance of different approaches. The last one, named 'others' is the benchmark published by ROADEF.
+
+![case1 solution](benchmarking.png)
+
+The main axes of improvement are the following:
+
+1. Add new swapping movements.
+2. Detect the inefficiencies in the code and improve the speed of execution.
+3. Play with the configuration to get better parameters.
+4. Modify the simulated annealing behavior without changing the swappings (the order, the frequency, etc.).
