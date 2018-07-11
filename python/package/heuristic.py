@@ -126,7 +126,6 @@ class ImproveHeuristic(sol.Solution):
             # ideally, there should be not reference to the tree here
             # so we can test nodes that are not part of a tree
         nodes = {1: node1, 2: node2}
-        wastes = {k: nd.find_waste(node) for k, node in nodes.items()}
         dims_i = {
             k: nd.get_orientation_from_cut(node, inv=True)[1]
             for k, node in nodes.items()
@@ -135,11 +134,16 @@ class ImproveHeuristic(sol.Solution):
             k: nd.get_orientation_from_cut(node)[1]
             for k, node in nodes.items()
         }
+
+        # TODO: to calculate space use the sum of all available spaces right to where the defects are
+        # defects_by_plate = self.get_defects_per_plate()
+        wastes = {k: nd.find_waste(node) for k, node in nodes.items()}
         # if there's no waste, I'll just say it's a 0 length node?
         # null_waste = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
         for k, waste in wastes.items():
             if waste is None:
                 wastes[k] = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
+        waste_space = {k: getattr(wastes[k], dims[k]) for k in nodes}
 
         node_space = {
             k: {
@@ -151,7 +155,7 @@ class ImproveHeuristic(sol.Solution):
 
         space = {
             k: {
-                dims[k]: getattr(wastes[k], dims[k]) + node_space[k][dims[k]],
+                dims[k]: waste_space[k] + node_space[k][dims[k]],
                 dims_i[k]: getattr(node, dims_i[k])
             }
             for k, node in nodes.items()
@@ -159,10 +163,10 @@ class ImproveHeuristic(sol.Solution):
         # if not swapping, we have less space in node2
         if insert:
             space[2][dims[2]] -= node_space[2][dims[2]]
-            # if node2 is a waste, I can use it as the destination's waste
-            # but on
-            if nd.is_waste(nodes[2]) and wastes[2] is None:
-                space[2][dims[2]] = max(space[2][dims[2]], node_space[2][dims[2]])
+            # # if node2 is a waste, I can use it as the destination's waste
+            # # but on
+            # if nd.is_waste(nodes[2]) and wastes[2] is None:
+            #     space[2][dims[2]] = max(space[2][dims[2]], node_space[2][dims[2]])
 
         # rotate can be a list with the index of nodes to reverse.
         # this way, we can check different combinations of rotation
@@ -196,17 +200,17 @@ class ImproveHeuristic(sol.Solution):
             return False
         return True
 
-    def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False, probs=None):
+    def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False, rotation_probs=None):
         if node1.up == node2.up:
             return []
         result = False
         rotations = [[]]
         if try_rotation:
             rotations_av = [[], [1], [2], [1, 2]]
-            if probs is not None:
-                probs = [0.8, 0.1, 0.05, 0.05]
+            if rotation_probs is not None:
+                rotation_probs = [0.8, 0.1, 0.05, 0.05]
             # probs = [0.8, 0.2, 0, 0]
-            rotations = np.random.choice(a=rotations_av, p=probs, size=2, replace=False)
+            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=2, replace=False)
         for rotation in rotations:
             result = self.check_swap_size(node1, node2, insert, rotate=rotation)
             if result:
@@ -786,7 +790,8 @@ class ImproveHeuristic(sol.Solution):
             if not self.check_assumptions_swap(node1, node2, insert):
                 continue
             result = self.check_swap_size_rotation(node1, node2, insert=insert,
-                                                   try_rotation=kwargs.get('try_rotation', False))
+                                                   try_rotation=kwargs.get('try_rotation', False),
+                                                   rotation_probs=kwargs.get('rotation_probs', None))
             if result is None:
                 continue
             balance = 0
@@ -977,7 +982,9 @@ class ImproveHeuristic(sol.Solution):
     def node_in_solution(self, node):
         return node.get_tree_root() in self.trees
 
-    def collapse_to_left(self, level, max_candidates=50, **kwargs):
+    def collapse_to_left(self, level, max_candidates=50, max_wastes=None, **kwargs):
+        if max_wastes is None:
+            max_wastes = max_candidates
         fails = successes = 0
         wastes = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE in [-1, -3])
         # wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
@@ -1420,21 +1427,25 @@ class ImproveHeuristic(sol.Solution):
         count = 0
         changed_flag = False
         b_accepted = b_improved = 0
+        max_wastes = params['max_candidates']
         while True:
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
-                level = np.random.choice(a=[1, 2, 3], p=[0.4, 0.4, 0.2])
-                if level == 1:
-                    params['try_rotation'] = False
-                else:
-                    params['try_rotation'] = try_rotation
+                level = np.random.choice(a=[1, 2, 3], p=[0.5, 0.4, 0.1])
+                # if level == 1:
+                #     params['try_rotation'] = False
+                # else:
+                #     params['try_rotation'] = try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     try_rotation = True
+                    temp = params['temperature']
+                    # max_wastes = 50
                     params['try_rotation'] = True
-                    weights['defects'] *= 1000
-                    weights['space'] *= 10000000
+                    weights['seq'] = 20000
+                    weights['defects'] = 1000
+                    weights['space'] = 1000
                     # for k in weights:
                     #     weights[k] *= 1000000
                         # coolingRate /= 5
@@ -1442,7 +1453,7 @@ class ImproveHeuristic(sol.Solution):
                     changed_flag = True
                     log.info('activate rotation')
                 log.debug('DO: collapse left')
-                fsc['collapse'] = self.collapse_to_left(level, **params)
+                fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
                 self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
@@ -1504,11 +1515,15 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: when making swap or insert, consider make node bigger to make it fit.
-    # TODO: (this is not correct) to calculate space use the sum of all available spaces that don't have defects
-    #     TODO: only if there are no defects in the destination node.
     # TODO: when taking out empty slots, I have to deal with defects
     #     TODO: for example, if the destination has no defects, I get the smallest one.
+    # TODO: random merges and cut of wastes.
+    # TODO: do GRASP when choosing from list of candidates.
+    # TODO: get a good initial solution.
+    # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
+    # TODO: add more random movements.
+    # TODO: go back to initial solution *very* rarely
+    # TODO: play with proportion of level changes
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

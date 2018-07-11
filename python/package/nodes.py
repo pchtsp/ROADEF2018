@@ -159,8 +159,18 @@ def find_all_wastes(node):
     return [w for w in node.children if is_waste(w)]
 
 
+def find_all_wastes_after_defect(node, defects):
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    if node.CUT > 0:
+        defects = defects_in_node(node, defects)
+    up_right = [x[dim_i] + x[axis_i] for x in defects]
+    last_defect = max(up_right)
+    return [w for w in node.children if is_waste(w) if getattr(w, axis_i) > last_defect]
+
+
 def get_code_node(node):
     return rn.randint(1, 100000)
+
 
 def order_children(node):
     for v in node.traverse():
@@ -175,15 +185,19 @@ def order_children(node):
     return True
 
 
-def get_orientation_from_cut(node, inv=False):
-    # inv: means inverse the result.
+def get_dim_of_node(node, inv):
     result = node.CUT % 2
     if inv:
         result = not result
     if result:  # cuts 1 and 3
-        dim = 'WIDTH'
-    else:  # cut 2 and 4
-        dim = 'HEIGHT'
+        return 'WIDTH'
+    # cut 2 and 4
+    return 'HEIGHT'
+
+
+def get_orientation_from_cut(node, inv=False):
+    # inv: means inverse the result.
+    dim = get_dim_of_node(node, inv)
     axis = get_axis_of_dim(dim)
     return axis, dim
 
