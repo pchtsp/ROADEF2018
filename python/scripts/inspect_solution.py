@@ -6,7 +6,7 @@ try:
 except:
     import package.params as pm
 
-path = pm.PATHS['results'] + '/heuristic2/A1/'
+path = pm.PATHS['results'] + '/clust1_20180708_py/A1/'
 self = heur.ImproveHeuristic.from_io_files(path=path)
 options = di.load_data(path= path + 'options.json')
 options['heur_params']['weights'] = options['heur_weights']

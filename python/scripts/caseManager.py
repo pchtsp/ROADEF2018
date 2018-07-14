@@ -36,6 +36,6 @@ def move_case_checker():
 
 
 if __name__ == "__main__":
-    separate_cases('template')
+    separate_cases('ubuntu_20180706')
 
 

@@ -1427,7 +1427,7 @@ class ImproveHeuristic(sol.Solution):
                     temp = params['temperature']
                     # max_wastes = 50
                     params['try_rotation'] = True
-                    weights['seq'] = 20000
+                    weights['seq'] = 10000
                     weights['defects'] = 1000
                     weights['space'] = 1000
                     # for k in weights:
@@ -1439,21 +1439,25 @@ class ImproveHeuristic(sol.Solution):
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
-                self.merge_wastes_seq()
+                if rn.random() > 0.5:
+                    self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
                 if level == 1:
-                    fsc['cuts'] = self.search_waste_cuts(1, **params)
+                    if rn.random() > 0.5:
+                        fsc['cuts'] = self.search_waste_cuts(1, **params)
                 include_sisters = True
-                fsc['cuts2'] = self.search_waste_cuts_2(level, **params)
+                if rn.random() > 0.5:
+                    fsc['cuts2'] = self.search_waste_cuts_2(level, **params)
                 log.debug('DO: collapse left')
-                fsc['collapse'] = self.collapse_to_left(level, **params)
+                fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 log.debug('DO: search_waste_cuts')
                 fsc['seq2'] = self.change_level_by_seq2(level, **params)
                 fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, **params)
                 fsc['def'] = self.change_level_by_defects(level, **params)
                 log.debug('DO: change_level_by_defects')
                 fsc['all'] = self.change_level_all(level, **params)
-                self.clean_empty_cuts_2()
+                if rn.random() > 0.5:
+                    self.clean_empty_cuts_2()
                 self.add_1cut()
                 fsc['interlevel'] = \
                     self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, **params)

@@ -4,7 +4,7 @@ results_root = '/home/pchtsp/Dropbox/ROADEF2018/'
 PATHS = {
     'root': path_root
     ,'results': results_root
-    ,'experiments': results_root + "heuristics_20180706/"
+    ,'experiments': results_root + "test/"
     ,'img': path_root + "OPTIMA/img/"
     ,'latex': path_root + "OPTIMA/latex/"
     ,'data': path_root + "resources/data/dataset_A/"
@@ -38,10 +38,11 @@ OPTIONS = {
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
                       'temperature': 8000, 'try_rotation': False,
-                      'max_candidates': 5, 'extra_jumbos': 2,
+                      'max_candidates': 5, 'extra_jumbos': 1,
                       'cooling_rate': 0.001,
-                      'change_first': False, 'tolerance': None}
-    , 'debug': True
+                      'change_first': False, 'tolerance': None,
+                      'rotation_probs': [0.7, 0.30, 0, 0]}
+    , 'debug': False
     , 'graph': True
     # putting a tolerance on the heuristic seems horrible for finding good solutions.
     # putting change_first is also a very bad idea.

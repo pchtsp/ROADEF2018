@@ -94,14 +94,14 @@ def benchmarking():
     # df_final = reduce(lambda left, right: pd.merge(left, right, on='name'), dfs)
     params = {'how': 'outer'}
     summary = \
-        others.\
-            merge(table_obj, **params).\
+        table_obj.\
+            merge(others, **params).\
             merge(table_items, **params).\
             merge(table_feas, **params)
 
     summary['dif'] = (summary.obj - summary.others) / summary.others * 100
     summary[['case', 'experiment', 'obj']].\
-        pivot(index='case', columns='experiment', values='obj').plot.bar()
+        pivot(index='case', columns='experiment', values='dif').plot.bar()
 
 
 def graph(experiment, case=None, dpi=25):
