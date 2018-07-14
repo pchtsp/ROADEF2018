@@ -4,6 +4,7 @@ import importlib
 import package.data_input as di
 import package.model as md
 import package.heuristic as heur
+import scripts.caseManager as cs
 import argparse
 import logging as log
 import copy
@@ -129,11 +130,14 @@ if __name__ == "__main__":
     parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
     parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
+    parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
 
     args = parser.parse_args()
     if args.root is not None:
+        if 'PYTHONPATH' not in os.environ:
+            os.environ['PYTHONPATH'] = ''
         os.environ['PYTHONPATH'] += ':' + args.root + 'python'
-        print(os.environ['PYTHONPATH'])
+        # print(os.environ['PYTHONPATH'])
     pm = importlib.import_module(args.file)
 
     cases = args.case
@@ -145,6 +149,12 @@ if __name__ == "__main__":
 
     if args.results is not None:
         pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
+        if args.results_dir is not None:
+            pm.PATHS['experiments'] = args.results + args.results_dir + '/'
+            if not os.path.exists(pm.PATHS['experiments']):
+                cs.separate_cases(name=args.results_dir,
+                                  data_dir=pm.PATHS['data'],
+                                  results_dir=pm.PATHS['results'])
 
     pm.OPTIONS['path'] = pm.PATHS['experiments']
 
