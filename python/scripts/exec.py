@@ -131,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
     parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
+    parser.add_argument('-ng', '--no-graph', dest='no_graph', help='avoid graphing at the end', action='store_true')
 
     args = parser.parse_args()
     if args.root is not None:
@@ -157,6 +158,9 @@ if __name__ == "__main__":
                                   results_dir=pm.PATHS['results'])
 
     pm.OPTIONS['path'] = pm.PATHS['experiments']
+
+    if args.no_graph:
+        pm.OPTIONS['graph'] = False
 
     print('Using config file in {}'.format(args.file))
 
