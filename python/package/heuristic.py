@@ -100,27 +100,7 @@ class ImproveHeuristic(sol.Solution):
         return node
         # return recalculate
 
-    def check_node_in_space(self, node_space, free_space, insert):
-        """
-        :param node_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
-        :param free_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
-        :return:
-        """
-        # if dimensions are too small, we can't do the change
-        # in insert=True we only check node1 movement
-        # Important! we want to have at least 20 of waste. Or 0.
-        for d in ['HEIGHT', 'WIDTH']:
-            dif = free_space[2][d] - node_space[1][d]
-            if dif < self.get_param('minWaste') and dif != 0:
-                return False
-            if insert:
-                continue
-            dif = free_space[1][d] - node_space[2][d]
-            if dif < self.get_param('minWaste') and dif != 0:
-                return False
-        return True
-
-    def check_swap_size(self, node1, node2, insert=False, rotate=None):
+    def check_swap_size(self, node1, node2, min_waste, insert=False, rotate=None):
         if rotate is None:
             rotate = []
             # ideally, there should be not reference to the tree here
@@ -135,15 +115,17 @@ class ImproveHeuristic(sol.Solution):
             for k, node in nodes.items()
         }
 
-        # TODO: to calculate space use the sum of all available spaces right to where the defects are
-        # defects_by_plate = self.get_defects_per_plate()
-        wastes = {k: nd.find_waste(node) for k, node in nodes.items()}
+        defects = {k: self.get_defects_plate(node.PLATE_ID) for k, node in nodes.items()}
+        wastes = {k: [
+            w for w in nd.find_all_wastes_after_defect(node.up, defects[k])
+            if w != node or (k == 2 and insert)
+        ] for k, node in nodes.items()}
+        # wastes = {k: nd.find_waste(node) for k, node in nodes.items()}
         # if there's no waste, I'll just say it's a 0 length node?
-        # null_waste = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
-        for k, waste in wastes.items():
-            if waste is None:
-                wastes[k] = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
-        waste_space = {k: getattr(wastes[k], dims[k]) for k in nodes}
+        # for k, waste in wastes.items():
+        #     if waste is None:
+        #         wastes[k] = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
+        waste_space = {k: sum(getattr(w, dims[k]) for w in wastes[k]) for k in nodes}
 
         node_space = {
             k: {
@@ -177,7 +159,7 @@ class ImproveHeuristic(sol.Solution):
             node_space[pos][_dim], node_space[pos][_dim_i] = \
                 node_space[pos][_dim_i], node_space[pos][_dim]
 
-        return self.check_node_in_space(node_space, space, insert)
+        return geom.check_nodespace_in_space(node_space, space, insert, min_waste)
 
     @staticmethod
     def check_assumptions_swap(node1, node2, insert):
@@ -212,7 +194,7 @@ class ImproveHeuristic(sol.Solution):
             # probs = [0.8, 0.2, 0, 0]
             rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=2, replace=False)
         for rotation in rotations:
-            result = self.check_swap_size(node1, node2, insert, rotate=rotation)
+            result = self.check_swap_size(node1, node2, self.get_param('minWaste'), insert, rotate=rotation)
             if result:
                 return rotation
         if not result:
@@ -273,8 +255,10 @@ class ImproveHeuristic(sol.Solution):
 
         # 7: we need to update the waste at both sides
         if parent1 != parent2:
+            min_waste = self.get_param('minWaste')
             for parent in parents.values():
-                nd.repair_dim_node(parent)
+                defects = self.get_defects_plate(parent.PLATE_ID)
+                nd.repair_dim_node(parent, defects, min_waste)
 
         if self.debug:
             consist = self.check_consistency()

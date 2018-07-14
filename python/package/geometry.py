@@ -84,3 +84,26 @@ def plate_inside_plate(plate1, plate2, turn=True, both_sides=False):
         [origin, {'X': plate2[0], 'Y': plate2[1]}],
         both_sides=both_sides
     )
+
+
+def check_nodespace_in_space(node_space, free_space, insert, min_waste):
+    """
+    :param node_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
+    :param free_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
+    :param insert: if true, we do not check the other node.
+    :param min_waste: min size of waste
+    :return:
+    """
+    # if dimensions are too small, we can't do the change
+    # in insert=True we only check node1 movement
+    # Important! we want to have at least 20 of waste. Or 0.
+    for d in ['HEIGHT', 'WIDTH']:
+        dif = free_space[2][d] - node_space[1][d]
+        if dif < min_waste and dif != 0:
+            return False
+        if insert:
+            continue
+        dif = free_space[1][d] - node_space[2][d]
+        if dif < min_waste and dif != 0:
+            return False
+    return True

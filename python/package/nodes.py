@@ -160,13 +160,24 @@ def find_all_wastes(node):
 
 
 def find_all_wastes_after_defect(node, defects):
+    """
+    :param node: the node to search wastes
+    :param defects: the relevant defects
+    :return: list of wastes that are next to the defects
+    """
+    # We assume that the last child of the node, if it's a waste,
+    # it's available
+    if node is None:
+        return []
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     if node.CUT > 0:
         defects = defects_in_node(node, defects)
     up_right = [x[dim_i] + x[axis_i] for x in defects]
-    last_defect = max(up_right)
-    return [w for w in node.children if is_waste(w) if getattr(w, axis_i) > last_defect]
-
+    last_defect = max(up_right, default=0)
+    return [w for w in node.children
+            if is_waste(w) if getattr(w, axis_i) > last_defect or
+            w == node.children[-1]
+            ]
 
 def get_code_node(node):
     return rn.randint(1, 100000)
@@ -623,7 +634,7 @@ def get_surplus_dim(node):
     return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
 
 
-def repair_dim_node(node):
+def repair_dim_node(node, defects, min_waste):
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     change = get_surplus_dim(node)
     node_size = getattr(node, dim_i)
@@ -634,27 +645,25 @@ def repair_dim_node(node):
                         waste_pos=node_size+change,
                         increase_node=False)
         return True
-    wastes = find_all_wastes(node)
+    wastes = find_all_wastes_after_defect(node, defects)
+    # TODO: get better ways to eat wastes.
     # we revert to the previous change
     # we want the farthest at the end:
-    wastes.sort(key=lambda x: getattr(x, axis_i))
+    # wastes.sort(key=lambda x: getattr(x, axis_i))
 
-    # # we want the smallest at the end:
-    # wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
+    # we want the smallest at the end:
+    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
-    # TODO: check this, change the 20
-    min_width = 20
     while wastes and remaining:
         waste = wastes.pop()
         size = getattr(waste, dim_i)
         quantity = size
         if remaining < size:
             waste_rem = size - remaining
-            if min_width > waste_rem > 0:
-                quantity = size - min_width
+            if min_waste > waste_rem > 0:
+                quantity = size - min_waste
             else:
                 quantity = remaining
-        # quantity = min(remaining, )
         resize_waste(waste, dim_i, -quantity)
         remaining -= quantity
     return True
