@@ -1,15 +1,23 @@
-path_root = '/home/pchtsp/Documents/projects/ROADEF2018/'
-results_root = '/home/pchtsp/Dropbox/ROADEF2018/'
-
-PATHS = {
-    'root': path_root
-    ,'results': results_root
-    ,'experiments': results_root + "test/"
-    ,'img': path_root + "OPTIMA/img/"
-    ,'latex': path_root + "OPTIMA/latex/"
-    ,'data': path_root + "resources/data/dataset_A/"
-    ,'checker_data': path_root + "resources/checker/instances_checker/"
+def calculate_paths_root(root):
+    return {
+    'root': root
+    ,'img': root + "OPTIMA/img/"
+    ,'latex': root + "OPTIMA/latex/"
+    ,'data': root + "resources/data/dataset_A/"
+    ,'checker_data': root + "resources/checker/instances_checker/"
 }
+
+
+def calculate_paths_results(results):
+    return {
+    'results': results
+    ,'experiments': results + "test/"
+    }
+
+root = '/home/pchtsp/Documents/projects/ROADEF2018/'
+results = '/home/pchtsp/Dropbox/ROADEF2018/'
+
+PATHS = {**calculate_paths_root(root), **calculate_paths_results(results)}
 
 ORIENTATIONS = [0, 1]
 ORIENT_H = 0

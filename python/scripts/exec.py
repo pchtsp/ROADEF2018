@@ -131,12 +131,24 @@ if __name__ == "__main__":
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
 
     args = parser.parse_args()
+    if args.root is not None:
+        os.environ['PYTHONPATH'] += ':' + args.root + 'python'
+        print(os.environ['PYTHONPATH'])
+    pm = importlib.import_module(args.file)
 
     cases = args.case
     if args.all_cases:
         cases = ['A{}'.format(case) for case in range(1, 21)]
 
+    if args.root is not None:
+        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(args.root)}
+
+    if args.results is not None:
+        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
+
+    pm.OPTIONS['path'] = pm.PATHS['experiments']
+
     print('Using config file in {}'.format(args.file))
-    pm = importlib.import_module(args.file)
+
     for case in cases:
         solve(pm.OPTIONS, case)
