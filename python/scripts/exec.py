@@ -123,20 +123,20 @@ def solve(options, case=None):
 if __name__ == "__main__":
     import pprint as pp
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
-    parser.add_argument('-c', dest='file', default="package.params",
+    parser.add_argument('-c', '--config-file', dest='file', default="package.params",
                         help='config file (default: package.params)')
-    parser.add_argument('-a', dest='case', help='case name')
-    # parser.add_argument('-a', dest='case', help='case name')
+    parser.add_argument('-a', '--case-name', dest='case', help='case name', nargs='*', default=[None])
+    parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
+    parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
+    parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
 
     args = parser.parse_args()
-    # if not os.path.exists(args.file):
-    #     raise FileNotFoundError("{} was not found".format(args.file))
+
+    cases = args.case
+    if args.all_cases:
+        cases = ['A{}'.format(case) for case in range(1, 21)]
+
     print('Using config file in {}'.format(args.file))
     pm = importlib.import_module(args.file)
-    # import package.params as params
-    solve(pm.OPTIONS, args.case)
-
-    # solve_case(options=pm.OPTIONS)
-        # checks = self.check_all()
-        # checks_ = sd.SuperDict.from_dict(checks).to_dictdict()
-        # di.export_data(output_path, checks, name="checks", file_type='json')
+    for case in cases:
+        solve(pm.OPTIONS, case)

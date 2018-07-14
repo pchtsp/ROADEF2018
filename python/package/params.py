@@ -4,7 +4,6 @@ results_root = '/home/pchtsp/Dropbox/ROADEF2018/'
 PATHS = {
     'root': path_root
     ,'results': results_root
-    # ,'results': path_root + 'results/'
     ,'experiments': results_root + "heuristics_20180706/"
     ,'img': path_root + "OPTIMA/img/"
     ,'latex': path_root + "OPTIMA/latex/"
