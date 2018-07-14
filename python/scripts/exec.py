@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
     parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
     parser.add_argument('-ng', '--no-graph', dest='no_graph', help='avoid graphing at the end', action='store_true')
-    parser.add_argument('-ej', '--extra-jumbos', dest='extra_jumbos', help='number of extra jumbos to add')
+    parser.add_argument('-ej', '--extra-jumbos', dest='extra_jumbos', help='number of extra jumbos to add', type=int)
 
     args = parser.parse_args()
     if args.root is not None:
