@@ -203,38 +203,82 @@ Figures \ref{fig:swap3-before} and \ref{fig:swap3-after} show an insert from a l
 
 The following are the schemes built on swaps to find candidates and try to swap or insert nodes.
 
+Explanation:
+
+* **level**: the CUT levels that are compatible with the strategy. Usually is 'any' which means it can be chosen. But there are some movements that are only compatible with level 1 or have 'all' which means that they do all levels at the same time.
+* **candidates**: the way the search for the initial candidates to do the swap. *Node1* is usually the interesting node and *Node2* usually depends on the choice of *Node1*.
+* **action**: usually an "insert" or a "swap" or "first try insert and then swap". For strategies that are not movements of nodes, a description is given.
+
 #### Try reduce nodes
 
-type: special.
-level: 1.
-candidates: all level 1 nodes.
-action: searches for level 2 children and if all children are smaller than the width of the node, it shortens the node.
+* **level**: 1.
+* **candidates**: all level 1 nodes.
+* **action**: searches for level 2 children and if all children are smaller than the width of the node, it shortens the node.
 
 #### Collapse to left
 
-level: all.
-candidates: 
-
+* **level**: each
+* **candidates**:
+  * *node1*: items (ordered by position)
+  * *node2*: wastes (preferably to the right of the item)
+* **action**: insert or swap of nodes
 
 #### Merge neighbor wastes
 
+* **type**: special.
+* **level**: all.
+* **action**: merge all consecutive wastes in any node.
+
 #### Search waste cuts v1
 
-only for level 1
+* **level**: 1.
+* **action**: creates cuts around waste.
 
 #### Search waste cuts v2
 
+* **level**: any.
+* **candidates**:
+  * wastes with defects.
+* **action**: cuts wastes around wastes + swaps with siblings.
+
 #### Change level by Sequence v1
+
+* **level**: any
+* **candidates**:
+  * *node1*: nodes with sequence problems and their siblings.
+  * *node2*: any other node with the same level.
 
 #### Change level by Sequence v2
 
+* **level**: any.
+* **candidates**:
+  * *node1*: nodes with sequence problems.
+  * *node2*: nodes with whom they have sequence problems and their siblings.
+* **action**: insert or swap.
+
 #### Change level by Defects v1
+
+* **level**: any.
+* **candidates**:
+  * *node1*: nodes with defect problems.
+  * *node2*: siblings and if it doesn't work, any node of the same level.
+* **action**: insert or swap.
 
 #### Change level by Any
 
-#### Multi-level dif=1
+* **level**: any.
+* **candidates**:
+  * *node1*: any node.
+  * *node2*: any node.
+* **action**: insert or swap.
 
-#### Multi-level dif=2
+#### Multi-level
+
+* **level**: any.
+* **candidates**:
+  * *node1*: seq + defects + last items. And their siblings.
+  * *node2*: wastes that are dif (1 or 2) levels above.
+* **action**: insert.
 
 ## Configuration, Storage and experimentation
 
