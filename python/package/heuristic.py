@@ -984,7 +984,7 @@ class ImproveHeuristic(sol.Solution):
             w_before_node = [w for w in w_candidates if
                              nd.get_node_pos_tup(w) < nd.get_node_pos_tup(c)]
             if len(w_before_node) > max_candidates:
-                wastes = rn.sample(w_before_node, max_candidates)
+                w_before_node = rn.sample(w_before_node, max_candidates)
             for _insert in [True, False]:
                 change = self.try_change_node(node=c, candidates=w_before_node, insert=_insert, **kwargs)
                 if change:
@@ -995,7 +995,7 @@ class ImproveHeuristic(sol.Solution):
                 continue
             # didn't work: search for any waste:
             if len(w_candidates) > max_candidates:
-                wastes = rn.sample(w_candidates, max_candidates)
+                w_candidates = rn.sample(w_candidates, max_candidates)
             for _insert in [True, False]:
                 change = self.try_change_node(node=c, candidates=w_candidates, insert=_insert, **kwargs)
                 if change:
@@ -1124,11 +1124,12 @@ class ImproveHeuristic(sol.Solution):
         return sum(self.get_param('widthPlates') ** pos
                    for pos, tree in enumerate(solution))
 
-    def insert_nodes_somewhere(self, level, max_iter=100, include_sisters=False, dif_level=1, **params):
+    def insert_nodes_somewhere(self, level, max_iter=100, include_sisters=False, dif_level=1, max_candidates=50, **params):
         fails = successes = 0
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
-        candidates = set(rem) | set([d[0] for d in defects])
+        items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
+        candidates = set(rem) | set([d[0] for d in defects]) | set(items)
         # candidates = set(rem)
         level_cand = [nd.find_ancestor_level(n, level) for n in candidates]
         if include_sisters:
@@ -1138,6 +1139,8 @@ class ImproveHeuristic(sol.Solution):
         level_cand = [n for n in set(level_cand) if n is not None]
         # candidates = [ch for tree in self.trees for ch in tree.get_children() if tree.get_children()]
         candidates = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
+        if len(candidates) > max_candidates:
+            candidates = rn.sample(candidates, max_candidates)
         i = 0
         for c in level_cand:
             if i >= max_iter:
@@ -1500,8 +1503,6 @@ if __name__ == "__main__":
     # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
     # TODO: add more random movements.
     # TODO: go back to initial solution *very* rarely
-    # TODO: play with proportion of level changes
-    # TODO> use insert_nodes_somewhere more randomly
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
