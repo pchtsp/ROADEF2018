@@ -191,7 +191,7 @@ The node 110 (red) is inserted just before the node 107 (yellow). This is a move
 
 ![After swap level 2\label{fig:swap2-after}](swap_2_after.png)
 
-## Complex insert
+#### Complex insert
 
 Figures \ref{fig:swap3-before} and \ref{fig:swap3-after} show an insert from a level 3 node (node 88, red) just before a level 2 (node 74, yellow) node while rotating it before insertion.
 
@@ -199,6 +199,42 @@ Figures \ref{fig:swap3-before} and \ref{fig:swap3-after} show an insert from a l
 
 ![After swap level 3\label{fig:swap3-after}](swap_3_rot_after.png)
 
+### Strategies
+
+The following are the schemes built on swaps to find candidates and try to swap or insert nodes.
+
+#### Try reduce nodes
+
+type: special.
+level: 1.
+candidates: all level 1 nodes.
+action: searches for level 2 children and if all children are smaller than the width of the node, it shortens the node.
+
+#### Collapse to left
+
+level: all.
+candidates: 
+
+
+#### Merge neighbor wastes
+
+#### Search waste cuts v1
+
+only for level 1
+
+#### Search waste cuts v2
+
+#### Change level by Sequence v1
+
+#### Change level by Sequence v2
+
+#### Change level by Defects v1
+
+#### Change level by Any
+
+#### Multi-level dif=1
+
+#### Multi-level dif=2
 
 ## Configuration, Storage and experimentation
 

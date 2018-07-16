@@ -1503,6 +1503,7 @@ if __name__ == "__main__":
     # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
     # TODO: add more random movements.
     # TODO: go back to initial solution *very* rarely
+    # TODO: dynamic weights.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
