@@ -14,6 +14,7 @@ def calculate_paths_results(results):
     ,'experiments': results + "test/"
     }
 
+
 root = '/home/pchtsp/Documents/projects/ROADEF2018/'
 results = '/home/pchtsp/Dropbox/ROADEF2018/'
 
@@ -42,14 +43,22 @@ OPTIONS = {
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
-    , 'heur_weights': {'space': 0.0001, 'seq': 100000, 'defects': 1000}
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
                       'temperature': 8000, 'try_rotation': False,
-                      'max_candidates': 5, 'extra_jumbos': 1,
+                      'max_candidates': 5, 'extra_jumbos': 0,
                       'cooling_rate': 0.001,
                       'change_first': False, 'tolerance': None,
-                      'rotation_probs': [0.7, 0.30, 0, 0]}
+                      'rotation_probs': [0.97, 0.03, 0, 0],
+                      'level_probs': [0.5, 0.5, 0],
+                      'weights': {'space': 0.00001, 'seq': 100000, 'defects': 1000}
+                      }
+    , 'heur_optim': {
+        'try_rotation': True,
+        'max_candidates': 10,
+        'rotation_probs': [0.7, 0.30, 0, 0],
+        'weights': {'space': 1000, 'seq': 10000, 'defects': 1000}
+    }
     , 'debug': False
     , 'graph': True
     # putting a tolerance on the heuristic seems horrible for finding good solutions.

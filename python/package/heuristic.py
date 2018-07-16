@@ -192,7 +192,7 @@ class ImproveHeuristic(sol.Solution):
             if rotation_probs is not None:
                 rotation_probs = [0.8, 0.1, 0.05, 0.05]
             # probs = [0.8, 0.2, 0, 0]
-            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=2, replace=False)
+            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=1, replace=False)
         for rotation in rotations:
             result = self.check_swap_size(node1, node2, self.get_param('minWaste'), insert, rotate=rotation)
             if result:
@@ -1383,9 +1383,8 @@ class ImproveHeuristic(sol.Solution):
         end = options['timeLimit']
         self.debug = options.get('debug', False)
 
-        weights = options['heur_weights']
         params = options['heur_params']
-        params['weights'] = weights
+        weights = params['weights']
 
         params_init = dict(params)
         if not warm_start:
@@ -1417,25 +1416,17 @@ class ImproveHeuristic(sol.Solution):
             # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
-                level = np.random.choice(a=[1, 2, 3], p=[0.5, 0.4, 0.1])
+                level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
                 # if level == 1:
                 #     params['try_rotation'] = False
                 # else:
                 #     params['try_rotation'] = try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
-                    try_rotation = True
+                    params = {**options['heur_params'], **options['heur_optim']}
+                    weights = params['weights']
                     temp = params['temperature']
-                    # max_wastes = 50
-                    params['try_rotation'] = True
-                    weights['seq'] = 10000
-                    weights['defects'] = 1000
-                    weights['space'] = 1000
-                    # for k in weights:
-                    #     weights[k] *= 1000000
-                        # coolingRate /= 5
-                    # params['max_candidates'] = 30
                     changed_flag = True
-                    log.info('activate rotation')
+                    log.info('activate optimisation')
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
@@ -1503,8 +1494,6 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: when taking out empty slots, I have to deal with defects
-    #     TODO: for example, if the destination has no defects, I get the smallest one.
     # TODO: random merges and cut of wastes.
     # TODO: do GRASP when choosing from list of candidates.
     # TODO: get a good initial solution.
@@ -1512,6 +1501,7 @@ if __name__ == "__main__":
     # TODO: add more random movements.
     # TODO: go back to initial solution *very* rarely
     # TODO: play with proportion of level changes
+    # TODO> use insert_nodes_somewhere more randomly
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

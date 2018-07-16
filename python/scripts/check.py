@@ -55,8 +55,8 @@ def get_solutions(exp_paths):
 
 def benchmarking():
     others_path = pm.PATHS['data'] + 'solutions_A.csv'
-    table1 = pd.DataFrame.from_csv(others_path, sep=';')
-    table1.columns = ['others', 'TEAM']
+    table1 = pd.read_csv(others_path, sep=';')
+    table1.columns = ['INSTANCE', 'others', 'TEAM']
     exp_paths = get_experiments_paths(pm.PATHS['results'])
 
     solutions = get_solutions(exp_paths)
@@ -79,6 +79,8 @@ def benchmarking():
 
     f_experiment = [*[*exp_paths.values()][0]][1]
     items_area = {c: s[f_experiment].get_items_area() for c, s in solutions.items()}
+    instance_case1 = solutions['A1'][f_experiment]
+    jumbo_area = instance_case1.get_param('widthPlates') * instance_case1.get_param('heightPlates')
 
     table_items = pd.DataFrame.from_dict(items_area, orient='index').reset_index().\
         rename(columns={0: 'items', 'index': 'case'})
@@ -87,9 +89,10 @@ def benchmarking():
         melt(id_vars='index', value_name='obj').rename(columns=renames)
     table_feas = pd.DataFrame.from_dict(feasibility, orient='index').reset_index().\
         melt(id_vars='index', value_name='feas').rename(columns=renames)
-    others = table1[['others']].reset_index().rename(columns={'INSTANCE': 'case'})
-    others['experiment'] = 'others'
-    table_obj = table_obj.append(others.rename(columns={'others': 'obj'}))
+    others = table1[['INSTANCE', 'others']].rename(columns={'INSTANCE': 'case'})
+    others_ed = others.copy()
+    others_ed['experiment'] = 'others'
+    table_obj = table_obj.append(others_ed.rename(columns={'others': 'obj'}))
 
     # df_final = reduce(lambda left, right: pd.merge(left, right, on='name'), dfs)
     params = {'how': 'outer'}
@@ -99,9 +102,12 @@ def benchmarking():
             merge(table_items, **params).\
             merge(table_feas, **params)
 
-    summary['dif'] = (summary.obj - summary.others) / summary.others * 100
-    summary[['case', 'experiment', 'obj']].\
-        pivot(index='case', columns='experiment', values='dif').plot.bar()
+    summary['dif'] = (summary.obj - summary.others)
+    summary['dif_perc'] = (summary.obj - summary.others) / summary.others * 100
+    summary['dif_jumbo'] = (summary.obj - summary.others) / jumbo_area
+    value = 'dif_jumbo'
+    indeces = ['case', 'experiment'] + [value]
+    summary[indeces].pivot(index='case', columns='experiment', values=value).plot.bar()
 
 
 def graph(experiment, case=None, dpi=25):
