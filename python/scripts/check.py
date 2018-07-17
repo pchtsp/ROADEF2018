@@ -61,14 +61,6 @@ def benchmarking():
 
     solutions = get_solutions(exp_paths)
 
-    objectives = \
-        {c: {
-            exp: s.calculate_objective()
-            for exp, s in experiments.items()
-        }
-            for c, experiments in solutions.items()
-        }
-
     feasibility = \
         {c: {
             exp: s.count_errors()
@@ -77,7 +69,16 @@ def benchmarking():
             for c, experiments in solutions.items()
         }
 
-    f_experiment = [*[*exp_paths.values()][0]][1]
+    objectives = \
+        {c: {
+            exp: s.calculate_objective()
+            for exp, s in experiments.items()
+            if feasibility[c][exp] == 0
+        }
+            for c, experiments in solutions.items()
+        }
+
+    f_experiment = 'heuristic1800'
     items_area = {c: s[f_experiment].get_items_area() for c, s in solutions.items()}
     instance_case1 = solutions['A1'][f_experiment]
     jumbo_area = instance_case1.get_param('widthPlates') * instance_case1.get_param('heightPlates')
@@ -92,7 +93,7 @@ def benchmarking():
     others = table1[['INSTANCE', 'others']].rename(columns={'INSTANCE': 'case'})
     others_ed = others.copy()
     others_ed['experiment'] = 'others'
-    table_obj = table_obj.append(others_ed.rename(columns={'others': 'obj'}))
+    table_obj = table_obj.append(others_ed.rename(columns={'others': 'obj'}), sort=False)
 
     # df_final = reduce(lambda left, right: pd.merge(left, right, on='name'), dfs)
     params = {'how': 'outer'}

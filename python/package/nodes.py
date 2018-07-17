@@ -634,6 +634,16 @@ def get_surplus_dim(node):
     return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
 
 
+def get_item_density_node(node):
+    return sum(item.HEIGHT * item.WIDTH for item in get_node_leaves(node)) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
+
+
+def get_waste_density_node(node):
+    return sum(waste.HEIGHT * waste.WIDTH for waste in get_node_leaves(node, type_options=[-1, -3])) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
+
+
 def repair_dim_node(node, defects, min_waste):
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     change = get_surplus_dim(node)

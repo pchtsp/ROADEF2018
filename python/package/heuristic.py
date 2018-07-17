@@ -163,14 +163,12 @@ class ImproveHeuristic(sol.Solution):
 
     @staticmethod
     def check_assumptions_swap(node1, node2, insert):
-        # for now, the only requisite is to have the same level.
-        # Maybe this will be relaxed in the future.
         siblings = node1.up == node2.up
         if siblings and insert:
             return False
-        if node1.TYPE in [-1, -3] and node2.TYPE in [-1, -3]:
+        if nd.is_waste(node1) and nd.is_waste(node2):
             return False
-        if node1.TYPE in [-1, -3] and insert:
+        if nd.is_waste(node1) and insert:
             return False
         if node1.up == node2 or node1 == node2.up:
             return False
@@ -548,9 +546,7 @@ class ImproveHeuristic(sol.Solution):
         # (dif density) * (dif position)
         nodes = {1: node1, 2: node2}
         node_density = {
-            n: sum(item.HEIGHT * item.WIDTH for item in nd.get_node_leaves(node)) /
-               ((node.HEIGHT+1) * (node.WIDTH+1))
-            for n, node in nodes.items()
+            n: nd.get_item_density_node(node) for n, node in nodes.items()
         }
 
         if insert:
@@ -789,7 +785,10 @@ class ImproveHeuristic(sol.Solution):
                 break
         if len(good_candidates) == 0:
             return False
-        node2, balance = max(good_candidates.items(), key=lambda x: x[1])
+        candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
+        node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
+        balance = good_candidates[node2]
+        # node2, balance = max(good_candidates.items(), key=lambda x: x[1])
         improve = self.acceptance_probability(balance, temperature=temperature)
         self.evaluated += 1
         if improve < rn.random():
@@ -888,11 +887,14 @@ class ImproveHeuristic(sol.Solution):
         return [ch for tree in self.trees for ch in tree.traverse(is_leaf_fn=lambda x: x.CUT == level)
             if ch.CUT == level and filter_fn(ch)]
 
-    def change_level(self, node, level, max_candidates=50, siblings_only=False, **kwargs):
+    def change_level(self, node, level, max_candidates=50, siblings_only=False, fn_weights=None, **kwargs):
         """
         General function that searches nodes in the same level of the node and try to swap them
         :param node:
         :param level: cut level
+        :param max_candidates: maximum number of candidates to search for.
+        :param siblings_only: wether to search for the node's siblings only or not.
+        :param fn_weights: a function that applied to the candidate returns the probability to choose it.
         :param kwargs: tolerance, temperature, ...
         :return: True if swap was successful
         """
@@ -902,13 +904,21 @@ class ImproveHeuristic(sol.Solution):
         node_level = nd.find_ancestor_level(node, level)
         if node_level is None:
             return fails, successes
+        if fn_weights is None:
+            fn_weights = lambda x: 1
         if siblings_only:
             candidates = [c for c in node.get_sisters() if self.node_in_solution(c)]
         else:
             candidates = [c for c in self.get_nodes_by_level(level) if c != node_level and
                           self.node_in_solution(c)]
         if len(candidates) > max_candidates:
-            candidates = rn.sample(candidates, max_candidates)
+            candidates_prob = sd.SuperDict({k: fn_weights(k) for k in candidates}).to_weights()
+            candidates = \
+                np.random.choice(
+                    a=candidates_prob.keys_l(), size=max_candidates,
+                    p=candidates_prob.values_l(), replace=False
+                )
+            # candidates = rn.sample(candidates, max_candidates)
         # always try insert first
         for _insert in [True, False]:
             change = self.try_change_node(node=node_level, candidates=candidates, insert=_insert, **kwargs)
@@ -969,7 +979,7 @@ class ImproveHeuristic(sol.Solution):
     def node_in_solution(self, node):
         return node.get_tree_root() in self.trees
 
-    def collapse_to_left(self, level, max_candidates=50, max_wastes=None, **kwargs):
+    def collapse_to_left(self, level, max_candidates=50, max_iter=100, max_wastes=None, **kwargs):
         if max_wastes is None:
             max_wastes = max_candidates
         fails = successes = 0
@@ -978,36 +988,47 @@ class ImproveHeuristic(sol.Solution):
         # wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
         candidates = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE not in [-1, -3]) + \
                      self.get_nodes_by_level(level+1, filter_fn=lambda x: x.TYPE not in [-1, -3])
-        if len(candidates) > max_candidates:
-            candidates = rn.sample(candidates, max_candidates)
-        candidates.sort(reverse=True, key=lambda x: nd.get_node_pos_tup(x))
+
+        wastes_prob = sd.SuperDict(
+            {c: nd.get_node_position_cost_unit(c, self.get_param('widthPlates')) for c in wastes}
+        )
+        # candidates.sort(reverse=True, key=lambda x: nd.get_node_pos_tup(x))
+        rn.shuffle(candidates)
+        i = 0
         for c in candidates:
             if not self.node_in_solution(c):
                 continue
-            w_candidates = [w for w in wastes if self.node_in_solution(w)]
-            w_before_node = [w for w in w_candidates if
-                             nd.get_node_pos_tup(w) < nd.get_node_pos_tup(c)]
-            # TODO: use the items pos to sample weight
-            if len(w_before_node) > max_candidates:
-                w_before_node = rn.sample(w_before_node, max_candidates)
+            i += 1
+            if i >= max_iter:
+                break
+            wastes_prob = sd.SuperDict({k: v for k, v in wastes_prob.items() if self.node_in_solution(k)})
+            wastes_prob = wastes_prob.to_weights()
+            w_candidates = wastes_prob.keys_l()
+            if len(w_candidates) > max_candidates:
+                w_candidates = np.random.choice(a=wastes_prob.keys_l(), size=max_candidates,
+                                                replace=False, p=wastes_prob.values_l())
+            # w_before_node = [w for w in w_candidates if
+            #                  nd.get_node_pos_tup(w) < nd.get_node_pos_tup(c)]
+            # if len(w_before_node) > max_candidates:
+            #     w_before_node = rn.sample(w_before_node, max_candidates)
             for _insert in [True, False]:
-                change = self.try_change_node(node=c, candidates=w_before_node, insert=_insert, **kwargs)
+                change = self.try_change_node(node=c, candidates=w_candidates, insert=_insert, **kwargs)
                 if change:
                     break
             fails += not change
             successes += change
-            if change:
-                continue
-            # didn't work: search for any waste:
-            w_after_node = [w for w in set(w_candidates) - set(w_before_node)]
-            if len(w_after_node) > max_candidates:
-                w_after_node = rn.sample(w_after_node, max_candidates)
-            for _insert in [True, False]:
-                change = self.try_change_node(node=c, candidates=w_after_node, insert=_insert, **kwargs)
-                if change:
-                    break
-            fails += not change
-            successes += change
+            # if change:
+            #     continue
+            # # didn't work: search for any waste:
+            # w_after_node = [w for w in set(w_candidates) - set(w_before_node)]
+            # if len(w_after_node) > max_candidates:
+            #     w_after_node = rn.sample(w_after_node, max_candidates)
+            # for _insert in [True, False]:
+            #     change = self.try_change_node(node=c, candidates=w_after_node, insert=_insert, **kwargs)
+            #     if change:
+            #         break
+            # fails += not change
+            # successes += change
         return fails, successes
 
     def merge_wastes_seq(self):
@@ -1029,7 +1050,8 @@ class ImproveHeuristic(sol.Solution):
             node, actual_defect = defect
             i += 1
             # first, we try siblings:
-            _fails, _successes = self.change_level(node, level, siblings_only=True, **kwargs)
+            _fails, _successes = \
+                self.change_level(node, level, siblings_only=True, fn_weights=nd.get_waste_density_node, **kwargs)
             fails += _fails
             successes += _successes
             if _successes:
@@ -1042,7 +1064,8 @@ class ImproveHeuristic(sol.Solution):
             if not _successes:
                 continue
             # I want to give it a try doing some local changes afterwards.
-            _fails, _successes = self.change_level(node, level, siblings_only=False, **kwargs)
+            _fails, _successes = \
+                self.change_level(node, level, siblings_only=False, fn_weights=nd.get_waste_density_node, **kwargs)
             fails += _fails
             successes += _successes
             if not _successes:
@@ -1080,7 +1103,7 @@ class ImproveHeuristic(sol.Solution):
             nodes = nd.split_waste(waste, cut, min_size=self.get_param('minWaste'))
             if not len(nodes):
                 return fails, successes
-            candidates = [n for n in nodes[2].get_sisters() if n.TYPE not in [-1, -3]]
+            candidates = [n for n in nodes[2].get_sisters() if not nd.is_waste(n)]
             for node_level in nodes.values():
                 change = self.try_change_node(node_level, candidates, insert=False, **kwargs)
                 fails += not change
@@ -1117,7 +1140,7 @@ class ImproveHeuristic(sol.Solution):
                 wastes.pop(2)
 
             # Here we try to swap the nodes with their siblings:
-            candidates = [n for n in wastes[0].get_sisters() if n.TYPE not in [-1, -3]]
+            candidates = [n for n in wastes[0].get_sisters() if not nd.is_waste(n)]
             for waste in wastes:
                 change = self.try_change_node(waste, candidates, insert=False, **kwargs)
                 fails += not change
@@ -1145,14 +1168,16 @@ class ImproveHeuristic(sol.Solution):
             level_cand_s = [s for n in level_cand for s in n.get_sisters()]
             level_cand.extend(level_cand_s)
         level_cand = [n for n in set(level_cand) if n is not None]
-        # candidates = [ch for tree in self.trees for ch in tree.get_children() if tree.get_children()]
-        candidates = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
-        if len(candidates) > max_candidates:
-            candidates = rn.sample(candidates, max_candidates)
+        rn.shuffle(level_cand)
+        # candidates_all = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
+        candidates_all = self.get_nodes_by_level(level=level - dif_level)
         i = 0
         for c in level_cand:
             if i >= max_iter:
                 break
+            candidates = candidates_all
+            if len(candidates) > max_candidates:
+                candidates = rn.sample(candidates_all, max_candidates)
             change = self.try_change_node(c, candidates, insert=True, **params)
             fails += not change
             successes += change
@@ -1410,8 +1435,6 @@ class ImproveHeuristic(sol.Solution):
         self.jumbos_mirroring(params)
         assert 'weights' in params
         temp = params['temperature']
-        try_rotation = params['try_rotation']
-        # params = {'weights': weights, 'max_iter': iterations, 'temperature': temp}
         coolingRate = params['cooling_rate']
         fsc = {}
         fail_success_acum = []
@@ -1428,10 +1451,6 @@ class ImproveHeuristic(sol.Solution):
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
-                # if level == 1:
-                #     params['try_rotation'] = False
-                # else:
-                #     params['try_rotation'] = try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     params = {**options['heur_params'], **options['heur_optim']}
                     weights = params['weights']
@@ -1441,7 +1460,7 @@ class ImproveHeuristic(sol.Solution):
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
-                if rn.random() > 0.5:
+                if rn.random() > 0.8:
                     self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
                 if level == 1:
@@ -1466,10 +1485,6 @@ class ImproveHeuristic(sol.Solution):
                 if level in [2, 3]:
                     fsc['interlevel'] = \
                         self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, dif_level=2, **params)
-                # fails, successes = zip(*fail_success_cat.values())
-                # fail_success_acum.append(tuple(map(sum, zip(*fsc.values()))))
-                # fail_success_acum_cat = {c: tuple(map(sum, zip(v, fsc[c])))
-                #                          for c, v in fail_success_acum_cat.items()}
                 count += 1
 
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)
@@ -1505,13 +1520,13 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: random merges and cut of wastes.
-    # TODO: do GRASP when choosing from list of candidates.
     # TODO: get a good initial solution.
     # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
     # TODO: add more random movements.
     # TODO: go back to initial solution *very* rarely
     # TODO: dynamic weights.
+    # TODO: implement the multilevel swap
+    # TODO: for defects, search nodes with good waste density.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
