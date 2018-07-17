@@ -44,9 +44,9 @@ OPTIONS = {
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
-    , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
-                      'temperature': 8000, 'try_rotation': True,
-                      'max_candidates': 5, 'extra_jumbos': 0,
+    , 'heur_params': {'main_iter': 5, 'max_iter': 10,
+                      'temperature': 8000, 'try_rotation': False,
+                      'max_candidates': 3, 'extra_jumbos': 0,
                       'cooling_rate': 0.001,
                       'change_first': False, 'tolerance': None,
                       'rotation_probs': [0.99, 0.01, 0, 0],

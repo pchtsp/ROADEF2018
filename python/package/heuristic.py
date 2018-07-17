@@ -863,7 +863,7 @@ class ImproveHeuristic(sol.Solution):
             node_level = nd.find_ancestor_level(node, level)
             if node_level is None:
                 continue
-            other_nodes = [nd.find_ancestor_level(p, level) for p in prec[node]]
+            other_nodes = set([nd.find_ancestor_level(p, level) for p in prec[node]])
             candidates = [s for p in other_nodes if p is not None and p.up is not None
                           for s in p.up.get_children()]
             if len(candidates) > max_candidates:
@@ -950,12 +950,15 @@ class ImproveHeuristic(sol.Solution):
             rem = list(set(rem))
         return fails, successes
 
-    def change_level_all(self, level, max_candidates=50, **kwargs):
+    def change_level_all(self, level, max_iter=100, **kwargs):
         fails = successes = 0
         candidates = [c for c in self.get_nodes_by_level(level)]
-        if len(candidates) > max_candidates:
-            candidates = rn.sample(candidates, max_candidates)
+        i = 0
+        rn.shuffle(candidates)
         for c in candidates:
+            i += 1
+            if i >= max_iter:
+                break
             if not self.node_in_solution(c):
                 continue
             _fails, _successes = self.change_level(c, level, **kwargs)
@@ -970,9 +973,10 @@ class ImproveHeuristic(sol.Solution):
         if max_wastes is None:
             max_wastes = max_candidates
         fails = successes = 0
+        # TODO: now, wastes can be any level...
         wastes = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE in [-1, -3])
         # wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
-        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE not in [-1, -3])+\
+        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE not in [-1, -3]) + \
                      self.get_nodes_by_level(level+1, filter_fn=lambda x: x.TYPE not in [-1, -3])
         if len(candidates) > max_candidates:
             candidates = rn.sample(candidates, max_candidates)
@@ -983,6 +987,7 @@ class ImproveHeuristic(sol.Solution):
             w_candidates = [w for w in wastes if self.node_in_solution(w)]
             w_before_node = [w for w in w_candidates if
                              nd.get_node_pos_tup(w) < nd.get_node_pos_tup(c)]
+            # TODO: use the items pos to sample weight
             if len(w_before_node) > max_candidates:
                 w_before_node = rn.sample(w_before_node, max_candidates)
             for _insert in [True, False]:
@@ -994,10 +999,11 @@ class ImproveHeuristic(sol.Solution):
             if change:
                 continue
             # didn't work: search for any waste:
-            if len(w_candidates) > max_candidates:
-                w_candidates = rn.sample(w_candidates, max_candidates)
+            w_after_node = [w for w in set(w_candidates) - set(w_before_node)]
+            if len(w_after_node) > max_candidates:
+                w_after_node = rn.sample(w_after_node, max_candidates)
             for _insert in [True, False]:
-                change = self.try_change_node(node=c, candidates=w_candidates, insert=_insert, **kwargs)
+                change = self.try_change_node(node=c, candidates=w_after_node, insert=_insert, **kwargs)
                 if change:
                     break
             fails += not change
@@ -1036,9 +1042,11 @@ class ImproveHeuristic(sol.Solution):
             if not _successes:
                 continue
             # I want to give it a try doing some local changes afterwards.
-            _fails, _successes = self.change_level(node, level, siblings_only=True, **kwargs)
+            _fails, _successes = self.change_level(node, level, siblings_only=False, **kwargs)
             fails += _fails
             successes += _successes
+            if not _successes:
+                continue
             # made a swap: recalculate
             defects = self.check_defects()
         return fails, successes
