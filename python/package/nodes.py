@@ -656,26 +656,37 @@ def repair_dim_node(node, defects, min_waste):
                         increase_node=False)
         return True
     wastes = find_all_wastes_after_defect(node, defects)
+    # wastes = find_all_wastes(node)
     # TODO: get better ways to eat wastes.
     # we revert to the previous change
     # we want the farthest at the end:
-    # wastes.sort(key=lambda x: getattr(x, axis_i))
+    # but we want to eliminate really small wastes before
+    # wastes.sort(key=lambda x: (getattr(x, dim_i) < 20, getattr(x, axis_i)))
 
     # we want the smallest at the end:
     wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
+    comply_min_waste = True
     while wastes and remaining:
         waste = wastes.pop()
         size = getattr(waste, dim_i)
         quantity = size
         if remaining < size:
             waste_rem = size - remaining
-            if min_waste > waste_rem > 0:
+            if min_waste > waste_rem > 0 and comply_min_waste:
                 quantity = size - min_waste
             else:
                 quantity = remaining
         resize_waste(waste, dim_i, -quantity)
         remaining -= quantity
+        # If we did all we could and still have remaining.
+        # we relax the min size constraint and do one last turn.
+        if not len(wastes) and comply_min_waste:
+            wastes = find_all_wastes(node)
+            wastes.sort(key=lambda x: getattr(x, axis_i))
+            comply_min_waste = False
+    if remaining > 0:
+        assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
     return True
 
 

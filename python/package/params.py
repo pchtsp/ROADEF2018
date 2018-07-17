@@ -37,7 +37,7 @@ OPTIONS = {
     , 'solver': "HEUR"  # CPLEXPY, CPLEX_CMD, GUROBI, HEUR
     , 'integer': False
     , 'path': PATHS['experiments']
-    , 'case_name': 'A13'
+    , 'case_name': 'A14'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
@@ -51,13 +51,13 @@ OPTIONS = {
                       'change_first': False, 'tolerance': None,
                       'rotation_probs': [0.99, 0.01, 0, 0],
                       'level_probs': [0.3, 0.6, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 50000, 'defects': 1000}
+                      'weights': {'space': 0.00001, 'seq': 50000, 'defects': 50000}
                       }
     , 'heur_optim': {
         'try_rotation': True,
         'max_candidates': 10,
-        'rotation_probs': [0.99, 0.01, 0, 0],
-        'weights': {'space': 1000, 'seq': 20000, 'defects': 3000}
+        'rotation_probs': [0.70, 0.3, 0, 0],
+        'weights': {'space': 5000, 'seq': 5000, 'defects': 5000}
     }
     , 'debug': False
     , 'graph': True

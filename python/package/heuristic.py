@@ -1002,6 +1002,8 @@ class ImproveHeuristic(sol.Solution):
             if i >= max_iter:
                 break
             wastes_prob = sd.SuperDict({k: v for k, v in wastes_prob.items() if self.node_in_solution(k)})
+            if not len(wastes_prob):
+                break
             wastes_prob = wastes_prob.to_weights()
             w_candidates = wastes_prob.keys_l()
             if len(w_candidates) > max_candidates:
