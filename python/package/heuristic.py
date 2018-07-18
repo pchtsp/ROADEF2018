@@ -1534,6 +1534,7 @@ if __name__ == "__main__":
     # TODO: for eating wastes after swap, I can eat wastes right of the defect
         # or
     # TODO: profiling
+    # TODO: add other items from stack to sequence swaps.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
