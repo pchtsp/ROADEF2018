@@ -44,20 +44,21 @@ OPTIONS = {
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
-    , 'heur_params': {'main_iter': 5, 'max_iter': 100,
-                      'temperature': 8000, 'try_rotation': False,
+    , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
+                      'temperature': 8000, 'try_rotation': True,
                       'max_candidates': 5, 'extra_jumbos': 0,
                       'cooling_rate': 0.001,
                       'change_first': False, 'tolerance': None,
-                      'rotation_probs': [0.99, 0.01, 0, 0],
-                      'level_probs': [0.3, 0.6, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 50000, 'defects': 50000}
+                      'rotation_probs': [0.70, 0.30, 0, 0],
+                      'rotation_tries': 2,
+                      'level_probs': [0.5, 0.4, 0.1],
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
                       }
     , 'heur_optim': {
         'try_rotation': True,
         'max_candidates': 10,
         'rotation_probs': [0.70, 0.3, 0, 0],
-        'weights': {'space': 5000, 'seq': 5000, 'defects': 5000}
+        'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
     , 'debug': False
     , 'graph': True

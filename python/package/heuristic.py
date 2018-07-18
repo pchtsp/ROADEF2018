@@ -180,7 +180,8 @@ class ImproveHeuristic(sol.Solution):
             return False
         return True
 
-    def check_swap_size_rotation(self, node1, node2, insert=False, try_rotation=False, rotation_probs=None):
+    def check_swap_size_rotation(self, node1, node2, insert=False,
+                                 try_rotation=False, rotation_probs=None, rotation_tries=1):
         if node1.up == node2.up:
             return []
         result = False
@@ -190,7 +191,7 @@ class ImproveHeuristic(sol.Solution):
             if rotation_probs is not None:
                 rotation_probs = [0.8, 0.1, 0.05, 0.05]
             # probs = [0.8, 0.2, 0, 0]
-            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=1, replace=False)
+            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
         for rotation in rotations:
             result = self.check_swap_size(node1, node2, self.get_param('minWaste'), insert, rotate=rotation)
             if result:
@@ -1437,6 +1438,7 @@ class ImproveHeuristic(sol.Solution):
         self.jumbos_mirroring(params)
         assert 'weights' in params
         temp = params['temperature']
+        try_rotation = params['try_rotation']
         coolingRate = params['cooling_rate']
         fsc = {}
         fail_success_acum = []
@@ -1453,6 +1455,7 @@ class ImproveHeuristic(sol.Solution):
             for x in range(params['main_iter']):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
+                params['try_rotation'] = level == 3 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     params = {**options['heur_params'], **options['heur_optim']}
                     weights = params['weights']
@@ -1528,7 +1531,9 @@ if __name__ == "__main__":
     # TODO: go back to initial solution *very* rarely
     # TODO: dynamic weights.
     # TODO: implement the multilevel swap
-    # TODO: for defects, search nodes with good waste density.
+    # TODO: for eating wastes after swap, I can eat wastes right of the defect
+        # or
+    # TODO: profiling
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
