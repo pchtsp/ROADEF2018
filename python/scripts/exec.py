@@ -133,6 +133,7 @@ if __name__ == "__main__":
     parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
     parser.add_argument('-ng', '--no-graph', dest='no_graph', help='avoid graphing at the end', action='store_true')
     parser.add_argument('-ej', '--extra-jumbos', dest='extra_jumbos', help='number of extra jumbos to add', type=int)
+    parser.add_argument('-tl', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
 
     args = parser.parse_args()
     if args.root is not None:
@@ -165,6 +166,9 @@ if __name__ == "__main__":
 
     if args.extra_jumbos is not None:
         pm.OPTIONS['heur_params']['extra_jumbos'] = args.extra_jumbos
+
+    if args.time_limit is not None:
+        pm.OPTIONS['timeLimit'] = args.time_limit
 
     print('Using config file in {}'.format(args.file))
 
