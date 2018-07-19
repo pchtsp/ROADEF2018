@@ -152,12 +152,12 @@ if __name__ == "__main__":
 
     if args.results is not None:
         pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
-        if args.results_dir is not None:
-            pm.PATHS['experiments'] = args.results + args.results_dir + '/'
-            if not os.path.exists(pm.PATHS['experiments']):
-                cs.separate_cases(name=args.results_dir,
-                                  data_dir=pm.PATHS['data'],
-                                  results_dir=pm.PATHS['results'])
+    if args.results_dir is not None:
+        pm.PATHS['experiments'] = pm.PATHS['results'] + args.results_dir + '/'
+        if not os.path.exists(pm.PATHS['experiments']):
+            cs.separate_cases(name=args.results_dir,
+                              data_dir=pm.PATHS['data'],
+                              results_dir=pm.PATHS['results'])
 
     pm.OPTIONS['path'] = pm.PATHS['experiments']
 
