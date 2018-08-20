@@ -97,13 +97,17 @@ def check_nodespace_in_space(node_space, free_space, insert, min_waste):
     # if dimensions are too small, we can't do the change
     # in insert=True we only check node1 movement
     # Important! we want to have at least 20 of waste. Or 0.
-    for d in ['HEIGHT', 'WIDTH']:
-        dif = free_space[2][d] - node_space[1][d]
-        if dif < min_waste and dif != 0:
-            return False
-        if insert:
-            continue
-        dif = free_space[1][d] - node_space[2][d]
-        if dif < min_waste and dif != 0:
-            return False
+    nodes_to_check = [(2, 1)]
+    if not insert:
+        nodes_to_check.append((1, 2))
+    for n1, n2 in nodes_to_check:
+        fs = free_space[n1]
+        ns = node_space[n2]
+        # if the area is smaller... no need to continue:
+        # if fs['HEIGHT']*fs['WIDTH'] < ns['HEIGHT']*ns['WIDTH']:
+        #     return False
+        for d in ['HEIGHT', 'WIDTH']:
+            dif = fs[d] - ns[d]
+            if dif < min_waste and dif != 0:
+                return False
     return True

@@ -1205,11 +1205,16 @@ class ImproveHeuristic(sol.Solution):
         # descendant. So, we we'll travel the leaves actually.
 
         # if node2 is already an item: I cannot go deeper.
-        # I try to insert next to it:
+        # I try to insert node1 after node2:
         if node2.TYPE > 0:
             # I change the cut of node1 so it's "compatible"
             node1.CUT = node2.CUT
-            return self.try_change_node(node1, [node2], insert=True, **kwargs)
+            next_sibling = nd.get_next_sibling(node2)
+            if next_sibling is None:
+                return False
+            # check if node2 is the last sibling.
+            # if it's not, insert in the next one. If it's, then return False
+            return self.try_change_node(node1, [next_sibling], insert=True, **kwargs)
 
         # if node2 is a waste:
         # I try to create a child waste and use this to insert.
@@ -1240,17 +1245,28 @@ class ImproveHeuristic(sol.Solution):
 
         # If I failed inserting in the children: I try to insert next to the waste
         # or -1
+        if node2.up is None:
+            return False
         node1.CUT = node2.CUT
-        return self.try_change_node(node1, [node2], insert=True, **kwargs)
+        next_sibling = nd.get_next_sibling(node2)
+        if next_sibling is None:
+            return False
+        return self.try_change_node(node1, [next_sibling], insert=True, **kwargs)
 
     def create_dummy_tree(self, nodes):
+        """
+        This function creates a very big tree and puts the nodes list inside as children.
+        The does not comply with space and size requirements.
+        :param nodes: list of nodes to insert as children
+        :return: tree object.
+        """
         dummyTree = nd.create_plate(width=999999, height=999999, id=-1)
         dummyWaste = dummyTree.copy()
         dummyWaste.TYPE = -1
         for n in nodes:
             dummyTree.add_child(n)
         dummyTree.add_child(dummyWaste)
-        return
+        return dummyTree
 
     def add_jumbo(self, num=1):
         plate_W = self.get_param('widthPlates')

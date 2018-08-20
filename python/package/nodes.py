@@ -158,7 +158,7 @@ def find_all_wastes(node):
     # same as find_waste but returns all wastes
     return [w for w in node.children if is_waste(w)]
 
-
+# @profile
 def find_all_wastes_after_defect(node, defects):
     """
     :param node: the node to search wastes
@@ -170,17 +170,19 @@ def find_all_wastes_after_defect(node, defects):
     if node is None:
         return []
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    # TODO: optimise
     if node.CUT > 0:
         defects = defects_in_node(node, defects)
     up_right = [x[dim_i] + x[axis_i] for x in defects]
-    last_defect = max(up_right, default=0)
+    last_defect = max(up_right, default=-1)
+    if not len(node.children):
+        return []
+    last_children = node.children[-1]
+    # TODO: optimise
     return [w for w in node.children
-            if is_waste(w) if getattr(w, axis_i) > last_defect or
-            w == node.children[-1]
+            if is_waste(w) and (getattr(w, axis_i) > last_defect or
+            w == last_children)
             ]
-
-def get_code_node(node):
-    return rn.randint(1, 100000)
 
 
 def order_children(node):
@@ -194,6 +196,10 @@ def order_children(node):
         # come before... (that's why the dim in second place)
         v.children.sort(key=lambda x: (getattr(x, axis), getattr(x, dim)))
     return True
+
+
+def get_code_node(node):
+    return rn.randint(1, 100000)
 
 
 def get_dim_of_node(node, inv):
@@ -231,10 +237,82 @@ def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
 
 
 def get_node_pos(node):
-    pos = 0
-    if node.up is not None:
-        pos = node.up.children.index(node)
+    assert node.up is not None
+    pos = node.up.children.index(node)
     return node.PLATE_ID, pos
+
+
+def get_next_sibling(node):
+    plate, ch_pos = get_node_pos(node)
+    new_pos = ch_pos + 1
+    children = node.up.children
+    if len(children) == new_pos:
+        return None
+    return children[new_pos]
+
+
+def get_node_position_cost_unit(node, plate_width):
+    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
+
+
+def get_node_position_cost(node, plate_width):
+    # we'll give more weight to things that are in the right and up.
+    # I guess it depends on the size too...
+    return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
+
+
+def get_size_without_waste(node, dim):
+    waste = find_waste(node, child=True)
+    if waste is None:
+        return getattr(node, dim)
+    return getattr(node, dim) - getattr(waste, dim)
+
+
+def get_size_without_wastes(node, dim):
+    wastes = find_all_wastes(node)
+    sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
+    return getattr(node, dim) - sum_waste_dims
+
+
+def get_node_pos_tup(node):
+    return node.PLATE_ID, node.X, node.Y
+
+
+def get_children_names(node):
+    return [ch.name for ch in node.children]
+
+
+def get_last_sibling(node):
+    assert node.up is not None, 'node is root node'
+    return node.up.children[-1]
+
+
+def get_features(node, features=None):
+    if features is None:
+        features = default_features()
+    attrs = {k: int(getattr(node, k)) for k in features}
+    parent = node.up
+    if parent is not None:
+        parent = int(parent.NODE_ID)
+    attrs['PARENT'] = parent
+    return attrs
+
+
+def get_surplus_dim(node):
+    if node.is_leaf():
+        return 0
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
+
+
+def get_item_density_node(node):
+    return sum(item.HEIGHT * item.WIDTH for item in get_node_leaves(node)) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
+
+
+def get_waste_density_node(node):
+    return sum(waste.HEIGHT * waste.WIDTH for waste in get_node_leaves(node, type_options=[-1, -3])) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
 
 
 def node_to_square(node):
@@ -255,17 +333,6 @@ def node_to_plate(node):
 
 def default_features():
     return ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
-
-
-def get_features(node, features=None):
-    if features is None:
-        features = default_features()
-    attrs = {k: int(getattr(node, k)) for k in features}
-    parent = node.up
-    if parent is not None:
-        parent = int(parent.NODE_ID)
-    attrs['PARENT'] = parent
-    return attrs
 
 
 def duplicate_node_as_its_parent(node, node_mod=900, return_both=False):
@@ -422,19 +489,6 @@ def add_child_waste(node, child_size, waste_pos=None, increase_node=True):
     return True, recalculate
 
 
-def get_size_without_waste(node, dim):
-    waste = find_waste(node, child=True)
-    if waste is None:
-        return getattr(node, dim)
-    return getattr(node, dim) - getattr(waste, dim)
-
-
-def get_size_without_wastes(node, dim):
-    wastes = find_all_wastes(node)
-    sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
-    return getattr(node, dim) - sum_waste_dims
-
-
 def del_child_waste(node):
     axis, dim_i = get_orientation_from_cut(node, inv=True)
     child = find_waste(node, child=True)
@@ -444,16 +498,6 @@ def del_child_waste(node):
     new_size = getattr(node, dim_i) - getattr(child, dim_i)
     setattr(node, dim_i, new_size)
     return True
-
-
-def get_node_position_cost_unit(node, plate_width):
-    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
-
-
-def get_node_position_cost(node, plate_width):
-    # we'll give more weight to things that are in the right and up.
-    # I guess it depends on the size too...
-    return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
 
 
 def filter_defects(node, defects, previous=True):
@@ -577,10 +621,6 @@ def search_node_of_defect(node, defect):
     return None
 
 
-def get_node_pos_tup(node):
-    return node.PLATE_ID, node.X, node.Y
-
-
 def defects_in_node(node, defects):
     """
     :param node:
@@ -600,8 +640,8 @@ def is_waste(node):
     return node.TYPE in [-1, -3]
 
 
-def get_children_names(node):
-    return [ch.name for ch in node.children]
+def is_last_sibling(node):
+    return get_last_sibling(node) == node
 
 
 def draw(node, *attributes):
@@ -625,23 +665,6 @@ def extract_node_from_position(node):
     # In case there's any waste at the end: I want to trim it.
     del_child_waste(node)
     return node
-
-
-def get_surplus_dim(node):
-    if node.is_leaf():
-        return 0
-    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
-    return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
-
-
-def get_item_density_node(node):
-    return sum(item.HEIGHT * item.WIDTH for item in get_node_leaves(node)) /\
-           ((node.HEIGHT+1) * (node.WIDTH+1))
-
-
-def get_waste_density_node(node):
-    return sum(waste.HEIGHT * waste.WIDTH for waste in get_node_leaves(node, type_options=[-1, -3])) /\
-           ((node.HEIGHT+1) * (node.WIDTH+1))
 
 
 def repair_dim_node(node, defects, min_waste):
