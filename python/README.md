@@ -12,11 +12,6 @@ Code is organized as follows:
 * **scripts**: python scripts done for executing model, heuristics, etc.
 * **package**: core code with models, data processing and main logic. Objects for data input and output.
 
-Requirements:
-
-* python >= 3.5
-* git
-
 ## Install dependencies
 
 ### Ubuntu:
@@ -40,7 +35,7 @@ Windows:
     git clone git@github.com:pchtsp/ROADEF2018.git
     cd ROADEF2018\python
     python3 -m venv venv
-    venv\Scripts\bin\activate
+    venv\Scripts\activate
     pip3 install -r requirements.txt
 
 Ubuntu:
