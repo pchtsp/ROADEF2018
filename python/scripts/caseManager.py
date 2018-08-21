@@ -4,15 +4,15 @@ import re
 import shutil
 
 
-def separate_cases(name):
-    destination = pm.PATHS['results'] + name + '/'
+def separate_cases(name, data_dir=pm.PATHS['data'], results_dir=pm.PATHS['results']):
+    destination = results_dir + name + '/'
     if not os.path.exists(destination):
         os.makedirs(destination)
 
-    files = os.listdir(pm.PATHS['data'])
+    files = os.listdir(data_dir)
     cases = ["A{}".format(n) for n in range(1, 21)]
     for case in cases:
-        _files = [os.path.join(pm.PATHS['data'], f) for f in files if f.startswith(case+'_')]
+        _files = [os.path.join(data_dir, f) for f in files if f.startswith(case + '_')]
         _dest = destination + case + '/'
         if not os.path.exists(_dest):
             os.makedirs(_dest)
@@ -36,6 +36,6 @@ def move_case_checker():
 
 
 if __name__ == "__main__":
-    separate_cases('template')
+    separate_cases('ubuntu_20180706')
 
 

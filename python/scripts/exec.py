@@ -4,6 +4,7 @@ import importlib
 import package.data_input as di
 import package.model as md
 import package.heuristic as heur
+import scripts.caseManager as cs
 import argparse
 import logging as log
 import copy
@@ -123,20 +124,53 @@ def solve(options, case=None):
 if __name__ == "__main__":
     import pprint as pp
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
-    parser.add_argument('-c', dest='file', default="package.params",
+    parser.add_argument('-c', '--config-file', dest='file', default="package.params",
                         help='config file (default: package.params)')
-    parser.add_argument('-a', dest='case', help='case name')
-    # parser.add_argument('-a', dest='case', help='case name')
+    parser.add_argument('-a', '--case-name', dest='case', help='case name', nargs='*', default=[None])
+    parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
+    parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
+    parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
+    parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
+    parser.add_argument('-ng', '--no-graph', dest='no_graph', help='avoid graphing at the end', action='store_true')
+    parser.add_argument('-ej', '--extra-jumbos', dest='extra_jumbos', help='number of extra jumbos to add', type=int)
+    parser.add_argument('-tl', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
 
     args = parser.parse_args()
-    # if not os.path.exists(args.file):
-    #     raise FileNotFoundError("{} was not found".format(args.file))
-    print('Using config file in {}'.format(args.file))
+    if args.root is not None:
+        if 'PYTHONPATH' not in os.environ:
+            os.environ['PYTHONPATH'] = ''
+        os.environ['PYTHONPATH'] += ':' + args.root + 'python'
+        # print(os.environ['PYTHONPATH'])
     pm = importlib.import_module(args.file)
-    # import package.params as params
-    solve(pm.OPTIONS, args.case)
 
-    # solve_case(options=pm.OPTIONS)
-        # checks = self.check_all()
-        # checks_ = sd.SuperDict.from_dict(checks).to_dictdict()
-        # di.export_data(output_path, checks, name="checks", file_type='json')
+    cases = args.case
+    if args.all_cases:
+        cases = ['A{}'.format(case) for case in range(1, 21)]
+
+    if args.root is not None:
+        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(args.root)}
+
+    if args.results is not None:
+        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
+    if args.results_dir is not None:
+        pm.PATHS['experiments'] = pm.PATHS['results'] + args.results_dir + '/'
+        if not os.path.exists(pm.PATHS['experiments']):
+            cs.separate_cases(name=args.results_dir,
+                              data_dir=pm.PATHS['data'],
+                              results_dir=pm.PATHS['results'])
+
+    pm.OPTIONS['path'] = pm.PATHS['experiments']
+
+    if args.no_graph:
+        pm.OPTIONS['graph'] = False
+
+    if args.extra_jumbos is not None:
+        pm.OPTIONS['heur_params']['extra_jumbos'] = args.extra_jumbos
+
+    if args.time_limit is not None:
+        pm.OPTIONS['timeLimit'] = args.time_limit
+
+    print('Using config file in {}'.format(args.file))
+
+    for case in cases:
+        solve(pm.OPTIONS, case)

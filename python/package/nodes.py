@@ -158,9 +158,32 @@ def find_all_wastes(node):
     # same as find_waste but returns all wastes
     return [w for w in node.children if is_waste(w)]
 
+# @profile
+def find_all_wastes_after_defect(node, defects):
+    """
+    :param node: the node to search wastes
+    :param defects: the relevant defects
+    :return: list of wastes that are next to the defects
+    """
+    # We assume that the last child of the node, if it's a waste,
+    # it's available
+    if node is None:
+        return []
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    # TODO: optimise
+    if node.CUT > 0:
+        defects = defects_in_node(node, defects)
+    up_right = [x[dim_i] + x[axis_i] for x in defects]
+    last_defect = max(up_right, default=-1)
+    if not len(node.children):
+        return []
+    last_children = node.children[-1]
+    # TODO: optimise
+    return [w for w in node.children
+            if is_waste(w) and (getattr(w, axis_i) > last_defect or
+            w == last_children)
+            ]
 
-def get_code_node(node):
-    return rn.randint(1, 100000)
 
 def order_children(node):
     for v in node.traverse():
@@ -175,15 +198,23 @@ def order_children(node):
     return True
 
 
-def get_orientation_from_cut(node, inv=False):
-    # inv: means inverse the result.
+def get_code_node(node):
+    return rn.randint(1, 100000)
+
+
+def get_dim_of_node(node, inv):
     result = node.CUT % 2
     if inv:
         result = not result
     if result:  # cuts 1 and 3
-        dim = 'WIDTH'
-    else:  # cut 2 and 4
-        dim = 'HEIGHT'
+        return 'WIDTH'
+    # cut 2 and 4
+    return 'HEIGHT'
+
+
+def get_orientation_from_cut(node, inv=False):
+    # inv: means inverse the result.
+    dim = get_dim_of_node(node, inv)
     axis = get_axis_of_dim(dim)
     return axis, dim
 
@@ -206,10 +237,82 @@ def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
 
 
 def get_node_pos(node):
-    pos = 0
-    if node.up is not None:
-        pos = node.up.children.index(node)
+    assert node.up is not None
+    pos = node.up.children.index(node)
     return node.PLATE_ID, pos
+
+
+def get_next_sibling(node):
+    plate, ch_pos = get_node_pos(node)
+    new_pos = ch_pos + 1
+    children = node.up.children
+    if len(children) == new_pos:
+        return None
+    return children[new_pos]
+
+
+def get_node_position_cost_unit(node, plate_width):
+    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
+
+
+def get_node_position_cost(node, plate_width):
+    # we'll give more weight to things that are in the right and up.
+    # I guess it depends on the size too...
+    return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
+
+
+def get_size_without_waste(node, dim):
+    waste = find_waste(node, child=True)
+    if waste is None:
+        return getattr(node, dim)
+    return getattr(node, dim) - getattr(waste, dim)
+
+
+def get_size_without_wastes(node, dim):
+    wastes = find_all_wastes(node)
+    sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
+    return getattr(node, dim) - sum_waste_dims
+
+
+def get_node_pos_tup(node):
+    return node.PLATE_ID, node.X, node.Y
+
+
+def get_children_names(node):
+    return [ch.name for ch in node.children]
+
+
+def get_last_sibling(node):
+    assert node.up is not None, 'node is root node'
+    return node.up.children[-1]
+
+
+def get_features(node, features=None):
+    if features is None:
+        features = default_features()
+    attrs = {k: int(getattr(node, k)) for k in features}
+    parent = node.up
+    if parent is not None:
+        parent = int(parent.NODE_ID)
+    attrs['PARENT'] = parent
+    return attrs
+
+
+def get_surplus_dim(node):
+    if node.is_leaf():
+        return 0
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
+
+
+def get_item_density_node(node):
+    return sum(item.HEIGHT * item.WIDTH for item in get_node_leaves(node)) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
+
+
+def get_waste_density_node(node):
+    return sum(waste.HEIGHT * waste.WIDTH for waste in get_node_leaves(node, type_options=[-1, -3])) /\
+           ((node.HEIGHT+1) * (node.WIDTH+1))
 
 
 def node_to_square(node):
@@ -230,17 +333,6 @@ def node_to_plate(node):
 
 def default_features():
     return ['X', 'Y', 'NODE_ID', 'PLATE_ID', 'CUT', 'TYPE', 'WIDTH', 'HEIGHT']
-
-
-def get_features(node, features=None):
-    if features is None:
-        features = default_features()
-    attrs = {k: int(getattr(node, k)) for k in features}
-    parent = node.up
-    if parent is not None:
-        parent = int(parent.NODE_ID)
-    attrs['PARENT'] = parent
-    return attrs
 
 
 def duplicate_node_as_its_parent(node, node_mod=900, return_both=False):
@@ -397,19 +489,6 @@ def add_child_waste(node, child_size, waste_pos=None, increase_node=True):
     return True, recalculate
 
 
-def get_size_without_waste(node, dim):
-    waste = find_waste(node, child=True)
-    if waste is None:
-        return getattr(node, dim)
-    return getattr(node, dim) - getattr(waste, dim)
-
-
-def get_size_without_wastes(node, dim):
-    wastes = find_all_wastes(node)
-    sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
-    return getattr(node, dim) - sum_waste_dims
-
-
 def del_child_waste(node):
     axis, dim_i = get_orientation_from_cut(node, inv=True)
     child = find_waste(node, child=True)
@@ -419,16 +498,6 @@ def del_child_waste(node):
     new_size = getattr(node, dim_i) - getattr(child, dim_i)
     setattr(node, dim_i, new_size)
     return True
-
-
-def get_node_position_cost_unit(node, plate_width):
-    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
-
-
-def get_node_position_cost(node, plate_width):
-    # we'll give more weight to things that are in the right and up.
-    # I guess it depends on the size too...
-    return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
 
 
 def filter_defects(node, defects, previous=True):
@@ -552,10 +621,6 @@ def search_node_of_defect(node, defect):
     return None
 
 
-def get_node_pos_tup(node):
-    return node.PLATE_ID, node.X, node.Y
-
-
 def defects_in_node(node, defects):
     """
     :param node:
@@ -575,8 +640,8 @@ def is_waste(node):
     return node.TYPE in [-1, -3]
 
 
-def get_children_names(node):
-    return [ch.name for ch in node.children]
+def is_last_sibling(node):
+    return get_last_sibling(node) == node
 
 
 def draw(node, *attributes):
@@ -602,14 +667,7 @@ def extract_node_from_position(node):
     return node
 
 
-def get_surplus_dim(node):
-    if node.is_leaf():
-        return 0
-    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
-    return sum(getattr(n, dim_i) for n in node.get_children()) - getattr(node, dim_i)
-
-
-def repair_dim_node(node):
+def repair_dim_node(node, defects, min_waste):
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     change = get_surplus_dim(node)
     node_size = getattr(node, dim_i)
@@ -620,29 +678,38 @@ def repair_dim_node(node):
                         waste_pos=node_size+change,
                         increase_node=False)
         return True
-    wastes = find_all_wastes(node)
+    wastes = find_all_wastes_after_defect(node, defects)
+    # wastes = find_all_wastes(node)
+    # TODO: get better ways to eat wastes.
     # we revert to the previous change
     # we want the farthest at the end:
-    wastes.sort(key=lambda x: getattr(x, axis_i))
+    # but we want to eliminate really small wastes before
+    # wastes.sort(key=lambda x: (getattr(x, dim_i) < 20, getattr(x, axis_i)))
 
-    # # we want the smallest at the end:
-    # wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
+    # we want the smallest at the end:
+    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
-    # TODO: check this, change the 20
-    min_width = 20
+    comply_min_waste = True
     while wastes and remaining:
         waste = wastes.pop()
         size = getattr(waste, dim_i)
         quantity = size
         if remaining < size:
             waste_rem = size - remaining
-            if min_width > waste_rem > 0:
-                quantity = size - min_width
+            if min_waste > waste_rem > 0 and comply_min_waste:
+                quantity = size - min_waste
             else:
                 quantity = remaining
-        # quantity = min(remaining, )
         resize_waste(waste, dim_i, -quantity)
         remaining -= quantity
+        # If we did all we could and still have remaining.
+        # we relax the min size constraint and do one last turn.
+        if not len(wastes) and comply_min_waste:
+            wastes = find_all_wastes(node)
+            wastes.sort(key=lambda x: getattr(x, axis_i))
+            comply_min_waste = False
+    if remaining > 0:
+        assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
     return True
 
 

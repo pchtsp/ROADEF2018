@@ -39,7 +39,7 @@ node1 = self.get_node_by_name(110)
 node2 = self.get_node_by_name(107)
 try_rotation = False
 insert = True
-result = self.check_swap_size_rotation(node1, node2, insert=insert, try_rotation=try_rotation, probs=[0, 1, 0, 0])
+result = self.check_swap_size_rotation(node1, node2, insert=insert, try_rotation=try_rotation, rotation_probs=[0, 1, 0, 0])
 self.try_change_node(node=node1, candidates=node2, insert=insert, **kwargs)
 
 # swap_3_rot_before
@@ -47,5 +47,5 @@ node1 = self.get_node_by_name(88)
 node2 = self.get_node_by_name(76)
 try_rotation = True
 insert = True
-result = self.check_swap_size_rotation(node1, node2, insert=insert, try_rotation=try_rotation, probs=[0, 1, 0, 0])
+result = self.check_swap_size_rotation(node1, node2, insert=insert, try_rotation=try_rotation, rotation_probs=[0, 1, 0, 0])
 recalculate = self.swap_nodes_same_level(node1, node2, insert=insert, rotation=result)

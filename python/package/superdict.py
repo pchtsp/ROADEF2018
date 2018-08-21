@@ -92,10 +92,10 @@ class SuperDict(dict):
         return SuperDict({**{k: default for k in keys}, **self})
 
     def get_property(self, property):
-        return {key: value[property] for key, value in self.items() if property in value}
+        return SuperDict({key: value[property] for key, value in self.items() if property in value})
 
     def to_lendict(self):
-        return {k: len(v) for k, v in self.items()}
+        return SuperDict({k: len(v) for k, v in self.items()})
 
     def index_by_property(self, property, get_list=False):
         el = self.keys_l()[0]
@@ -126,6 +126,12 @@ class SuperDict(dict):
         if get_list:
             return result.values_l()
         return result
+
+    def to_weights(self):
+        min_value = min(self.values()) - 0.1
+        dict_temp = {k: v - min_value for k, v in self.items()}
+        total = sum(dict_temp.values())
+        return SuperDict({k: v/total for k, v in dict_temp.items()})
 
     @classmethod
     def from_dict(cls, dictionary):
