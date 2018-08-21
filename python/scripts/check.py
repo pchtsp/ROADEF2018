@@ -14,6 +14,8 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import shutil
+import re
+
 
 
 def stats():
@@ -39,7 +41,7 @@ def stats():
 
 def get_experiments_paths(path):
     cases = ["A{}".format(n) for n in range(1, 21)]
-    experiments = {f: path + f + '/' for f in os.listdir(path) if not f.startswith('old')}
+    experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
     return {c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases}
 
 
@@ -53,7 +55,50 @@ def get_solutions(exp_paths):
         }
 
 
-def benchmarking():
+def is_pareto_dominated(costs):
+    """
+    :param costs: An (n_points, n_costs) array
+    :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+    """
+    is_dominated = np.ones(costs.shape[0], dtype=bool)
+    for i, c in enumerate(costs):
+        is_dominated[i] = sum(np.all(costs<=c, axis=1)) > 1
+    return is_dominated
+
+
+def dominant_experiments():
+    others_path = pm.PATHS['data'] + 'solutions_A.csv'
+    table1 = pd.read_csv(others_path, sep=';')
+    table1.columns = ['INSTANCE', 'others', 'TEAM']
+    exp_paths = get_experiments_paths(pm.PATHS['results'])
+    experiments_names = list(set(i for k in exp_paths.values() for i in k))
+
+    solutions = get_solutions(exp_paths)
+
+    feasibility = \
+        {c: {
+            exp: s.count_errors()
+            for exp, s in experiments.items()
+        }
+            for c, experiments in solutions.items()
+        }
+
+    objectives = np.zeros((len(experiments_names), len(solutions)))
+    case_pos = 0
+    for c, experiments in solutions.items():
+        exp_pos = 0
+        for exp in experiments_names:
+            if exp in experiments and feasibility[c][exp] == 0:
+                objectives[exp_pos][case_pos] = experiments[exp].calculate_objective()
+            else:
+                objectives[exp_pos][case_pos] = 9000000000
+            exp_pos += 1
+        case_pos += 1
+
+    return np.array(experiments_names)[is_pareto_dominated(objectives)]
+
+
+def benchmarking(value='dif_jumbo'):
     others_path = pm.PATHS['data'] + 'solutions_A.csv'
     table1 = pd.read_csv(others_path, sep=';')
     table1.columns = ['INSTANCE', 'others', 'TEAM']
@@ -103,10 +148,11 @@ def benchmarking():
             merge(table_items, **params).\
             merge(table_feas, **params)
 
+    summary['obj'] = summary.obj
     summary['dif'] = (summary.obj - summary.others)
     summary['dif_perc'] = (summary.obj - summary.others) / summary.others * 100
     summary['dif_jumbo'] = (summary.obj - summary.others) / jumbo_area
-    value = 'dif_jumbo'
+    # value = 'dif_perc'
     indeces = ['case', 'experiment'] + [value]
     summary[indeces].pivot(index='case', columns='experiment', values=value).plot.bar()
 
@@ -129,4 +175,5 @@ def graph(experiment, case=None, dpi=25):
         v.graph_solution(path, dpi=dpi)
 
 if __name__ == "__main__":
-    benchmarking()
+    benchmarking('obj')
+    dominant_experiments()

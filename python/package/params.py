@@ -32,7 +32,7 @@ cut_level_next_o = {
 }
 
 OPTIONS = {
-    'timeLimit': 3600
+    'timeLimit': 600
     , 'gap': 0.1
     , 'solver': "HEUR"  # CPLEXPY, CPLEX_CMD, GUROBI, HEUR
     , 'integer': False
