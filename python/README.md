@@ -78,6 +78,6 @@ For distributions that are not Ubuntu: https://github.com/squeaky-pl/portable-py
 
 <!-- pip install git+https://bitbucket.org/pypy/numpy.git -->
 
-    virtualenv -p /path/to/pypy/tarball/ venv_pypy
+    virtualenv -p /path/to/pypy/tarball/pypy3-v6.0.0-linux64/bin/pypy3 venv_pypy
     source venv_pypy/bin/activate
     pip install -r requirements.txt

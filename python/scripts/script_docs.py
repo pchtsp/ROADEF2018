@@ -26,7 +26,7 @@ benchmarking()
 # path =
 
 
-path = pm.PATHS['results'] + '/clust1_20180706/A6/'
+path = pm.PATHS['root'] + '/python/examples/A6/'
 self = heur.ImproveHeuristic.from_io_files(path=path)
 options = di.load_data(path= path + 'options.json')
 options['heur_params']['weights'] = options['heur_weights']
