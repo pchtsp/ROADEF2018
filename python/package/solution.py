@@ -5,7 +5,7 @@ import package.instance as inst
 import package.params as pm
 import numpy as np
 import matplotlib
-matplotlib.use('Qt5Agg', warn=False, force=True)
+# matplotlib.use('Qt5Agg', warn=False, force=True)
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import palettable as pal
@@ -222,16 +222,8 @@ class Solution(inst.Instance):
                 # if we're here, they are in the same plate/ tree.
                 # we find the common ancestor and check which node's
                 # ancestors appear first
-                ancestor = node.get_common_ancestor(prec_node)
-                n1ancestors = set([node] + node.get_ancestors())
-                n2ancestors = set([prec_node] + prec_node.get_ancestors())
-                for n in ancestor.iter_descendants():
-                    # print(n)
-                    if n in n1ancestors:
-                        wrong_order.append((node, prec_node))
-                        break
-                    if n in n2ancestors:
-                        break
+                if nd.check_node_order(node, prec_node):
+                    wrong_order.append((node, prec_node))
         return tl.TupList(wrong_order)
 
     def check_defects(self, solution=None):

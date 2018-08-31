@@ -2,6 +2,8 @@ import ete3
 import package.geometry as geom
 import logging as log
 import random as rn
+import numpy as np
+from collections import deque
 
 # These are auxiliary functions for nodes of trees (see ete3).
 # TODO: this should be a subclass of TreeNode...
@@ -30,7 +32,25 @@ def create_plate(width, height, id):
             'NODE_ID': 0,
             'PLATE_ID': id
             }
-    return create_node(**args)
+    plate = create_node(**args)
+    duplicate_waste_into_children(plate)
+    return plate
+
+
+def create_dummy_tree(nodes, id=-1):
+    """
+    This function creates a very big tree and puts the nodes list inside as children.
+    The does not comply with space and size requirements.
+    :param nodes: list of nodes to insert as children
+    :return: tree object.
+    """
+    dummyTree = create_plate(width=999999, height=999999, id=id)
+    dummyWaste = dummyTree.copy()
+    dummyWaste.TYPE = -1
+    for n in nodes:
+        dummyTree.add_child(n)
+    dummyTree.add_child(dummyWaste)
+    return dummyTree
 
 
 def create_node(**kwargs):
@@ -63,7 +83,7 @@ def resize_waste(waste, dim, quantity):
         return False
     log.debug('waste {} is being reduced by {}'.format(waste.name, quantity))
     setattr(waste, dim, getattr(waste, dim) + quantity)
-    plate, pos = get_node_pos(waste)
+    plate, pos = get_node_plate_pos(waste)
     for ch in parent.children[pos+1:]:
         mod_feature_node(ch, quantity, get_axis_of_dim(dim))
     if not getattr(waste, dim):
@@ -236,15 +256,22 @@ def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
     return [leaf for leaf in node.get_leaves() if leaf.TYPE in type_options]
 
 
-def get_node_pos(node):
-    assert node.up is not None
-    pos = node.up.children.index(node)
+def get_node_plate_pos(node):
+    pos = get_node_pos(node)
     return node.PLATE_ID, pos
 
 
+def get_node_pos(node):
+    if node.up is None:
+        return 0
+    pos = node.up.children.index(node)
+    return pos
+
+
 def get_next_sibling(node):
-    plate, ch_pos = get_node_pos(node)
-    new_pos = ch_pos + 1
+    if node.up is None:
+        return None
+    new_pos = get_node_pos(node) + 1
     children = node.up.children
     if len(children) == new_pos:
         return None
@@ -367,7 +394,7 @@ def duplicate_node_as_child(node, node_mod=500):
 
 
 def duplicate_waste_into_children(node):
-    assert node.TYPE in [-1, -3], \
+    assert is_waste(node), \
         'node {} needs to be a waste!'.format(node.name)
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     child1 = duplicate_node_as_child(node, node_mod=200)
@@ -655,7 +682,7 @@ def extract_node_from_position(node):
     # take node out from where it is (detach and everything)
     # update all the positions of siblings accordingly
     parent = node.up
-    plate, ch_pos = get_node_pos(node)
+    plate, ch_pos = get_node_plate_pos(node)
     axis, dim = get_orientation_from_cut(node)
     for sib in parent.children[ch_pos+1:]:
         mod_feature_node(node=sib, quantity=-getattr(node, dim), feature=axis)
@@ -711,6 +738,175 @@ def repair_dim_node(node, defects, min_waste):
     if remaining > 0:
         assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
     return True
+
+
+def get_nodes_between_nodes_in_tree(node1=None, node2=None):
+    """
+    This procedure searches a tree for all nodes between node1 and node2.
+    node1 is assumed to come before node2.
+    In case node1 is None: it should start in the first node
+    If node2 is None: it should end in the last node
+    :param node1:
+    :param node2:
+    :return: list: the order of the nodes and a list of nodes in between.
+    """
+    if node1 is None and node2 is None:
+        raise ValueError("node1 and node2 cannot be None at the same time")
+
+    ancestors = set()
+    if node1 is not None:
+        ancestors |= set(node1.get_ancestors() + [node1])
+    if node2 is not None:
+        ancestors |= set(node2.get_ancestors() + [node2])
+    if node1 is None and node2 is None:
+        assert node1.get_tree_root() == node2.get_tree_root(), \
+            "node {} does not share root with node {}".format(node1.name, node2.name)
+
+    if node1 is None:
+        node1 = get_descendant(node2.get_tree_root(), which='first')
+
+    # if one of the nodes is the ancestor: there's no nodes in between
+    ancestor = node1.get_common_ancestor(node2)
+    if ancestor in [node1, node2]:
+        return node1, node2, []
+
+    def is_leaf_fn(node):
+        return node not in ancestors
+
+    is_last_fn = None
+    if node2 is not None:
+        def is_last_fn(node):
+            return node == node2
+
+    nodes = [n for n in
+             post_traverse_from_node(node1,
+                                     is_leaf_fn=is_leaf_fn,
+                                     last_node=is_last_fn)
+             ]
+
+    return list(set(nodes) - ancestors)
+
+
+def pre_traverse_from_node(node1, is_leaf_fn=None):
+    """
+    If it's an ancestor, iterate starting in the children that's to the right of the previous ancestor-children. And then go up.
+    If it's not an ancestor, traverse normally from left to right.
+    For this we need to store the position of each node in the children list.
+    :return:
+    """
+    to_visit = deque()
+    node = node1
+    pos = get_node_pos(node1)
+    pos += 1
+    node1_ancestors = set(node1.get_ancestors() + [node1])
+    while node is not None:
+        yield node
+        if node in node1_ancestors and node.up:
+            pos_new = get_node_pos(node)
+            to_visit.appendleft((node.up, pos_new+1))
+        if not is_leaf_fn or not is_leaf_fn(node):
+            nodes_to_add = node.children
+            if pos:
+                nodes_to_add = nodes_to_add[pos:]
+            to_visit.extendleft(zip(reversed(nodes_to_add), [0]*len(nodes_to_add)))
+        try:
+            node, pos = to_visit.popleft()
+        except:
+            node = None
+
+
+def post_traverse_from_node(node1, is_leaf_fn=None, last_node=None):
+    to_visit = [(node1, 0)]
+    pos = get_node_pos(node1)
+    pos += 1
+    node1_ancestors = set(node1.get_ancestors() + [node1])
+
+    if last_node:
+        top_root = node1.get_common_ancestor(last_node)
+
+        def not_top_root(node):
+            return node != top_root
+    else:
+        def not_top_root(node):
+            return node.up
+
+    if is_leaf_fn is not None:
+        _leaf = is_leaf_fn
+    else:
+        _leaf = node1.__class__.is_leaf
+
+    while to_visit:
+        node, pos = to_visit.pop(-1)
+        try:
+            node = node[1]
+        except TypeError:
+            # PREORDER ACTIONS
+            if node in node1_ancestors and not_top_root(node):
+                pos_new = get_node_pos(node)
+                to_visit.append((node.up, pos_new + 1))
+            if not _leaf(node):
+                # ADD CHILDREN
+                nodes_to_add = node.children
+                if pos:
+                    nodes_to_add = nodes_to_add[pos:]
+                to_visit.extend(
+                    zip(
+                        reversed(node.children + [[1, node]]),
+                        np.zeros(len(nodes_to_add) + 1)
+                    )
+                )
+            else:
+                yield node
+        else:
+            #POSTORDER ACTIONS
+            yield node
+        if last_node and node == last_node:
+            break
+
+
+def check_assumptions_swap(node1, node2, insert):
+    siblings = node1.up == node2.up
+    if siblings and insert:
+        return False
+    if is_waste(node1) and is_waste(node2):
+        return False
+    if is_waste(node1) and insert:
+        return False
+    if node1.up == node2 or node1 == node2.up:
+        return False
+    # for now, we do not allow swapping between different levels
+    # or inserting a node from a higher to a lower level
+    if node1.CUT != node2.CUT and not insert:
+        return False
+    if node1.CUT < node2.CUT:
+        return False
+    return True
+
+
+def check_node_order(node1, node2):
+    """
+    These nodes are assumed to belong to the same tree.
+    :param node1:
+    :param node2:
+    :return: True if node2 comes before node2
+    """
+    ancestor = node1.get_common_ancestor(node2)
+    n1ancestors = set([node1] + node1.get_ancestors())
+    n2ancestors = set([node2] + node2.get_ancestors())
+    for n in ancestor.children:
+        if n in n1ancestors:
+            return True
+        if n in n2ancestors:
+            return False
+    return True
+
+
+def order_nodes(node1, node2):
+    first_node = node1
+    second_node = node2
+    if not check_node_order(node1, node2):
+        first_node, second_node = second_node, first_node
+    return first_node, second_node
 
 
 if __name__ == "__main__":

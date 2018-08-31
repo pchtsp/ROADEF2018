@@ -161,31 +161,14 @@ class ImproveHeuristic(sol.Solution):
 
         return geom.check_nodespace_in_space(node_space, space, insert, min_waste)
 
-    @staticmethod
-    def check_assumptions_swap(node1, node2, insert):
-        siblings = node1.up == node2.up
-        if siblings and insert:
-            return False
-        if nd.is_waste(node1) and nd.is_waste(node2):
-            return False
-        if nd.is_waste(node1) and insert:
-            return False
-        if node1.up == node2 or node1 == node2.up:
-            return False
-        # for now, we do not allow swapping between different levels
-        # or inserting a node from a higher to a lower level
-        if node1.CUT != node2.CUT and not insert:
-            return False
-        if node1.CUT < node2.CUT:
-            return False
-        return True
-
     def check_swap_size_rotation(self, node1, node2, insert=False,
-                                 try_rotation=False, rotation_probs=None, rotation_tries=1):
+                                 try_rotation=False, rotation_probs=None, rotation_tries=None):
         if node1.up == node2.up:
             return []
         result = False
         rotations = [[]]
+        if rotation_tries is None:
+            rotation_tries = 1
         if try_rotation:
             rotations_av = [[], [1], [2], [1, 2]]
             if rotation_probs is not None:
@@ -210,7 +193,7 @@ class ImproveHeuristic(sol.Solution):
             parents[2] = node2
         parent1 = parents[1]
         parent2 = parents[2]
-        ch_pos = {k: nd.get_node_pos(node)[1] for k, node in nodes.items()}
+        ch_pos = {k: nd.get_node_plate_pos(node)[1] for k, node in nodes.items()}
         # plate1, ch_pos1 = nd.get_node_pos(node1)
         # plate2, ch_pos2 = nd.get_node_pos(node2)
 
@@ -417,8 +400,8 @@ class ImproveHeuristic(sol.Solution):
         if node1.up is None or node2.up is None:
             return -10000
         nodes = {1: node1, 2: node2}
-        plate1, ch_pos1 = nd.get_node_pos(node1)
-        plate2, ch_pos2 = nd.get_node_pos(node2)
+        plate1, ch_pos1 = nd.get_node_plate_pos(node1)
+        plate2, ch_pos2 = nd.get_node_plate_pos(node2)
         positions = {1: ch_pos1, 2: ch_pos2}
         plates = {1: plate1, 2: plate2}
         dims = {}
@@ -676,16 +659,18 @@ class ImproveHeuristic(sol.Solution):
 
         if plate1 == plate2:
             # if they're in the same plate: I just get the nodes between them
-            return self.get_nodes_between_nodes_in_tree(node1=node1, node2=node2)
+            node1, node2 = nd.order_nodes(node1, node2)
+            nodes = nd.get_nodes_between_nodes_in_tree(node1=node1, node2=node2)
+            return node1, node2, nodes
 
         if plate1 > plate2:
             node1, node2 = node2, node1
             plate1, plate2 = plate2, plate1
         # if not in the same plate: i have three parts:
         # the rest of node1's plate:
-        node1, _, nodes1 = self.get_nodes_between_nodes_in_tree(node1=node1)
+        nodes1 = nd.get_nodes_between_nodes_in_tree(node1=node1)
         # the beginning of node2's plate:
-        _, node2, nodes2 = self.get_nodes_between_nodes_in_tree(node2=node2)
+        nodes2 = nd.get_nodes_between_nodes_in_tree(node2=node2)
         nodes = nodes1 + nodes2
         # nodes in intermediate plates:
         i = plate1 + 1
@@ -693,65 +678,6 @@ class ImproveHeuristic(sol.Solution):
             nodes += self.trees[i]
             i += 1
         return node1, node2, nodes
-
-    def get_nodes_between_nodes_in_tree(self, node1=None, node2=None, only_order=False):
-        """
-        This procedure searches a tree for all nodes between node1 and node2.
-        In case node1 is None: it should start in the first node
-        If node2 is None: it should end in the last node
-        :param node1:
-        :param node2:
-        :param only_order: we only care about which nodes comes before.
-            Not the nodes in between.
-        :return: (n1, n2, list): the order of the nodes and a list of nodes in between.
-        """
-        nodes = []
-        try_to_add_node1 = False
-        try_to_add_node2 = False
-        if node1 is None and node2 is None:
-            raise ValueError("node1 and node2 cannot be None at the same time")
-        if node1 is None:
-            node1 = nd.get_descendant(node2.get_tree_root(), which='first')
-            try_to_add_node1 = True
-        elif node2 is None:
-            node2 = nd.get_descendant(node1.get_tree_root(), which='last')
-            try_to_add_node2 = True
-        else:
-            assert node1.get_tree_root() == node2.get_tree_root(), \
-                "node {} does not share root with node {}".format(node1.name, node2.name)
-        ancestor = node1.get_common_ancestor(node2)
-        # if one of the nodes is the ancestor: there no nodes in between
-        if ancestor in [node1, node2]:
-            return node1, node2, []
-        if try_to_add_node1:
-            nodes.append(node1)
-        if try_to_add_node2:
-            nodes.append(node2)
-        n1ancestors = node1.get_ancestors()
-        n2ancestors = node2.get_ancestors()
-        all_ancestors = set(n1ancestors) | set(n2ancestors)
-        first_node = None
-        second_node = None
-
-        def is_not_ancestor(node):
-            return node not in all_ancestors
-
-        for node in ancestor.iter_descendants(strategy='postorder', is_leaf_fn=is_not_ancestor):
-            if first_node is None:
-                if node not in [node1, node2]:
-                    continue
-                first_node, second_node = node1, node2
-                if node == node2:
-                    first_node, second_node = node2, node1
-                if only_order:
-                    break
-                continue
-            if node == second_node:
-                break
-            if is_not_ancestor(node):
-                nodes.append(node)
-
-        return first_node, second_node, nodes
 
     def cut_waste_with_defects(self):
 
@@ -768,11 +694,12 @@ class ImproveHeuristic(sol.Solution):
             node1, node2 = node, candidate
             if reverse:
                 node1, node2 = candidate, node
-            if not self.check_assumptions_swap(node1, node2, insert):
+            if not nd.check_assumptions_swap(node1, node2, insert):
                 continue
             result = self.check_swap_size_rotation(node1, node2, insert=insert,
                                                    try_rotation=kwargs.get('try_rotation', False),
-                                                   rotation_probs=kwargs.get('rotation_probs', None))
+                                                   rotation_probs=kwargs.get('rotation_probs', None),
+                                                   rotation_tries=kwargs.get('rotation_tries', None))
             if result is None:
                 continue
             balance = 0
@@ -812,11 +739,11 @@ class ImproveHeuristic(sol.Solution):
         # seq_after = self.check_sequence()
         # print('sequence after= {}'.format(len(seq_after)))
         # len([n.name for tree in self.trees for n in tree.get_descendants() if n.Y < 0]) > 0
-        if not evaluate:
-            return improve
         # update previous and next nodes:
         if recalculate:
             self.update_precedence_nodes()
+        if not evaluate:
+            return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
@@ -1202,71 +1129,63 @@ class ImproveHeuristic(sol.Solution):
         # we do not know anything of node2.
         # we don't care about the CUT.
         # we just want to fit the node in the first possible
-        # descendant. So, we we'll travel the leaves actually.
+        # descendant. So, we'll traverse the nodes.
+        node1.CUT = node2.CUT
 
-        # if node2 is already an item: I cannot go deeper.
-        # I try to insert node1 after node2:
-        if node2.TYPE > 0:
-            # I change the cut of node1 so it's "compatible"
-            node1.CUT = node2.CUT
-            next_sibling = nd.get_next_sibling(node2)
-            if next_sibling is None:
-                return False
-            # check if node2 is the last sibling.
-            # if it's not, insert in the next one. If it's, then return False
-            return self.try_change_node(node1, [next_sibling], insert=True, **kwargs)
-
-        # if node2 is a waste:
-        # I try to create a child waste and use this to insert.
-        if node2.TYPE in [-1, -3]:
+        # if node2 is -2... I'll try to insert it *inside* it.
+        # I want to see if it's worth it to continue (if it fits still)
+        if node2.TYPE == -2:
             if geom.plate_inside_plate(nd.node_to_plate(node1),
                                        nd.node_to_plate(node2),
                                        turn=True):
-                child = nd.duplicate_waste_into_children(node2)
-                node1.CUT = child.CUT
-                change = self.try_change_node(node1, [child], insert=True, **kwargs)
-                if change:
-                    return True
-                for ch in node2.get_children():
-                    node2.remove_child(ch)
-                node2.TYPE = -1
-            return False
-        # if node2 is -2... I'll try to insert it *inside* it.
-        # I want to see if it's worth it to continue (if it fits still)
-        if geom.plate_inside_plate(nd.node_to_plate(node1),
-                                   nd.node_to_plate(node2),
-                                   turn=True):
-            # either way, I'll try to make it fit with together with the children
-            # (new or old). If succesful, done!
-            for ch in node2.children:
-                change = self.insert_node_inside_node(node1, ch, kwargs)
-                if change:
-                    return True
+                # either way, I'll try to make it fit with together with the children
+                # (new or old). If successful, done!
+                for ch in node2.children:
+                    change = self.insert_node_inside_node(node1, ch, kwargs)
+                    if change:
+                        return True
 
-        # If I failed inserting in the children: I try to insert next to the waste
-        # or -1
-        if node2.up is None:
-            return False
-        node1.CUT = node2.CUT
+        # if node2 is a waste:
+        # I try to create a child waste and use this to insert.
+        if nd.is_waste(node2):
+            return self.try_change_node(node1, [node2], **kwargs)
+
+        # If I failed inserting in the children or if node2 is an item:
+        # I try to insert next to the node2
         next_sibling = nd.get_next_sibling(node2)
         if next_sibling is None:
             return False
-        return self.try_change_node(node1, [next_sibling], insert=True, **kwargs)
+        return self.try_change_node(node1, [next_sibling], **kwargs)
 
-    def create_dummy_tree(self, nodes):
-        """
-        This function creates a very big tree and puts the nodes list inside as children.
-        The does not comply with space and size requirements.
-        :param nodes: list of nodes to insert as children
-        :return: tree object.
-        """
-        dummyTree = nd.create_plate(width=999999, height=999999, id=-1)
-        dummyWaste = dummyTree.copy()
-        dummyWaste.TYPE = -1
-        for n in nodes:
-            dummyTree.add_child(n)
-        dummyTree.add_child(dummyWaste)
-        return dummyTree
+    def insert_node_inside_node_traverse(self, node1, node_start, kwargs):
+        # we want to insert node1 at the first available space in node_start's tree
+        # but never before node_start.
+        # If i just want to traverse the whole tree, just need to put node1= root
+        def is_leaf_fn(node2):
+            return not \
+                geom.plate_inside_plate(
+                    nd.node_to_plate(node1),
+                    nd.node_to_plate(node2),
+                    turn=True
+                )
+
+        for node2 in nd.post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
+            node1.CUT = node2.CUT
+            if nd.is_waste(node2):
+                change = self.try_change_node(node1, [node2], **kwargs)
+                if change:
+                    return change
+                continue
+            # If I failed inserting in the children or if node2 is an item:
+            # I try to insert next to the node2
+            next_sibling = nd.get_next_sibling(node2)
+            if next_sibling is None:
+                continue
+            change = self.try_change_node(node1, [next_sibling], **kwargs)
+            if change:
+                return change
+        return False
+
 
     def add_jumbo(self, num=1):
         plate_W = self.get_param('widthPlates')
@@ -1389,12 +1308,16 @@ class ImproveHeuristic(sol.Solution):
     def get_initial_solution(self, params):
         """
         This algorithm just iterates over the items in the order of the sequence
-        and size to put everything as tight as possible
+        and size to put everything as tight as possible.
+        Respects sequence.
         :return:
         """
         params = dict(params)
         params['evaluate'] = False
         params['tolerance'] = None
+        params['insert'] = True
+        params['rotation_probs'] = [0.50, 0.50, 0, 0]
+        params['try_rotation'] = True
         batch_data = self.get_batch()
         items, values = zip(*sorted(batch_data.items(), key=lambda x: x[1]['SEQUENCE']))
         plate_W = self.get_param('widthPlates')
@@ -1405,24 +1328,43 @@ class ImproveHeuristic(sol.Solution):
                 nd.rotate_node(n)
             if n.HEIGHT > plate_H:
                 nd.rotate_node(n)
+        new_tree = nd.create_dummy_tree(ordered_nodes, id=-1)
         tree = nd.create_plate(width=plate_W, height=plate_H, id=0)
-        self.trees = [tree]
-        self.create_dummy_tree(ordered_nodes)
+        self.trees = [new_tree, tree]
+
+        # For each item, I want the previous item.
+        # which is the last in the "previous items" list.
 
         for n in ordered_nodes:
+            prev_node = {k: v[-1] for k, v in self.get_previous_nodes().items() if v}
             change = False
-            for tree in self.trees:
-                change = self.insert_node_inside_node(n, tree, kwargs=params)
+            t_start = 1
+            # We first search the tree where the previous node in the sequence
+            # only starting from the position of the previous node
+            if n in prev_node:
+                node2 = prev_node[n]
+                change = self.insert_node_inside_node_traverse(n, node2, kwargs=params)
+                if change:
+                    continue
+                t_start = node2.PLATE_ID + 1
+            # The first tree is our dummy tree so we do not want to use it.
+            for tree in self.trees[t_start:]:
+                change = self.insert_node_inside_node_traverse(n, tree, kwargs=params)
                 if change:
                     break
-            while not change:
-                tree = nd.create_plate(width=plate_W, height=plate_H, id=len(self.trees))
-                self.trees.append(tree)
-                change = self.insert_node_inside_node(n, tree, kwargs=params)
+            if change:
+                continue
+            tree = nd.create_plate(width=plate_W, height=plate_H, id=len(self.trees)-1)
+            self.trees.append(tree)
+            change = self.insert_node_inside_node(n, tree, kwargs=params)
+            # TODO: warning, in the future this could be possible due to defects checking
+            assert change, "node {} apparently doesn't fit in a blank new tree".format(n.name)
 
+        # we take out the dummy tree
+        self.trees = self.trees[1:]
+        self.update_precedence_nodes()
         self.best_objective = self.evaluate_solution(params['weights'])
         # we get a backup to make this turn faster:
-        self.update_precedence_nodes()
         return True
 
     def update_precedence_nodes(self):
@@ -1555,7 +1497,7 @@ if __name__ == "__main__":
     import pprint as pp
     case = pm.OPTIONS['case_name']
     # path = pm.PATHS['experiments'] + e
-    path = pm.PATHS['results'] + 'heuristic/' + case + '/'
+    path = pm.PATHS['experiments'] + case + '/'
 
     self = ImproveHeuristic.from_input_files(case_name=case, path=path)
     self.solve(pm.OPTIONS)
