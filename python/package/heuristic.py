@@ -35,220 +35,6 @@ class ImproveHeuristic(sol.Solution):
     def update_best_solution(self, solution):
         self.best_solution = copy.deepcopy(solution)
 
-    def insert_node_at_position(self, node, destination, position):
-        """
-        :param node: node I'm going to insert.
-        :param destination: parent node were I want to insert it.
-        :param position: position of a children on the parent node (1 : num_children)
-        :return:
-        """
-        # move all nodes at destination starting from the marked position
-        # to make space and assign new plate, and new axis
-        # add node to new parent
-        axis_i, dim_i = nd.get_orientation_from_cut(node, inv=True)
-        axis, dim = nd.get_orientation_from_cut(node)
-        ref = {axis: dim, axis_i: dim_i}
-        # sib_axis, sib_dim = nd.get_orientation_from_cut(destination.children[position])
-        # dest_axis, dest_dim = nd.get_orientation_from_cut(destination)
-        dest_axis_i, dest_dim_i = nd.get_orientation_from_cut(destination, inv=True)
-
-        if destination.children:
-            if position < len(destination.children):
-                # we get the destination position and then make space:
-                axis_dest = {a: getattr(destination.children[position], a) for a in ref}
-                # because siblings could have different level than my node, the movement
-                # needs to be according to the siblings dimensions
-                # which are the opposite of the destination (parent)
-                for sib in destination.children[position:]:
-                    nd.mod_feature_node(node=sib,
-                                        quantity=getattr(node, dest_dim_i),
-                                        feature=dest_axis_i)
-            else:
-                # we're puting the node in a new, last place:
-                # so we do not move anything.
-                last_node = destination.children[-1]
-                axis_dest = {a: getattr(last_node, a) for a in ref}
-                axis_dest[dest_axis_i] += getattr(last_node, dest_dim_i)
-        else:
-            axis_dest = {a: getattr(destination, a) for a in ref}
-
-        # when doing weird multilevel swaps,
-        # we need to keep the CUT level and hierarchy:
-        # or we put the node inside itself.
-        # or we take all nodes out of the node and insert them separately.
-        if (node.CUT >= destination.CUT + 2) and node.children:
-            node = nd.duplicate_node_as_its_parent(node)
-
-        # we make the move:
-        nd.change_feature(node, 'PLATE_ID', destination.PLATE_ID)
-        dist = {a: axis_dest[a] - getattr(node, a) for a in ref}
-        for k, v in dist.items():
-            if v:
-               nd.mod_feature_node(node=node, quantity=v, feature=k)
-
-        # In case we're moving nodes from different levels, we need to update the CUT:
-        cut_change = destination.CUT + 1 - node.CUT
-        if cut_change:
-            nd.mod_feature_node(node, feature='CUT', quantity=cut_change)
-
-        log.debug('We insert node {} into destination {}'.
-                  format(node.name, destination.name))
-        destination.add_child(node)
-
-        # 3. update parents order:
-        nd.order_children(destination)
-        return node
-        # return recalculate
-
-    def check_swap_size(self, node1, node2, min_waste, insert=False, rotate=None):
-        if rotate is None:
-            rotate = []
-            # ideally, there should be not reference to the tree here
-            # so we can test nodes that are not part of a tree
-        nodes = {1: node1, 2: node2}
-        dims_i = {
-            k: nd.get_orientation_from_cut(node, inv=True)[1]
-            for k, node in nodes.items()
-        }
-        dims = {
-            k: nd.get_orientation_from_cut(node)[1]
-            for k, node in nodes.items()
-        }
-
-        defects = {k: self.get_defects_plate(node.PLATE_ID) for k, node in nodes.items()}
-        wastes = {k: [
-            w for w in nd.find_all_wastes_after_defect(node.up, defects[k])
-            if w != node or (k == 2 and insert)
-        ] for k, node in nodes.items()}
-        # wastes = {k: nd.find_waste(node) for k, node in nodes.items()}
-        # if there's no waste, I'll just say it's a 0 length node?
-        # for k, waste in wastes.items():
-        #     if waste is None:
-        #         wastes[k] = nd.create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
-        waste_space = {k: sum(getattr(w, dims[k]) for w in wastes[k]) for k in nodes}
-
-        node_space = {
-            k: {
-                dims[k]: getattr(node, dims[k]),
-                dims_i[k]: nd.get_size_without_waste(node, dims_i[k])
-            }
-            for k, node in nodes.items()
-        }
-
-        space = {
-            k: {
-                dims[k]: waste_space[k] + node_space[k][dims[k]],
-                dims_i[k]: getattr(node, dims_i[k])
-            }
-            for k, node in nodes.items()
-        }
-        # if not swapping, we have less space in node2
-        if insert:
-            space[2][dims[2]] -= node_space[2][dims[2]]
-            # # if node2 is a waste, I can use it as the destination's waste
-            # # but on
-            # if nd.is_waste(nodes[2]) and wastes[2] is None:
-            #     space[2][dims[2]] = max(space[2][dims[2]], node_space[2][dims[2]])
-
-        # rotate can be a list with the index of nodes to reverse.
-        # this way, we can check different combinations of rotation
-        # it's usually en empty list
-        for pos in rotate:
-            _dim_i = dims_i[pos]
-            _dim = dims[pos]
-            node_space[pos][_dim], node_space[pos][_dim_i] = \
-                node_space[pos][_dim_i], node_space[pos][_dim]
-
-        return geom.check_nodespace_in_space(node_space, space, insert, min_waste)
-
-    def check_swap_size_rotation(self, node1, node2, insert=False,
-                                 try_rotation=False, rotation_probs=None, rotation_tries=None):
-        if node1.up == node2.up:
-            return []
-        result = False
-        rotations = [[]]
-        if rotation_tries is None:
-            rotation_tries = 1
-        if try_rotation:
-            rotations_av = [[], [1], [2], [1, 2]]
-            if rotation_probs is not None:
-                rotation_probs = [0.8, 0.1, 0.05, 0.05]
-            # probs = [0.8, 0.2, 0, 0]
-            rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
-        for rotation in rotations:
-            result = self.check_swap_size(node1, node2, self.get_param('minWaste'), insert, rotate=rotation)
-            if result:
-                return rotation
-        if not result:
-            return None
-        return rotation
-
-    def swap_nodes_same_level(self, node1, node2, insert=False, rotation=None, node2_is_destination=False):
-        if rotation is None:
-            rotation = []
-        nodes = {1: node1, 2: node2}
-        other_node = {1: 2, 2: 1}
-        parents = {k: node.up for k, node in nodes.items()}
-        if node2_is_destination:
-            parents[2] = node2
-        parent1 = parents[1]
-        parent2 = parents[2]
-        ch_pos = {k: nd.get_node_plate_pos(node)[1] for k, node in nodes.items()}
-        # plate1, ch_pos1 = nd.get_node_pos(node1)
-        # plate2, ch_pos2 = nd.get_node_pos(node2)
-
-        recalculate = False
-        nodes_to_move = []
-        if self.debug:
-            pass
-            # self.draw(node1.PLATE_ID, 'name')
-            # self.draw(node2.PLATE_ID, 'name')
-            # self.draw(node1.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
-            # self.draw(node2.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
-        if node1.up != parent2 or ch_pos[1] != ch_pos[2]:
-            nodes_to_move.append(1)
-        if not insert and (node2.up != parent1 or ch_pos[1] + 1 != ch_pos[2]):
-            nodes_to_move.append(2)
-
-        for k in nodes_to_move:
-            node = nodes[k]
-            other_k = other_node[k]
-            destination = parents[other_k]
-            ch_pos_dest = ch_pos[other_k]
-            node = nd.extract_node_from_position(node)  # 1: take out children waste
-            node = nd.delete_only_child(node, check_parent=False)  # 1.5: collapse if only child
-            if k in rotation:
-                nd.rotate_node(node)  # 2: rotate
-            node = self.insert_node_at_position(node, destination, ch_pos_dest)  # 3, 4: insert+child
-
-            # 5: if necessary, we open the node to its children
-            inserted_nodes = nd.collapse_node(node)
-            for _node in inserted_nodes:
-                for ch in _node.children:
-                    nd.collapse_node(ch)
-
-            # 6: now we check if we need to create a waste children on the node:
-            _, dest_dim = nd.get_orientation_from_cut(destination)
-            for _node in inserted_nodes:
-                dest_size = getattr(destination, dest_dim)
-                node_size = getattr(node, dest_dim)
-                status, recalculate = nd.add_child_waste(node=_node, child_size=dest_size-node_size)
-            nodes[k] = node
-
-        # 7: we need to update the waste at both sides
-        if parent1 != parent2:
-            min_waste = self.get_param('minWaste')
-            for parent in parents.values():
-                defects = self.get_defects_plate(parent.PLATE_ID)
-                nd.repair_dim_node(parent, defects, min_waste)
-
-        if self.debug:
-            consist = self.check_consistency()
-            if len(consist):
-                pass
-        return True
-        # return recalculate
-
     def clean_empty_cuts(self):
         """
         An empty cut is a cut with a 0 distance in a dimension
@@ -372,7 +158,7 @@ class ImproveHeuristic(sol.Solution):
                         pos -= 1
                         continue
                     c = candidates_s.pop(0)
-                    self.swap_nodes_same_level(children[pos], c)
+                    nd.swap_nodes_same_level(children[pos], c, debug=self.debug, min_waste=self.get_param('minWaste'))
                     pos -= 1
                 candidates = children[min_pos:]
                 while len(candidates) > 1:
@@ -424,7 +210,7 @@ class ImproveHeuristic(sol.Solution):
                 second_node: []
             }
             defects = {
-                first_node: self.get_defects_plate(plates[1]),
+                first_node: nd.get_defects(nodes[1]),
                 second_node: []
             }
             # If a defect is to the left of the first node
@@ -437,7 +223,7 @@ class ImproveHeuristic(sol.Solution):
             neighbors = {k: nodes[k].up.children[positions[k]+1:] for k in nodes}
 
             # If a defect is to the left / down of the node: take it out.
-            defects = {k: self.get_defects_plate(plates[k]) for k in nodes}
+            defects = {k: nd.get_defects(nodes[k]) for k in nodes}
             defects = {k: nd.filter_defects(nodes[k], defects[k]) for k in nodes}
 
         # if there's no defects to check: why bother??
@@ -593,6 +379,7 @@ class ImproveHeuristic(sol.Solution):
         first_i, second_i = 1, 2
         if first_node != node1:
             first_i, second_i = 2, 1
+        # print(neighbors)
         neighbor_items = set(leaf for node in neighbors for leaf in nd.get_node_leaves(node))
         crossings = {k: {'items_after': set(), 'items_before': set()} for k in nodes}
         # neighbors between nodes are almost the same.
@@ -696,7 +483,8 @@ class ImproveHeuristic(sol.Solution):
                 node1, node2 = candidate, node
             if not nd.check_assumptions_swap(node1, node2, insert):
                 continue
-            result = self.check_swap_size_rotation(node1, node2, insert=insert,
+            result = nd.check_swap_size_rotation(node1, node2, insert=insert,
+                                                   min_waste=self.get_param('minWaste'),
                                                    try_rotation=kwargs.get('try_rotation', False),
                                                    rotation_probs=kwargs.get('rotation_probs', None),
                                                    rotation_tries=kwargs.get('rotation_tries', None))
@@ -735,7 +523,14 @@ class ImproveHeuristic(sol.Solution):
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
-        recalculate = self.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot, node2_is_destination=node2_is_destination)
+        recalculate = nd.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
+                                                 debug=self.debug, min_waste=self.get_param('minWaste'))
+
+        if self.debug:
+            consist = self.check_consistency()
+            if len(consist):
+                pass
+
         # seq_after = self.check_sequence()
         # print('sequence after= {}'.format(len(seq_after)))
         # len([n.name for tree in self.trees for n in tree.get_descendants() if n.Y < 0]) > 0
@@ -1167,7 +962,7 @@ class ImproveHeuristic(sol.Solution):
                     nd.node_to_plate(node1),
                     nd.node_to_plate(node2),
                     turn=True
-                )
+                ) or node2.CUT >= 3
 
         for node2 in nd.post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
             node1.CUT = node2.CUT
@@ -1191,7 +986,8 @@ class ImproveHeuristic(sol.Solution):
         plate_W = self.get_param('widthPlates')
         plate_H = self.get_param('heightPlates')
         for n in range(num):
-            tree = nd.create_plate(width=plate_W, height=plate_H, id=len(self.trees))
+            tree_id = len(self.trees)
+            tree = nd.create_plate(width=plate_W, height=plate_H, id=tree_id, defects=self.get_defects_plate(tree_id))
             self.trees.append(tree)
         return True
 
@@ -1328,15 +1124,17 @@ class ImproveHeuristic(sol.Solution):
                 nd.rotate_node(n)
             if n.HEIGHT > plate_H:
                 nd.rotate_node(n)
-        new_tree = nd.create_dummy_tree(ordered_nodes, id=-1)
-        tree = nd.create_plate(width=plate_W, height=plate_H, id=0)
-        self.trees = [new_tree, tree]
+        dummy_tree = nd.create_dummy_tree(ordered_nodes, id=-1)
+        tree_id = 0
+        tree = nd.create_plate(width=plate_W, height=plate_H, id=tree_id, defects=self.get_defects_plate(tree_id))
+        trees = [dummy_tree, tree]
 
         # For each item, I want the previous item.
         # which is the last in the "previous items" list.
 
         for n in ordered_nodes:
-            prev_node = {k: v[-1] for k, v in self.get_previous_nodes().items() if v}
+            # TODO: there are better ways to store this information by myself in ad-hoc code.
+            prev_node = {k: v[-1] for k, v in self.get_previous_nodes(solution=trees).items() if v}
             change = False
             t_start = 1
             # We first search the tree where the previous node in the sequence
@@ -1346,30 +1144,28 @@ class ImproveHeuristic(sol.Solution):
                 change = self.insert_node_inside_node_traverse(n, node2, kwargs=params)
                 if change:
                     continue
-                t_start = node2.PLATE_ID + 1
+                t_start = node2.PLATE_ID + 2
             # The first tree is our dummy tree so we do not want to use it.
-            for tree in self.trees[t_start:]:
+            for tree in trees[t_start:]:
                 change = self.insert_node_inside_node_traverse(n, tree, kwargs=params)
                 if change:
                     break
             if change:
                 continue
-            tree = nd.create_plate(width=plate_W, height=plate_H, id=len(self.trees)-1)
-            self.trees.append(tree)
+            tree_id = len(trees) - 1
+            tree = nd.create_plate(width=plate_W, height=plate_H, id=tree_id, defects=self.get_defects_plate(tree_id))
+            trees.append(tree)
             change = self.insert_node_inside_node(n, tree, kwargs=params)
             # TODO: warning, in the future this could be possible due to defects checking
             assert change, "node {} apparently doesn't fit in a blank new tree".format(n.name)
 
         # we take out the dummy tree
-        self.trees = self.trees[1:]
-        self.update_precedence_nodes()
-        self.best_objective = self.evaluate_solution(params['weights'])
-        # we get a backup to make this turn faster:
-        return True
+        trees = trees[1:]
+        return trees
 
-    def update_precedence_nodes(self):
-        self.type_node_dict = self.get_pieces_by_type()
-        self.previous_nodes = self.calc_previous_nodes()
+    def update_precedence_nodes(self, solution=None):
+        self.type_node_dict = self.get_pieces_by_type(solution=solution)
+        self.previous_nodes = self.calc_previous_nodes(solution=solution)
         self.next_nodes = self.previous_nodes.list_reverse()
         return True
 
@@ -1385,7 +1181,9 @@ class ImproveHeuristic(sol.Solution):
 
         params_init = dict(params)
         if not warm_start:
-            self.get_initial_solution(params_init)
+            self.trees = self.get_initial_solution(params_init)
+            self.update_precedence_nodes(self.trees)
+            self.best_objective = self.evaluate_solution(weights)
             self.add_jumbo(params['extra_jumbos'])
         self.order_all_children()
         self.clean_empty_cuts()
@@ -1483,7 +1281,6 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: get a good initial solution.
     # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
     # TODO: add more random movements.
     # TODO: go back to initial solution *very* rarely

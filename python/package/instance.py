@@ -49,11 +49,11 @@ class Instance(object):
         items = self.get_batch()
         return sum(i['LENGTH_ITEM']*i['WIDTH_ITEM'] for i in items.values())
 
-    def get_defects_plate(self, plate):
+    def get_defects_plate(self, plate_id):
         data = self.input_data['defects']
-        if plate not in data:
+        if plate_id not in data:
             return []
-        return data[plate]
+        return data[plate_id]
 
     def get_defects_per_plate(self, plates=None):
         # optional filter to tell range of plates.

@@ -22,7 +22,7 @@ def item_to_node(item):
     return create_node(**args)
 
 
-def create_plate(width, height, id):
+def create_plate(width, height, id, defects):
     args = {'WIDTH': width,
             'HEIGHT': height,
             'CUT': 0,
@@ -34,6 +34,7 @@ def create_plate(width, height, id):
             }
     plate = create_node(**args)
     duplicate_waste_into_children(plate)
+    plate.add_feature('DEFECTS', defects)
     return plate
 
 
@@ -44,7 +45,7 @@ def create_dummy_tree(nodes, id=-1):
     :param nodes: list of nodes to insert as children
     :return: tree object.
     """
-    dummyTree = create_plate(width=999999, height=999999, id=id)
+    dummyTree = create_plate(width=999999, height=999999, id=id, defects=[])
     dummyWaste = dummyTree.copy()
     dummyWaste.TYPE = -1
     for n in nodes:
@@ -137,19 +138,6 @@ def find_ancestor_level(node, level, incl_node=True):
     return None
 
 
-def get_descendant(node, which="first"):
-    assert which in ['first', 'last']
-    if which == 'first':
-        pos = 0
-    else:
-        pos = -1
-    children = node.children
-    if not children:
-        return node
-    else:
-        return get_descendant(children[pos], which=which)
-
-
 def find_waste(node, child=False):
     # We assume waste is at the end. Always.
     # If child=True we look in children instead of siblings
@@ -179,10 +167,9 @@ def find_all_wastes(node):
     return [w for w in node.children if is_waste(w)]
 
 # @profile
-def find_all_wastes_after_defect(node, defects):
+def find_all_wastes_after_defect(node):
     """
     :param node: the node to search wastes
-    :param defects: the relevant defects
     :return: list of wastes that are next to the defects
     """
     # We assume that the last child of the node, if it's a waste,
@@ -190,9 +177,7 @@ def find_all_wastes_after_defect(node, defects):
     if node is None:
         return []
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
-    # TODO: optimise
-    if node.CUT > 0:
-        defects = defects_in_node(node, defects)
+    defects = defects_in_node(node)
     up_right = [x[dim_i] + x[axis_i] for x in defects]
     last_defect = max(up_right, default=-1)
     if not len(node.children):
@@ -248,6 +233,7 @@ def get_axis_of_dim(dim):
 
 
 def get_node_leaves(node, min_type=0, max_type=99999, type_options=None):
+    # print(node)
     if type_options is None:
         return [leaf for leaf in node.get_leaves() if min_type <= leaf.TYPE <= max_type]
     if type(type_options) is not list:
@@ -341,6 +327,22 @@ def get_waste_density_node(node):
     return sum(waste.HEIGHT * waste.WIDTH for waste in get_node_leaves(node, type_options=[-1, -3])) /\
            ((node.HEIGHT+1) * (node.WIDTH+1))
 
+
+def get_descendant(node, which="first"):
+    assert which in ['first', 'last']
+    if which == 'first':
+        pos = 0
+    else:
+        pos = -1
+    children = node.children
+    if not children:
+        return node
+    else:
+        return get_descendant(children[pos], which=which)
+
+
+def get_defects(node):
+    return node.get_tree_root().DEFECTS
 
 def node_to_square(node):
     """
@@ -648,13 +650,15 @@ def search_node_of_defect(node, defect):
     return None
 
 
-def defects_in_node(node, defects):
+def defects_in_node(node):
     """
     :param node:
-    :param defects: defects to check
     :return: [defect1, defect2]
     """
     square = node_to_square(node)
+    defects = get_defects(node)
+    if node.CUT == 0:
+        return defects
     defects_in_node = []
     for defect in defects:
         square2 = geom.defect_to_square(defect)
@@ -694,7 +698,7 @@ def extract_node_from_position(node):
     return node
 
 
-def repair_dim_node(node, defects, min_waste):
+def repair_dim_node(node, min_waste):
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     change = get_surplus_dim(node)
     node_size = getattr(node, dim_i)
@@ -705,7 +709,7 @@ def repair_dim_node(node, defects, min_waste):
                         waste_pos=node_size+change,
                         increase_node=False)
         return True
-    wastes = find_all_wastes_after_defect(node, defects)
+    wastes = find_all_wastes_after_defect(node)
     # wastes = find_all_wastes(node)
     # TODO: get better ways to eat wastes.
     # we revert to the previous change
@@ -754,34 +758,28 @@ def get_nodes_between_nodes_in_tree(node1=None, node2=None):
         raise ValueError("node1 and node2 cannot be None at the same time")
 
     ancestors = set()
-    if node1 is not None:
+    if node1:
         ancestors |= set(node1.get_ancestors() + [node1])
-    if node2 is not None:
+    if node2:
         ancestors |= set(node2.get_ancestors() + [node2])
-    if node1 is None and node2 is None:
+    if node1 and node2:
         assert node1.get_tree_root() == node2.get_tree_root(), \
             "node {} does not share root with node {}".format(node1.name, node2.name)
+        # if one of the nodes is the ancestor: there's no nodes in between
+        ancestor = node1.get_common_ancestor(node2)
+        if ancestor in [node1, node2]:
+            return []
 
-    if node1 is None:
+    if not node1:
         node1 = get_descendant(node2.get_tree_root(), which='first')
-
-    # if one of the nodes is the ancestor: there's no nodes in between
-    ancestor = node1.get_common_ancestor(node2)
-    if ancestor in [node1, node2]:
-        return node1, node2, []
 
     def is_leaf_fn(node):
         return node not in ancestors
 
-    is_last_fn = None
-    if node2 is not None:
-        def is_last_fn(node):
-            return node == node2
-
     nodes = [n for n in
              post_traverse_from_node(node1,
                                      is_leaf_fn=is_leaf_fn,
-                                     last_node=is_last_fn)
+                                     last_node=node2)
              ]
 
     return list(set(nodes) - ancestors)
@@ -907,6 +905,205 @@ def order_nodes(node1, node2):
     if not check_node_order(node1, node2):
         first_node, second_node = second_node, first_node
     return first_node, second_node
+
+
+def insert_node_at_position(node, destination, position):
+    """
+    :param node: node I'm going to insert.
+    :param destination: parent node were I want to insert it.
+    :param position: position of a children on the parent node (1 : num_children)
+    :return:
+    """
+    # move all nodes at destination starting from the marked position
+    # to make space and assign new plate, and new axis
+    # add node to new parent
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    axis, dim = get_orientation_from_cut(node)
+    ref = {axis: dim, axis_i: dim_i}
+    # sib_axis, sib_dim = get_orientation_from_cut(destination.children[position])
+    # dest_axis, dest_dim = get_orientation_from_cut(destination)
+    dest_axis_i, dest_dim_i = get_orientation_from_cut(destination, inv=True)
+
+    if destination.children:
+        if position < len(destination.children):
+            # we get the destination position and then make space:
+            axis_dest = {a: getattr(destination.children[position], a) for a in ref}
+            # because siblings could have different level than my node, the movement
+            # needs to be according to the siblings dimensions
+            # which are the opposite of the destination (parent)
+            for sib in destination.children[position:]:
+                mod_feature_node(node=sib,
+                                    quantity=getattr(node, dest_dim_i),
+                                    feature=dest_axis_i)
+        else:
+            # we're puting the node in a new, last place:
+            # so we do not move anything.
+            last_node = destination.children[-1]
+            axis_dest = {a: getattr(last_node, a) for a in ref}
+            axis_dest[dest_axis_i] += getattr(last_node, dest_dim_i)
+    else:
+        axis_dest = {a: getattr(destination, a) for a in ref}
+
+    # when doing weird multilevel swaps,
+    # we need to keep the CUT level and hierarchy:
+    # or we put the node inside itself.
+    # or we take all nodes out of the node and insert them separately.
+    if (node.CUT >= destination.CUT + 2) and node.children:
+        node = duplicate_node_as_its_parent(node)
+
+    # we make the move:
+    change_feature(node, 'PLATE_ID', destination.PLATE_ID)
+    dist = {a: axis_dest[a] - getattr(node, a) for a in ref}
+    for k, v in dist.items():
+        if v:
+           mod_feature_node(node=node, quantity=v, feature=k)
+
+    # In case we're moving nodes from different levels, we need to update the CUT:
+    cut_change = destination.CUT + 1 - node.CUT
+    if cut_change:
+        mod_feature_node(node, feature='CUT', quantity=cut_change)
+
+    log.debug('We insert node {} into destination {}'.
+              format(node.name, destination.name))
+    destination.add_child(node)
+
+    # 3. update parents order:
+    order_children(destination)
+    return node
+
+
+def check_swap_size(nodes, min_waste, insert=False, rotate=None):
+    if rotate is None:
+        rotate = []
+        # ideally, there should be not reference to the tree here
+        # so we can test nodes that are not part of a tree
+    dims_i = {
+        k: get_orientation_from_cut(node, inv=True)[1]
+        for k, node in nodes.items()
+    }
+    dims = {
+        k: get_orientation_from_cut(node)[1]
+        for k, node in nodes.items()
+    }
+
+    wastes = {k: [
+        w for w in find_all_wastes_after_defect(node.up)
+        if w != node or (k == 2 and insert)
+    ] for k, node in nodes.items()}
+    # wastes = {k: find_waste(node) for k, node in nodes.items()}
+    # if there's no waste, I'll just say it's a 0 length node?
+    # for k, waste in wastes.items():
+    #     if waste is None:
+    #         wastes[k] = create_node(NODE_ID=12345, HEIGHT=0, WIDTH=0)
+    waste_space = {k: sum(getattr(w, dims[k]) for w in wastes[k]) for k in nodes}
+
+    node_space = {
+        k: {
+            dims[k]: getattr(node, dims[k]),
+            dims_i[k]: get_size_without_waste(node, dims_i[k])
+        }
+        for k, node in nodes.items()
+    }
+
+    space = {
+        k: {
+            dims[k]: waste_space[k] + node_space[k][dims[k]],
+            dims_i[k]: getattr(node, dims_i[k])
+        }
+        for k, node in nodes.items()
+    }
+    # if not swapping, we have less space in node2
+    if insert:
+        space[2][dims[2]] -= node_space[2][dims[2]]
+        # # if node2 is a waste, I can use it as the destination's waste
+        # # but on
+        # if is_waste(nodes[2]) and wastes[2] is None:
+        #     space[2][dims[2]] = max(space[2][dims[2]], node_space[2][dims[2]])
+
+    # rotate can be a list with the index of nodes to reverse.
+    # this way, we can check different combinations of rotation
+    # it's usually en empty list
+    for pos in rotate:
+        _dim_i = dims_i[pos]
+        _dim = dims[pos]
+        node_space[pos][_dim], node_space[pos][_dim_i] = \
+            node_space[pos][_dim_i], node_space[pos][_dim]
+
+    return geom.check_nodespace_in_space(node_space, space, insert, min_waste)
+
+
+def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, debug=False):
+    if rotation is None:
+        rotation = []
+    nodes = {1: node1, 2: node2}
+    other_node = {1: 2, 2: 1}
+    parents = {k: node.up for k, node in nodes.items()}
+    parent1 = parents[1]
+    parent2 = parents[2]
+    ch_pos = {k: get_node_pos(node) for k, node in nodes.items()}
+
+    recalculate = False
+    nodes_to_move = []
+    if debug:
+        pass
+        # self.draw(node1.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
+        # self.draw(node2.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
+    if node1.up != parent2 or ch_pos[1] != ch_pos[2]:
+        nodes_to_move.append(1)
+    if not insert and (node2.up != parent1 or ch_pos[1] + 1 != ch_pos[2]):
+        nodes_to_move.append(2)
+
+    for k in nodes_to_move:
+        node = nodes[k]
+        other_k = other_node[k]
+        destination = parents[other_k]
+        ch_pos_dest = ch_pos[other_k]
+        node = extract_node_from_position(node)  # 1: take out children waste
+        node = delete_only_child(node, check_parent=False)  # 1.5: collapse if only child
+        if k in rotation:
+            rotate_node(node)  # 2: rotate
+        node = insert_node_at_position(node, destination, ch_pos_dest)  # 3, 4: insert+child
+
+        # 5: if necessary, we open the node to its children
+        inserted_nodes = collapse_node(node)
+        for _node in inserted_nodes:
+            for ch in _node.children:
+                collapse_node(ch)
+
+        # 6: now we check if we need to create a waste children on the node:
+        _, dest_dim = get_orientation_from_cut(destination)
+        for _node in inserted_nodes:
+            dest_size = getattr(destination, dest_dim)
+            node_size = getattr(node, dest_dim)
+            status, recalculate = add_child_waste(node=_node, child_size=dest_size-node_size)
+        nodes[k] = node
+
+    # 7: we need to update the waste at both sides
+    if parent1 != parent2:
+        for parent in parents.values():
+            repair_dim_node(parent, min_waste)
+
+    return True
+    # return recalculate
+
+
+def check_swap_size_rotation(node1, node2, min_waste, insert=False,
+                             try_rotation=False, rotation_probs=None, rotation_tries=None):
+    if node1.up == node2.up:
+        return []
+    rotations = [[]]
+    nodes = {1: node1, 2: node2}
+    if rotation_tries is None:
+        rotation_tries = 1
+    if try_rotation:
+        rotations_av = [[], [1], [2], [1, 2]]
+        if rotation_probs is not None:
+            rotation_probs = [0.8, 0.1, 0.05, 0.05]
+        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
+    for rotation in rotations:
+        if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
+            return rotation
+    return None
 
 
 if __name__ == "__main__":

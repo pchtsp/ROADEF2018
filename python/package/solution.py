@@ -104,7 +104,7 @@ class Solution(inst.Instance):
         for tree in self.trees:
             nd.order_children(tree)
 
-    def get_pieces_by_type(self, by_plate=False, pos=None, min_type=0, solution=None):
+    def get_pieces_by_type(self, solution, by_plate=False, pos=None, min_type=0):
         """
         Gets the solution pieces indexed by the TYPE.
         :param by_plate: when active it returns a dictionary indexed
@@ -114,8 +114,6 @@ class Solution(inst.Instance):
         :param solution: if given it's evaluated instead of self.trees
         :return: {0: leaf0,  1: leaf1}
         """
-        if solution is None:
-            solution = self.trees
         if pos is None:
             leaves = [leaf for tree in solution
                       for leaf in nd.get_node_leaves(tree, min_type)]
@@ -179,7 +177,8 @@ class Solution(inst.Instance):
         return only_1_child
 
     def check_overlapping(self):
-        plate_leaves = self.get_pieces_by_type(by_plate=True)
+        solution = self.trees
+        plate_leaves = self.get_pieces_by_type(by_plate=True, solution=solution)
         overlapped = []
         for plate, leaves in plate_leaves.items():
             for k1, leaf1 in leaves.items():
@@ -385,7 +384,7 @@ class Solution(inst.Instance):
     def check_demand_satisfied(self):
         demand = self.get_batch()
         produced = []
-        pieces = self.get_pieces_by_type()
+        pieces = self.get_pieces_by_type(solution=self.trees)
         for k, leaf in pieces.items():
             item = demand.get(k, None)
             # there's no demand for this item code
