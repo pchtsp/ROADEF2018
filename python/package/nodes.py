@@ -1197,7 +1197,7 @@ def place_items_on_trees(params, global_params, items_by_batch, defects, sorting
             rotate_node(n)
     dummy_tree = create_dummy_tree(ordered_nodes, id=-1)
     tree_id = 0
-    tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects[tree_id])
+    tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects.get(tree_id, []))
     trees = [dummy_tree, tree]
 
     # For each item, I want the previous item.
@@ -1239,7 +1239,7 @@ def place_items_on_trees(params, global_params, items_by_batch, defects, sorting
         # because we are about to create another tree.
         if limit_trees and tree_id == limit_trees:
             return None
-        tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects[tree_id])
+        tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects.get(tree_id, []))
         trees.append(tree)
         inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, kwargs=params)
         # TODO: warning, in the future this could be possible due to defects checking
