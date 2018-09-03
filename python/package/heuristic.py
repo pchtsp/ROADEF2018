@@ -475,7 +475,6 @@ class ImproveHeuristic(sol.Solution):
         good_candidates = {}
         rotation = {}
         weights = kwargs.get('weights', None)
-        node2_is_destination = kwargs.get('node2_is_destination', False)
         assert weights is not None, 'weights argument cannot be empty or None!'
         for candidate in candidates:
             node1, node2 = node, candidate
@@ -536,7 +535,7 @@ class ImproveHeuristic(sol.Solution):
         # len([n.name for tree in self.trees for n in tree.get_descendants() if n.Y < 0]) > 0
         # update previous and next nodes:
         if recalculate:
-            self.update_precedence_nodes()
+            self.update_precedence_nodes(solution=self.trees)
         if not evaluate:
             return improve
         new = self.evaluate_solution(weights)
@@ -952,36 +951,6 @@ class ImproveHeuristic(sol.Solution):
             return False
         return self.try_change_node(node1, [next_sibling], **kwargs)
 
-    def insert_node_inside_node_traverse(self, node1, node_start, kwargs):
-        # we want to insert node1 at the first available space in node_start's tree
-        # but never before node_start.
-        # If i just want to traverse the whole tree, just need to put node1= root
-        def is_leaf_fn(node2):
-            return not \
-                geom.plate_inside_plate(
-                    nd.node_to_plate(node1),
-                    nd.node_to_plate(node2),
-                    turn=True
-                ) or node2.CUT >= 3
-
-        for node2 in nd.post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
-            node1.CUT = node2.CUT
-            if nd.is_waste(node2):
-                change = self.try_change_node(node1, [node2], **kwargs)
-                if change:
-                    return change
-                continue
-            # If I failed inserting in the children or if node2 is an item:
-            # I try to insert next to the node2
-            next_sibling = nd.get_next_sibling(node2)
-            if next_sibling is None:
-                continue
-            change = self.try_change_node(node1, [next_sibling], **kwargs)
-            if change:
-                return change
-        return False
-
-
     def add_jumbo(self, num=1):
         plate_W = self.get_param('widthPlates')
         plate_H = self.get_param('heightPlates')
@@ -1102,68 +1071,21 @@ class ImproveHeuristic(sol.Solution):
         return change
 
     def get_initial_solution(self, params):
-        """
-        This algorithm just iterates over the items in the order of the sequence
-        and size to put everything as tight as possible.
-        Respects sequence.
-        :return:
-        """
         params = dict(params)
         params['evaluate'] = False
         params['tolerance'] = None
         params['insert'] = True
         params['rotation_probs'] = [0.50, 0.50, 0, 0]
         params['try_rotation'] = True
-        batch_data = self.get_batch()
-        items, values = zip(*sorted(batch_data.items(), key=lambda x: x[1]['SEQUENCE']))
-        plate_W = self.get_param('widthPlates')
-        plate_H = self.get_param('heightPlates')
-        ordered_nodes = [nd.item_to_node(v) for v in values]
-        for n in ordered_nodes:
-            if n.WIDTH > n.HEIGHT:
-                nd.rotate_node(n)
-            if n.HEIGHT > plate_H:
-                nd.rotate_node(n)
-        dummy_tree = nd.create_dummy_tree(ordered_nodes, id=-1)
-        tree_id = 0
-        tree = nd.create_plate(width=plate_W, height=plate_H, id=tree_id, defects=self.get_defects_plate(tree_id))
-        trees = [dummy_tree, tree]
+        params['rotation_tries'] = 2
 
-        # For each item, I want the previous item.
-        # which is the last in the "previous items" list.
+        return nd.place_items_on_trees(params=params,
+                                       global_params=self.get_param(),
+                                       items_by_batch=self.get_items_per_stack(),
+                                       defects=self.get_defects_per_plate(),
+                                       sorting_function=lambda x: x[1]['SEQUENCE'])
 
-        for n in ordered_nodes:
-            # TODO: there are better ways to store this information by myself in ad-hoc code.
-            prev_node = {k: v[-1] for k, v in self.get_previous_nodes(solution=trees).items() if v}
-            change = False
-            t_start = 1
-            # We first search the tree where the previous node in the sequence
-            # only starting from the position of the previous node
-            if n in prev_node:
-                node2 = prev_node[n]
-                change = self.insert_node_inside_node_traverse(n, node2, kwargs=params)
-                if change:
-                    continue
-                t_start = node2.PLATE_ID + 2
-            # The first tree is our dummy tree so we do not want to use it.
-            for tree in trees[t_start:]:
-                change = self.insert_node_inside_node_traverse(n, tree, kwargs=params)
-                if change:
-                    break
-            if change:
-                continue
-            tree_id = len(trees) - 1
-            tree = nd.create_plate(width=plate_W, height=plate_H, id=tree_id, defects=self.get_defects_plate(tree_id))
-            trees.append(tree)
-            change = self.insert_node_inside_node(n, tree, kwargs=params)
-            # TODO: warning, in the future this could be possible due to defects checking
-            assert change, "node {} apparently doesn't fit in a blank new tree".format(n.name)
-
-        # we take out the dummy tree
-        trees = trees[1:]
-        return trees
-
-    def update_precedence_nodes(self, solution=None):
+    def update_precedence_nodes(self, solution):
         self.type_node_dict = self.get_pieces_by_type(solution=solution)
         self.previous_nodes = self.calc_previous_nodes(solution=solution)
         self.next_nodes = self.previous_nodes.list_reverse()

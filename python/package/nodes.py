@@ -1,5 +1,6 @@
 import ete3
 import package.geometry as geom
+import package.superdict as sd
 import logging as log
 import random as rn
 import numpy as np
@@ -1083,7 +1084,7 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
         for parent in parents.values():
             repair_dim_node(parent, min_waste)
 
-    return True
+    return nodes
     # return recalculate
 
 
@@ -1104,6 +1105,152 @@ def check_swap_size_rotation(node1, node2, min_waste, insert=False,
         if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
             return rotation
     return None
+
+
+def try_change_node_simple(node, candidates, insert, min_waste, reverse=False, **kwargs):
+    good_candidates = {}
+    rotation = {}
+    weights = kwargs.get('weights', None)
+    debug = kwargs.get('debug', False)
+    assert weights is not None, 'weights argument cannot be empty or None!'
+    for candidate in candidates:
+        node1, node2 = node, candidate
+        if reverse:
+            node1, node2 = candidate, node
+        if not check_assumptions_swap(node1, node2, insert):
+            continue
+        result = check_swap_size_rotation(node1, node2, insert=insert,
+                                          min_waste=min_waste,
+                                          try_rotation=kwargs.get('try_rotation', False),
+                                          rotation_probs=kwargs.get('rotation_probs', None),
+                                          rotation_tries=kwargs.get('rotation_tries', None))
+        if result is None:
+            continue
+        rotation[node2] = result
+        good_candidates[node2] = 0
+    if len(good_candidates) == 0:
+        return False
+    candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
+    node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
+    rot = rotation[node2]
+    inserted_nodes = swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
+                                           debug=debug, min_waste=min_waste)
+
+    # TODO: replace self.update_precedence_nodes()
+    return inserted_nodes
+
+
+def insert_node_inside_node_traverse(node1, node_start, min_waste, kwargs):
+    # we want to insert node1 at the first available space in node_start's tree
+    # but never before node_start.
+    # If i just want to traverse the whole tree, just need to put node1= root
+    def is_leaf_fn(node2):
+        return not \
+            geom.plate_inside_plate(
+                node_to_plate(node1),
+                node_to_plate(node2),
+                turn=True
+            ) or node2.CUT >= 3
+
+    for node2 in post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
+        node1.CUT = node2.CUT
+        if is_waste(node2):
+            inserted_nodes = try_change_node_simple(node=node1, candidates=[node2], min_waste=min_waste, **kwargs)
+            if inserted_nodes:
+                return inserted_nodes
+            continue
+        # If I failed inserting in the children or if node2 is an item:
+        # I try to insert next to the node2
+        next_sibling = get_next_sibling(node2)
+        if next_sibling is None:
+            continue
+        inserted_nodes = try_change_node_simple(node=node1, candidates=[next_sibling], min_waste=min_waste, **kwargs)
+        if inserted_nodes:
+            return inserted_nodes
+    return False
+
+
+def get_node_by_type(node, type):
+    for n in node.traverse():
+        if n.TYPE == type:
+            return n
+    return None
+
+
+def place_items_on_trees(params, global_params, items_by_batch, defects, sorting_function, limit_trees=None):
+    """
+    This algorithm just iterates over the items in the order of the sequence
+    and size to put everything as tight as possible.
+    Respects sequence.
+    :return:
+    """
+    batch_data = {v['ITEM_ID']: v for stack, items in items_by_batch.items() for v in items}
+    items, values = zip(*sorted(batch_data.items(), key=sorting_function))
+    plate_W = global_params['widthPlates']
+    plate_H = global_params['heightPlates']
+    min_waste = global_params['minWaste']
+    ordered_nodes = [item_to_node(v) for v in values]
+    for n in ordered_nodes:
+        if n.WIDTH > n.HEIGHT:
+            rotate_node(n)
+        if n.HEIGHT > plate_H:
+            rotate_node(n)
+    dummy_tree = create_dummy_tree(ordered_nodes, id=-1)
+    tree_id = 0
+    tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects[tree_id])
+    trees = [dummy_tree, tree]
+
+    # For each item, I want the previous item.
+    # Two parts:
+    # 1. for each item we want it's previous item => this doesn't change
+    item_prec = {}
+    for stack, items in items_by_batch.items():
+        for i, i2 in zip(items, items[1:]):
+            item_prec[i2['ITEM_ID']] = i['ITEM_ID']
+
+    # 2. for each item we've placed, we want it's node => this changes
+    item_node = {}
+
+    for n in ordered_nodes:
+        item_id = n.TYPE
+        inserted_nodes = False
+        t_start = 1
+        # We first search the tree where the previous node in the sequence
+        # only starting from the position of the previous node
+        if item_id in item_prec:
+            node2 = item_node[item_prec[item_id]]
+            inserted_nodes = insert_node_inside_node_traverse(n, node2, min_waste=min_waste, kwargs=params)
+            if inserted_nodes:
+                node = get_node_by_type(inserted_nodes[1], item_id)
+                item_node[item_id] = node
+                continue
+            t_start = node2.PLATE_ID + 2
+        # The first tree is our dummy tree so we do not want to use it.
+        for tree in trees[t_start:]:
+            inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, kwargs=params)
+            if inserted_nodes:
+                break
+        if inserted_nodes:
+            node = get_node_by_type(inserted_nodes[1], item_id)
+            item_node[item_id] = node
+            continue
+        tree_id = len(trees) - 1
+        # If we arrive to the limit, it means we lost.
+        # because we are about to create another tree.
+        if limit_trees and tree_id == limit_trees:
+            return None
+        tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects[tree_id])
+        trees.append(tree)
+        inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, kwargs=params)
+        # TODO: warning, in the future this could be possible due to defects checking
+        assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(n.name)
+        node = get_node_by_type(inserted_nodes[1], item_id)
+        item_node[item_id] = node
+
+    # we take out the dummy tree
+    trees = trees[1:]
+    return trees
+
 
 
 if __name__ == "__main__":

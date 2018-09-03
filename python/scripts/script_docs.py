@@ -48,4 +48,4 @@ node2 = self.get_node_by_name(76)
 try_rotation = True
 insert = True
 result = self.check_swap_size_rotation(node1, node2, insert=insert, try_rotation=try_rotation, rotation_probs=[0, 1, 0, 0])
-recalculate = self.swap_nodes_same_level(node1, node2, insert=insert, rotation=result)
+recalculate = self.swap_nodes_same_level(node1, node2, insert=insert, rotation=result, min_waste=self.get_param('minWaste'))
