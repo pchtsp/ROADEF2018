@@ -197,6 +197,8 @@ class Solution(inst.Instance):
         :return:
         """
         if type_node_dict is None or solution is not None:
+            if solution is None:
+                solution = self.trees
             type_node_dict = self.get_pieces_by_type(solution=solution)
         prev_items = self.get_previous_items()
         prev_nodes = {}
@@ -396,16 +398,18 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def calculate_objective(self):
-        if not self.trees:
+    def calculate_objective(self, solution=None):
+        if solution is None:
+            solution = self.trees
+        if not solution:
             return None
-        heigth, width = self.get_param('heightPlates'), self.get_param('widthPlates')
+        height, width = self.get_param('heightPlates'), self.get_param('widthPlates')
         items_area = self.get_items_area()
-        last_tree_children = self.trees[-1].get_children()
+        last_tree_children = solution[-1].get_children()
         last_waste_width = 0
-        if last_tree_children and last_tree_children[-1].TYPE == -3:
+        if last_tree_children and nd.is_waste(last_tree_children[-1]):
             last_waste_width = last_tree_children[-1].WIDTH
-        return len(self.trees) * heigth * width - last_waste_width * heigth - items_area
+        return len(solution) * height * width - last_waste_width * height - items_area
 
     def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=50, fontsize=30, solution=None):
         if solution is None:

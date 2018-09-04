@@ -180,6 +180,13 @@ def find_waste(node, child=False):
     return waste
 
 
+def get_size_last_waste(node, dim='WIDTH'):
+    waste = find_waste(node)
+    if waste is None:
+        return 0
+    return getattr(node, dim)
+
+
 def find_all_wastes(node):
     # same as find_waste but returns all wastes
     return [w for w in node.children if is_waste(w)]
@@ -1264,53 +1271,45 @@ def place_items_on_trees(params, global_params, items_by_stack, defects, sorting
         item_node[item_id] = node
 
     # we take out the dummy tree
-    trees = trees[1:]
-    return trees
+    return trees[1:]
 
 
-def rebuild_tree(tree, kwargs, all_items):
-    nodes = get_node_leaves(tree, min_type=0)
-    items_i = [n.TYPE for n in nodes]
-    # items = [sd.SuperDict(node_to_item(n))  for n in nodes]
-    items_dict = sd.SuperDict(all_items).filter(items_i)
-    items_dict = {k: {**v, **{'VAL': rn.random()}} for k, v in items_dict.items()}
-    stacks = sd.SuperDict(items_dict).index_by_property('STACK')
-    # items = {k['ITEM_ID']: {**all_items[k['ITEM_ID']], **k} for k in items}
-    # stacks = {}
-    # for i in items:
-    #     k = i['ITEM_ID']
-    #     complete_item =
-    #     stack = complete_item['STACK']
-    #     if stack not in stacks:
-    #         stacks[stack] = {}
-    #     stacks[stack][k] = complete_item
-
-    defects = tree.DEFECTS
-
-    # def compare_items_seq(item1, item2):
-    #     if item1['STACK']
+def sorting_items(items_by_stack):
+    # I get a list of stacks of items.
+    # The first items on the stack are at the end of the list.
+    items_list_stack = [sorted(items, key=lambda x: -x['SEQUENCE'])
+                        for stack, items in items_by_stack.items()]
+    items_list = []
+    # I get a random stack at every iteration and
+    # get the first remaining sequence element from the stack.
+    while len(items_list_stack):
+        stack_num = rn.randrange(len(items_list_stack))
+        stack = items_list_stack[stack_num]
+        items_list.append(stack.pop())
+        if not len(stack):
+            items_list_stack.pop(stack_num)
+    return items_list
 
 
-    def sorting_function(items_by_stack):
-        items_list_stack = [sorted(items, key=lambda x: -x['SEQUENCE']) for stack, items in items_by_stack.items()]
-        items_list = []
-        # I get a random stack at every iteration and
-        # get the first remaining sequence element from the stack.\
-        while len(items_list_stack):
-            stack_num = rn.randrange(len(items_list_stack))
-            stack = items_list_stack[stack_num]
-            items_list.append(stack.pop())
-            if not len(stack):
-                items_list_stack.pop(stack_num)
-
+def sorting_function_2(items_by_stack):
         # This is an implementation by comparing two elements
         # cmp = ft.cmp_to_key()
         # batch_data.sort(key=cmp)
+        pass
 
-        return items_list
 
-    place_items_on_trees(stacks, defects, sorting_function, limit_trees=None, **kwargs)
-    pass
+def rebuild_tree(tree, params, global_params, all_items):
+    nodes = get_node_leaves(tree, min_type=0)
+    items_i = [n.TYPE for n in nodes]
+    stacks = sd.SuperDict(all_items).filter(items_i).index_by_property('STACK')
+    return place_items_on_trees(
+        params=params,
+        global_params=global_params,
+        items_by_stack=stacks,
+        defects=tree.DEFECTS,
+        sorting_function=sorting_items,
+        limit_trees=1
+    )
 
 
 if __name__ == "__main__":
