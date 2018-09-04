@@ -5,22 +5,39 @@ import logging as log
 import random as rn
 import numpy as np
 from collections import deque
+import functools as ft
 
 # These are auxiliary functions for nodes of trees (see ete3).
 # TODO: this should be a subclass of TreeNode...
 
 
 def item_to_node(item):
-    args = {'WIDTH': item['WIDTH_ITEM'],
-            'HEIGHT': item['LENGTH_ITEM'],
-            'CUT': 0,
+    equivalence = \
+        {'WIDTH': 'WIDTH_ITEM',
+         'HEIGHT': 'LENGTH_ITEM',
+         'TYPE': 'ITEM_ID',
+         'NODE_ID': 'ITEM_ID',
+         }
+
+    default  =\
+        {'CUT': 0,
             'X': 0,
             'Y': 0,
-            'TYPE': item['ITEM_ID'],
-            'NODE_ID': item['ITEM_ID'],
             'PLATE_ID': 0
-            }
+         }
+    features = {k: item[v] for k, v in equivalence.items()}
+    args = {**default, **features}
     return create_node(**args)
+
+
+def node_to_item(node):
+    equivalence = \
+        {'WIDTH': 'WIDTH_ITEM',
+         'HEIGHT': 'LENGTH_ITEM',
+         'TYPE': 'ITEM_ID',
+         'NODE_ID': 'ITEM_ID',
+         }
+    return {v: getattr(node, k) for k, v in equivalence.items()}
 
 
 def create_plate(width, height, id, defects):
@@ -1177,15 +1194,14 @@ def get_node_by_type(node, type):
     return None
 
 
-def place_items_on_trees(params, global_params, items_by_batch, defects, sorting_function, limit_trees=None):
+def place_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, limit_trees=None):
     """
     This algorithm just iterates over the items in the order of the sequence
     and size to put everything as tight as possible.
     Respects sequence.
     :return:
     """
-    batch_data = {v['ITEM_ID']: v for stack, items in items_by_batch.items() for v in items}
-    items, values = zip(*sorted(batch_data.items(), key=sorting_function))
+    values = sorting_function(items_by_stack)
     plate_W = global_params['widthPlates']
     plate_H = global_params['heightPlates']
     min_waste = global_params['minWaste']
@@ -1204,7 +1220,7 @@ def place_items_on_trees(params, global_params, items_by_batch, defects, sorting
     # Two parts:
     # 1. for each item we want it's previous item => this doesn't change
     item_prec = {}
-    for stack, items in items_by_batch.items():
+    for stack, items in items_by_stack.items():
         for i, i2 in zip(items, items[1:]):
             item_prec[i2['ITEM_ID']] = i['ITEM_ID']
 
@@ -1251,6 +1267,50 @@ def place_items_on_trees(params, global_params, items_by_batch, defects, sorting
     trees = trees[1:]
     return trees
 
+
+def rebuild_tree(tree, kwargs, all_items):
+    nodes = get_node_leaves(tree, min_type=0)
+    items_i = [n.TYPE for n in nodes]
+    # items = [sd.SuperDict(node_to_item(n))  for n in nodes]
+    items_dict = sd.SuperDict(all_items).filter(items_i)
+    items_dict = {k: {**v, **{'VAL': rn.random()}} for k, v in items_dict.items()}
+    stacks = sd.SuperDict(items_dict).index_by_property('STACK')
+    # items = {k['ITEM_ID']: {**all_items[k['ITEM_ID']], **k} for k in items}
+    # stacks = {}
+    # for i in items:
+    #     k = i['ITEM_ID']
+    #     complete_item =
+    #     stack = complete_item['STACK']
+    #     if stack not in stacks:
+    #         stacks[stack] = {}
+    #     stacks[stack][k] = complete_item
+
+    defects = tree.DEFECTS
+
+    # def compare_items_seq(item1, item2):
+    #     if item1['STACK']
+
+
+    def sorting_function(items_by_stack):
+        items_list_stack = [sorted(items, key=lambda x: -x['SEQUENCE']) for stack, items in items_by_stack.items()]
+        items_list = []
+        # I get a random stack at every iteration and
+        # get the first remaining sequence element from the stack.\
+        while len(items_list_stack):
+            stack_num = rn.randrange(len(items_list_stack))
+            stack = items_list_stack[stack_num]
+            items_list.append(stack.pop())
+            if not len(stack):
+                items_list_stack.pop(stack_num)
+
+        # This is an implementation by comparing two elements
+        # cmp = ft.cmp_to_key()
+        # batch_data.sort(key=cmp)
+
+        return items_list
+
+    place_items_on_trees(stacks, defects, sorting_function, limit_trees=None, **kwargs)
+    pass
 
 
 if __name__ == "__main__":

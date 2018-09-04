@@ -1,3 +1,4 @@
+# python3
 import os, sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import importlib
@@ -8,6 +9,8 @@ import scripts.caseManager as cs
 import argparse
 import logging as log
 import copy
+import random as rn
+import numpy as np
 
 
 def solve_case(options):
@@ -126,15 +129,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
     parser.add_argument('-c', '--config-file', dest='file', default="package.params",
                         help='config file (default: package.params)')
-    parser.add_argument('-a', '--case-name', dest='case', help='case name', nargs='*', default=[None])
+    parser.add_argument('-a', '-p', '--case-name', dest='case', help='case name', nargs='*', default=[None])
     parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
     parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
     parser.add_argument('-rd', '--results-dir', dest='results_dir', help='directory to export experiments')
     parser.add_argument('-ng', '--no-graph', dest='no_graph', help='avoid graphing at the end', action='store_true')
     parser.add_argument('-ej', '--extra-jumbos', dest='extra_jumbos', help='number of extra jumbos to add', type=int)
-    parser.add_argument('-tl', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
-
+    parser.add_argument('-tl', '-t', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
+    parser.add_argument('-s', '--seed', dest='seed', help='seed', type=int)
+    parser.add_argument('-temp', '--temperature', dest='temperature', help='initial temperature', type=int)
+    # -o new_solution_filename to designate the result file.
+    # -name to return the identifier of the team that is the author of the executable
     args = parser.parse_args()
     if args.root is not None:
         if 'PYTHONPATH' not in os.environ:
@@ -169,6 +175,13 @@ if __name__ == "__main__":
 
     if args.time_limit is not None:
         pm.OPTIONS['timeLimit'] = args.time_limit
+
+    if args.temperature is not None:
+        pm.OPTIONS['heur_params']['temperature'] = args.temperature
+
+    if args.seed is not None:
+        rn.seed(args.seed)
+        np.random.seed(args.seed)
 
     print('Using config file in {}'.format(args.file))
 

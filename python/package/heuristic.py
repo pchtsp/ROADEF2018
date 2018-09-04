@@ -1079,11 +1079,18 @@ class ImproveHeuristic(sol.Solution):
         params['try_rotation'] = True
         params['rotation_tries'] = 2
 
+        def sorting_function(items_by_stack):
+            batch_data = {v['ITEM_ID']: v for stack, items in items_by_stack.items() for v in items}
+            items, values = zip(*sorted(batch_data.items(), key=lambda x: x[1]['SEQUENCE']))
+            return values
+
         return nd.place_items_on_trees(params=params,
                                        global_params=self.get_param(),
-                                       items_by_batch=self.get_items_per_stack(),
+                                       items_by_stack=self.get_items_per_stack(),
                                        defects=self.get_defects_per_plate(),
-                                       sorting_function=lambda x: x[1]['SEQUENCE'])
+                                       sorting_function=sorting_function
+                                       )
+
 
     def update_precedence_nodes(self, solution):
         self.type_node_dict = self.get_pieces_by_type(solution=solution)
@@ -1113,7 +1120,7 @@ class ImproveHeuristic(sol.Solution):
         self.clean_empty_cuts_2()
         self.correct_plate_node_ids()
         # self.jumbos_swapping(params)
-        self.jumbos_mirroring(params)
+        # self.jumbos_mirroring(params)
         assert 'weights' in params
         temp = params['temperature']
         try_rotation = params['try_rotation']
@@ -1137,7 +1144,7 @@ class ImproveHeuristic(sol.Solution):
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     params = {**options['heur_params'], **options['heur_optim']}
                     weights = params['weights']
-                    temp = params['temperature']
+                    # temp = params['temperature']
                     changed_flag = True
                     log.info('activate optimisation')
                 log.debug('DO: collapse left')
