@@ -136,8 +136,8 @@ class SuperDict(dict):
     @classmethod
     def from_dict(cls, dictionary):
         if type(dictionary) is not dict:
-            return
+            return dictionary
         dictionary = cls(dictionary)
-        for value in dictionary.values():
-            cls.from_dict(value)
+        for key, value in dictionary.items():
+            dictionary[key] = cls.from_dict(value)
         return dictionary

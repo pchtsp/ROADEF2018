@@ -707,10 +707,10 @@ class ImproveHeuristic(sol.Solution):
             max_wastes = max_candidates
         fails = successes = 0
         # TODO: now, wastes can be any level...
-        wastes = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE in [-1, -3])
+        wastes = self.get_nodes_by_level(level, filter_fn=nd.is_waste)
         # wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
-        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: x.TYPE not in [-1, -3]) + \
-                     self.get_nodes_by_level(level+1, filter_fn=lambda x: x.TYPE not in [-1, -3])
+        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: not nd.is_waste(x)) + \
+                     self.get_nodes_by_level(level+1, filter_fn=lambda x: not nd.is_waste(x))
 
         wastes_prob = sd.SuperDict(
             {c: nd.get_node_position_cost_unit(c, self.get_param('widthPlates')) for c in wastes}
@@ -1072,8 +1072,16 @@ class ImproveHeuristic(sol.Solution):
         return change
 
     def try_change_tree(self, params, num_iterations, tolerance=200):
-        num_tree = rn.choice(range(len(self.trees)))
-        incumbent = self.trees[num_tree]
+        incumbent = None
+        # For now, we only search for trees without defects...
+        # because if not we're going to be breaking them.
+        for x in range(10):
+            num_tree = rn.choice(range(len(self.trees)))
+            if not self.trees[num_tree].DEFECTS or rn.random() < 0.2:
+                incumbent = self.trees[num_tree]
+                break
+        if not incumbent:
+            return None
         trees = self.get_initial_solution(params=dict(params), num_tree=num_tree, num_iterations=num_iterations)
         if trees is None:
             return
@@ -1083,6 +1091,22 @@ class ImproveHeuristic(sol.Solution):
             nd.change_feature(candidate, 'PLATE_ID', num_tree)
             self.trees[num_tree] = candidate
             self.update_precedence_nodes(self.trees)
+
+            new = self.evaluate_solution(params['weights'])
+            old = self.best_objective
+            balance = old - new
+            log.debug('I just remade tree {}: gain={}, new={}, best={}, last={}'.format(
+                num_tree, round(balance), round(new),
+                round(self.best_objective), round(self.last_objective)
+            ))
+            self.last_objective = new
+            if balance > 0:
+                log.info('Best solution updated to {}!'.format(round(new)))
+                self.update_best_solution(self.trees)
+                self.best_objective = new
+            return True
+
+            # log.info('better tree found!')
         return
 
     def get_initial_solution(self, params, num_tree=None, num_iterations=1000, num_process=None):
@@ -1137,7 +1161,7 @@ class ImproveHeuristic(sol.Solution):
             result_x[x] = pool.apply_async(nd.place_items_on_trees, kwds={**args, **seed})
 
         for x, result in result_x.items():
-            result_x[x] = result.get(timeout=5)
+            result_x[x] = result.get(timeout=100)
 
         pool.close()
         values = [v for v in result_x.values() if v is not None]
@@ -1190,12 +1214,17 @@ class ImproveHeuristic(sol.Solution):
             # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 # for i in range(len(self.trees)//4):
-                self.try_change_tree(params, num_iterations = params.get('iterations_remake', 10))
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
-                params['try_rotation'] = level == 3 and try_rotation
+                # if rn.random() > 0.5:
+                self.try_change_tree(params,
+                                     num_iterations=params.get('iterations_remake', 10),
+                                     tolerance=0)
+                fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
+                params['try_rotation'] = level >= 2 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     params = {**options['heur_params'], **options['heur_optim']}
+                    try_rotation = params['try_rotation']
                     weights = params['weights']
                     # temp = params['temperature']
                     changed_flag = True

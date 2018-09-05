@@ -12,7 +12,8 @@ import pprint as pp
 import package.superdict as sd
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
+import matplotlib
+# matplotlib.use('Qt5Agg', warn=False, force=True)
 import shutil
 import re
 
@@ -42,7 +43,7 @@ def stats():
 def get_experiments_paths(path):
     cases = ["A{}".format(n) for n in range(1, 21)]
     experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
-    return {c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases}
+    return sd.SuperDict.from_dict({c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases})
 
 
 def get_solutions(exp_paths):
@@ -98,11 +99,14 @@ def dominant_experiments():
     return np.array(experiments_names)[is_pareto_dominated(objectives)]
 
 
-def benchmarking(value='dif_jumbo'):
+def benchmarking(value='dif_jumbo', experiments_filter=None):
     others_path = pm.PATHS['data'] + 'solutions_A.csv'
     table1 = pd.read_csv(others_path, sep=';')
     table1.columns = ['INSTANCE', 'others', 'TEAM']
     exp_paths = get_experiments_paths(pm.PATHS['results'])
+    if experiments_filter is not None:
+        experiments_filter.append('heuristic1800')
+        exp_paths = {k: v.filter(experiments_filter) for k, v in exp_paths.items()}
 
     solutions = get_solutions(exp_paths)
 
@@ -174,6 +178,10 @@ def graph(experiment, case=None, dpi=25):
         os.makedirs(path)
         v.graph_solution(path, dpi=dpi)
 
+
 if __name__ == "__main__":
-    benchmarking('obj')
-    dominant_experiments()
+    # pass
+    graph(experiment='test', case='A1')
+    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy'])
+    # dominant_experiments()
+    pass
