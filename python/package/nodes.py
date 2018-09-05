@@ -1122,7 +1122,7 @@ def check_swap_size_rotation(node1, node2, min_waste, insert=False,
         rotation_tries = 1
     if try_rotation:
         rotations_av = [[], [1], [2], [1, 2]]
-        if rotation_probs is not None:
+        if rotation_probs is None:
             rotation_probs = [0.8, 0.1, 0.05, 0.05]
         rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
     for rotation in rotations:
@@ -1201,7 +1201,7 @@ def get_node_by_type(node, type):
     return None
 
 
-def place_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, seed, limit_trees=None):
+def insert_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, seed, limit_trees=None):
     """
     This algorithm just iterates over the items in the order of the sequence
     and size to put everything as tight as possible.
@@ -1300,20 +1300,6 @@ def sorting_function_2(items_by_stack):
         # cmp = ft.cmp_to_key()
         # batch_data.sort(key=cmp)
         pass
-
-
-def rebuild_tree(tree, params, global_params, all_items):
-    nodes = get_node_leaves(tree, min_type=0)
-    items_i = [n.TYPE for n in nodes]
-    stacks = sd.SuperDict(all_items).filter(items_i).index_by_property('STACK')
-    return place_items_on_trees(
-        params=params,
-        global_params=global_params,
-        items_by_stack=stacks,
-        defects=tree.DEFECTS,
-        sorting_function=sorting_items,
-        limit_trees=1
-    )
 
 
 if __name__ == "__main__":

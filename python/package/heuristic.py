@@ -1124,7 +1124,7 @@ class ImproveHeuristic(sol.Solution):
             {
             'evaluate': False
             ,'insert': True
-            ,'rotation_probs': [0.50, 0.50, 0, 0]
+            ,'rotation_probs': params.get('rotation_remake', [0.5, 0.5, 0, 0])
             ,'try_rotation': True
             ,'rotation_tries': 2
             }
@@ -1158,7 +1158,7 @@ class ImproveHeuristic(sol.Solution):
         for x in range(num_iterations):
             # result = nd.place_items_on_trees(**args)
             seed = {'seed': int(rn.random()*1000)}
-            result_x[x] = pool.apply_async(nd.place_items_on_trees, kwds={**args, **seed})
+            result_x[x] = pool.apply_async(nd.insert_items_on_trees, kwds={**args, **seed})
 
         for x, result in result_x.items():
             result_x[x] = result.get(timeout=100)
