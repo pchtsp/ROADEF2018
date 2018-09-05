@@ -1071,20 +1071,21 @@ class ImproveHeuristic(sol.Solution):
                 return change
         return change
 
-    def try_change_tree(self, params, tolerance=200):
+    def try_change_tree(self, params, num_iterations, tolerance=200):
         num_tree = rn.choice(range(len(self.trees)))
         incumbent = self.trees[num_tree]
-        trees = self.get_initial_solution(params=dict(params), num_tree=num_tree, num_iterations=100)
+        trees = self.get_initial_solution(params=dict(params), num_tree=num_tree, num_iterations=num_iterations)
         if trees is None:
             return
         candidate = trees[0]
         if self.calculate_objective([candidate]) < \
                 self.calculate_objective([incumbent]) - tolerance:
+            nd.change_feature(candidate, 'PLATE_ID', num_tree)
             self.trees[num_tree] = candidate
             self.update_precedence_nodes(self.trees)
         return
 
-    def get_initial_solution(self, params, num_tree=None, num_iterations=1000, num_process=7):
+    def get_initial_solution(self, params, num_tree=None, num_iterations=1000, num_process=None):
         """
         :param params:
         :param num_tree: optional to only deal with 1 tree for modifying it
@@ -1092,6 +1093,8 @@ class ImproveHeuristic(sol.Solution):
         :param num_process: number of processors
         :return:
         """
+        if num_process is None:
+            num_process = multi.cpu_count() - 1
         params = dict(params)
         defaults = \
             {
@@ -1107,6 +1110,8 @@ class ImproveHeuristic(sol.Solution):
             incumbent = self.trees[num_tree]
             nodes = nd.get_node_leaves(incumbent, min_type=0)
             items_i = [n.TYPE for n in nodes]
+            if not items_i:
+                return None
             all_items = self.get_batch()
             stacks = sd.SuperDict(all_items).filter(items_i).\
                 index_by_property('STACK')
@@ -1128,11 +1133,13 @@ class ImproveHeuristic(sol.Solution):
         result_x = {}
         for x in range(num_iterations):
             # result = nd.place_items_on_trees(**args)
-            result_x[x] = pool.apply_async(nd.place_items_on_trees, kwds=args)
+            seed = {'seed': int(rn.random()*1000)}
+            result_x[x] = pool.apply_async(nd.place_items_on_trees, kwds={**args, **seed})
 
         for x, result in result_x.items():
-            result_x[x] = result.get(timeout=10)
+            result_x[x] = result.get(timeout=5)
 
+        pool.close()
         values = [v for v in result_x.values() if v is not None]
         if not values:
             return None
@@ -1156,7 +1163,7 @@ class ImproveHeuristic(sol.Solution):
         weights = params['weights']
 
         if not warm_start:
-            self.trees = self.get_initial_solution(params)
+            self.trees = self.get_initial_solution(params, num_iterations=params.get('iterations_initial', 1000))
             self.update_precedence_nodes(self.trees)
             self.best_objective = self.evaluate_solution(params['weights'])
             self.add_jumbo(params['extra_jumbos'])
@@ -1182,7 +1189,8 @@ class ImproveHeuristic(sol.Solution):
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
-                self.try_change_tree(params)
+                # for i in range(len(self.trees)//4):
+                self.try_change_tree(params, num_iterations = params.get('iterations_remake', 10))
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
                 params['try_rotation'] = level == 3 and try_rotation

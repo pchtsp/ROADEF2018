@@ -1201,13 +1201,15 @@ def get_node_by_type(node, type):
     return None
 
 
-def place_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, limit_trees=None):
+def place_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, seed, limit_trees=None):
     """
     This algorithm just iterates over the items in the order of the sequence
     and size to put everything as tight as possible.
     Respects sequence.
     :return:
     """
+    rn.seed(seed)
+    np.random.seed(seed)
     values = sorting_function(items_by_stack)
     plate_W = global_params['widthPlates']
     plate_H = global_params['heightPlates']
@@ -1226,7 +1228,9 @@ def place_items_on_trees(params, global_params, items_by_stack, defects, sorting
     # For each item, I want the previous item.
     # Two parts:
     # 1. for each item we want it's previous item => this doesn't change
+    # But we have to guarantee that the list of items is SORTED.
     item_prec = {}
+    items_by_stack = {s: sorted(items, key=lambda x: x['SEQUENCE']) for s, items in items_by_stack.items()}
     for stack, items in items_by_stack.items():
         for i, i2 in zip(items, items[1:]):
             item_prec[i2['ITEM_ID']] = i['ITEM_ID']

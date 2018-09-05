@@ -45,14 +45,16 @@ OPTIONS = {
     , 'ratio_plate_size': 2
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
-                      'temperature': 8000, 'try_rotation': False,
+                      'temperature': 1000, 'try_rotation': False,
                       'max_candidates': 10, 'extra_jumbos': 0,
                       'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
                       'rotation_probs': [0.70, 0.30, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.5, 0.4, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000},
+                      'iterations_initial': 100,
+                      'iterations_remake': 50
                       }
     , 'heur_optim': {
         'try_rotation': False,
