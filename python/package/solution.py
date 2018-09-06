@@ -240,10 +240,10 @@ class Solution(inst.Instance):
             solution = self.trees
         defect_node = []
         defects_by_plate = self.get_defects_per_plate()
-        for pos, tree in enumerate(solution):
-            if pos not in defects_by_plate:
+        for tree in solution:
+            if tree.PLATE_ID not in defects_by_plate:
                 continue
-            for defect in defects_by_plate[pos]:
+            for defect in defects_by_plate[tree.PLATE_ID]:
                 node = nd.search_node_of_defect(tree, defect)
                 assert node is not None, 'defect {} doesnt have node'.format(defect)
                 defect_node.append((node, defect))
@@ -398,14 +398,18 @@ class Solution(inst.Instance):
                 produced.append(k)
         return np.setdiff1d([*demand], produced)
 
-    def calculate_objective(self, solution=None):
+    def calculate_objective(self, solution=None, discard_empty_trees=False):
         if solution is None:
             solution = self.trees
         if not solution:
             return None
         height, width = self.get_param('heightPlates'), self.get_param('widthPlates')
         items_area = self.get_items_area()
-        last_tree_children = solution[-1].get_children()
+        last_tree = len(solution) - 1
+        if discard_empty_trees:
+            while not len(nd.get_node_leaves(solution[last_tree])) and last_tree >= 0:
+                last_tree -= 1
+        last_tree_children = solution[last_tree].get_children()
         last_waste_width = 0
         if last_tree_children and nd.is_waste(last_tree_children[-1]):
             last_waste_width = last_tree_children[-1].WIDTH

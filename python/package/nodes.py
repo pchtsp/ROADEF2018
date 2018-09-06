@@ -1159,8 +1159,6 @@ def try_change_node_simple(node, candidates, insert, min_waste, reverse=False, *
     rot = rotation[node2]
     inserted_nodes = swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
                                            debug=debug, min_waste=min_waste)
-
-    # TODO: replace self.update_precedence_nodes()
     return inserted_nodes
 
 

@@ -50,17 +50,20 @@ OPTIONS = {
                       'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
                       'rotation_probs': [0.70, 0.30, 0, 0],
-                      'rotation_remake': [0.50, 0.50, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.5, 0.4, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000},
-                      'iterations_initial': 1000,
-                      'iterations_remake': 100
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
                       }
+    , 'heur_remake': {
+        'iterations_initial': 10,
+        'iterations_remake': 20,
+        'rotation': [0.50, 0.50, 0, 0],
+        'num_trees': [0.70, 0.20, 0.1],
+    }
     , 'heur_optim': {
         'try_rotation': True,
         'max_candidates': 5,
-        'rotation_probs': [0.70, 0.3, 0, 0],
+        'rotation_probs': [0.90, 0.1, 0, 0],
         'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
     , 'debug': False

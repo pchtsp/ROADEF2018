@@ -1071,86 +1071,92 @@ class ImproveHeuristic(sol.Solution):
                 return change
         return change
 
-    def try_change_tree(self, params, num_iterations, tolerance=200):
-        incumbent = None
-        # For now, we only search for trees without defects...
-        # because if not we're going to be breaking them.
-        for x in range(10):
-            num_tree = rn.choice(range(len(self.trees)))
-            if not self.trees[num_tree].DEFECTS or rn.random() < 0.2:
-                incumbent = self.trees[num_tree]
-                break
-        if not incumbent:
+    def try_change_tree(self, options, num_iterations, tolerance=200):
+        params = options['heur_params']
+        remake_opts = options['heur_remake']
+        probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
+        tree_options = range(1, len(probs)+1)
+        start = rn.choice(range(len(self.trees)))
+        size = min(
+            np.random.choice(a=tree_options, p=probs),
+            len(self.trees) - start
+        )
+        num_trees = range(start, start + size)
+        incumbent = [self.trees[n] for n in num_trees]
+        candidate = self.get_initial_solution(options=options, num_trees=num_trees, num_iterations=num_iterations)
+        if candidate is None:
             return None
-        trees = self.get_initial_solution(params=dict(params), num_tree=num_tree, num_iterations=num_iterations)
-        if trees is None:
-            return
-        candidate = trees[0]
-        if self.calculate_objective([candidate]) < \
-                self.calculate_objective([incumbent]) - tolerance:
-            nd.change_feature(candidate, 'PLATE_ID', num_tree)
-            self.trees[num_tree] = candidate
-            self.update_precedence_nodes(self.trees)
+        # candidate = trees[0]
+        # if the candidate is worse, we do not even bother.
+        if self.calculate_objective(candidate) > \
+                self.calculate_objective(incumbent) - tolerance:
+            return None
+        # With 20% prob we accept worse solutions even if there are more defects.
+        # This can later be improved if we try to make the solution feasible regarding defects.
+        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)) and rn.random() > 0.2:
+            return None
+        for pos, plate_id in enumerate(num_trees):
+            nd.change_feature(candidate[pos], 'PLATE_ID', plate_id)
+            self.trees[plate_id] = candidate[pos]
+        self.update_precedence_nodes(self.trees)
 
-            new = self.evaluate_solution(params['weights'])
-            old = self.best_objective
-            balance = old - new
-            log.debug('I just remade tree {}: gain={}, new={}, best={}, last={}'.format(
-                num_tree, round(balance), round(new),
-                round(self.best_objective), round(self.last_objective)
-            ))
-            self.last_objective = new
-            if balance > 0:
-                log.info('Best solution updated to {}!'.format(round(new)))
-                self.update_best_solution(self.trees)
-                self.best_objective = new
-            return True
+        new = self.evaluate_solution(params['weights'])
+        old = self.best_objective
+        balance = old - new
+        log.debug('I just remade tree {}: gain={}, new={}, best={}, last={}'.format(
+            num_trees, round(balance), round(new),
+            round(self.best_objective), round(self.last_objective)
+        ))
+        self.last_objective = new
+        if balance > 0:
+            log.info('Best solution updated to {}!'.format(round(new)))
+            self.update_best_solution(self.trees)
+            self.best_objective = new
+        return True
 
-            # log.info('better tree found!')
-        return
-
-    def get_initial_solution(self, params, num_tree=None, num_iterations=1000, num_process=None):
+    def get_initial_solution(self, options, num_trees=None, num_iterations=1000, num_process=None):
         """
-        :param params:
-        :param num_tree: optional to only deal with 1 tree for modifying it
+        :param options:
+        :param num_trees: optional to only deal with X trees for modifying it. A list of num trees!
         :param num_iterations: number of iterations to do
         :param num_process: number of processors
-        :return:
+        :return: a list of trees with all the items (solution or partial solution)
         """
         if num_process is None:
             num_process = multi.cpu_count() - 1
+        params = options['heur_params']
+        remake = options['heur_remake']
         params = dict(params)
         defaults = \
             {
             'evaluate': False
             ,'insert': True
-            ,'rotation_probs': params.get('rotation_remake', [0.5, 0.5, 0, 0])
+            ,'rotation_probs': remake.get('rotation_remake', [0.5, 0.5, 0, 0])
             ,'try_rotation': True
             ,'rotation_tries': 2
             }
         params = {**params, **defaults}
         pool = multi.Pool(processes=num_process)
-        if num_tree is not None:
-            incumbent = self.trees[num_tree]
-            nodes = nd.get_node_leaves(incumbent, min_type=0)
-            items_i = [n.TYPE for n in nodes]
+        if num_trees is not None:
+            incumbent = [self.trees[n] for n in num_trees]
+            # incumbent = self.trees[num_tree]
+            items_i = [l.TYPE for tree in incumbent for l in nd.get_node_leaves(tree, min_type=0)]
+            # items_i = [n. for n in nodes]
             if not items_i:
                 return None
             all_items = self.get_batch()
             stacks = sd.SuperDict(all_items).filter(items_i).\
                 index_by_property('STACK')
-            stacks = {k: [*v.values() ]for k, v in stacks.items()}
-            defects = {incumbent.PLATE_ID: incumbent.DEFECTS}
-            limit_trees = 1
+            stacks = {k: [*v.values()]for k, v in stacks.items()}
+            limit_trees = len(incumbent)
         else:
             stacks = self.get_items_per_stack()
-            defects = self.get_defects_per_plate()
             limit_trees = None
         args = {
             'params': params,
             'global_params': self.get_param(),
             'items_by_stack': stacks,
-            'defects': defects,
+            'defects': self.get_defects_per_plate(),
             'sorting_function': nd.sorting_items,
             'limit_trees': limit_trees
         }
@@ -1164,10 +1170,26 @@ class ImproveHeuristic(sol.Solution):
             result_x[x] = result.get(timeout=100)
 
         pool.close()
-        values = [v for v in result_x.values() if v is not None]
-        if not values:
+        candidates = [v for v in result_x.values() if v is not None]
+        if not candidates:
             return None
-        candidate = min(values, key=self.calculate_objective)
+        # Here we have two hierarchical criteria:
+        # 1. number of defects
+        # 2. objective function
+        # For this, I need to change plate's ids to get the correct defects.
+        if num_trees is not None:
+            plate_W = self.get_param('widthPlates')
+            plate_H = self.get_param('heightPlates')
+            for candidate in candidates:
+                for iter, plate_id in enumerate(num_trees):
+                    if iter >= len(candidate):
+                        new_tree = nd.create_plate(width=plate_W, height=plate_H, id=plate_id,
+                                                   defects=self.get_defects_plate(plate_id))
+                        candidate.append(new_tree)
+                    else:
+                        candidate[iter].PLATE_ID = plate_id
+        candidate = min(candidates, key=lambda x: (len(self.check_defects(x)),
+                                                   self.calculate_objective(x, discard_empty_trees=True)))
         return candidate
 
     def update_precedence_nodes(self, solution):
@@ -1184,10 +1206,13 @@ class ImproveHeuristic(sol.Solution):
         self.debug = options.get('debug', False)
 
         params = options['heur_params']
+        p_remake = options['heur_remake']
         weights = params['weights']
 
         if not warm_start:
-            self.trees = self.get_initial_solution(params, num_iterations=params.get('iterations_initial', 1000))
+            self.trees = \
+                self.get_initial_solution(options = options,
+                                          num_iterations=p_remake['iterations_initial'])
             self.update_precedence_nodes(self.trees)
             self.best_objective = self.evaluate_solution(params['weights'])
             self.add_jumbo(params['extra_jumbos'])
@@ -1217,8 +1242,8 @@ class ImproveHeuristic(sol.Solution):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
                 # if rn.random() > 0.5:
-                self.try_change_tree(params,
-                                     num_iterations=params.get('iterations_remake', 10),
+                self.try_change_tree(options,
+                                     num_iterations=p_remake.get('iterations_remake', 10),
                                      tolerance=0)
                 fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
@@ -1292,15 +1317,13 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: do jumbo swaps. But *very* rarely and when nothing happens.
     # TODO: add more random movements.
-    # TODO: go back to initial solution *very* rarely
     # TODO: dynamic weights.
     # TODO: implement the multilevel swap
     # TODO: for eating wastes after swap, I can eat wastes right of the defect
-        # or
     # TODO: profiling
-    # TODO: add other items from stack to sequence swaps.
+    # TODO: make tree recreation work with defects.
+    # TODO: multiple tree recreation
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
