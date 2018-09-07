@@ -5,7 +5,10 @@ import package.instance as inst
 import package.params as pm
 import numpy as np
 import matplotlib
-matplotlib.use('Qt5Agg', warn=False, force=True)
+try:
+    import tkinter
+except:
+    matplotlib.use('Qt5Agg', warn=False, force=True)
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import palettable as pal
