@@ -1071,7 +1071,7 @@ class ImproveHeuristic(sol.Solution):
                 return change
         return change
 
-    def try_change_tree(self, options, num_iterations, tolerance=200):
+    def try_change_tree(self, options, num_iterations, pool, num_process, tolerance=200):
         params = options['heur_params']
         remake_opts = options['heur_remake']
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
@@ -1083,7 +1083,8 @@ class ImproveHeuristic(sol.Solution):
         )
         num_trees = range(start, start + size)
         incumbent = [self.trees[n] for n in num_trees]
-        candidate = self.get_initial_solution(options=options, num_trees=num_trees, num_iterations=num_iterations)
+        candidate = self.get_initial_solution(pool=pool, options=options, num_trees=num_trees,
+                                              num_iterations=num_iterations, num_process=num_process)
         if candidate is None:
             return None
         # candidate = trees[0]
@@ -1114,7 +1115,7 @@ class ImproveHeuristic(sol.Solution):
             self.best_objective = new
         return True
 
-    def get_initial_solution(self, options, num_trees=None, num_iterations=1000, num_process=None):
+    def get_initial_solution(self, options, pool, num_process, num_trees=None, num_iterations=1000):
         """
         :param options:
         :param num_trees: optional to only deal with X trees for modifying it. A list of num trees!
@@ -1122,8 +1123,6 @@ class ImproveHeuristic(sol.Solution):
         :param num_process: number of processors
         :return: a list of trees with all the items (solution or partial solution)
         """
-        if num_process is None:
-            num_process = multi.cpu_count() - 1
         params = options['heur_params']
         remake = options['heur_remake']
         params = dict(params)
@@ -1136,7 +1135,6 @@ class ImproveHeuristic(sol.Solution):
             ,'rotation_tries': 2
             }
         params = {**params, **defaults}
-        pool = multi.Pool(processes=num_process)
         iterator_per_proc = math.ceil(num_iterations / num_process)
         if num_trees is not None:
             incumbent = [self.trees[n] for n in num_trees]
@@ -1171,7 +1169,6 @@ class ImproveHeuristic(sol.Solution):
         for x, result in result_x.items():
             result_x[x] = result.get(timeout=10000)
 
-        pool.close()
 
         candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
@@ -1212,9 +1209,12 @@ class ImproveHeuristic(sol.Solution):
         p_remake = options['heur_remake']
         weights = params['weights']
 
+        num_process = multi.cpu_count() - 1
+        pool = multi.Pool(processes=num_process)
+
         if not warm_start:
             self.trees = \
-                self.get_initial_solution(options = options,
+                self.get_initial_solution(options = options, pool=pool, num_process=num_process,
                                           num_iterations=p_remake['iterations_initial'])
             self.update_precedence_nodes(self.trees)
             self.best_objective = self.evaluate_solution(params['weights'])
@@ -1245,9 +1245,9 @@ class ImproveHeuristic(sol.Solution):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
                 # if rn.random() > 0.5:
-                self.try_change_tree(options,
+                self.try_change_tree(options=options, pool=pool,
                                      num_iterations=p_remake.get('iterations_remake', 10),
-                                     tolerance=0)
+                                     tolerance=0, num_process=num_process)
                 fsc['collapse'] = self.collapse_to_left(level, **params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
@@ -1312,6 +1312,7 @@ class ImproveHeuristic(sol.Solution):
             )
             if count % 100 == 0:
                 log.debug(fail_success_acum_cat)
+        pool.close()
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
@@ -1326,7 +1327,6 @@ if __name__ == "__main__":
     # TODO: for eating wastes after swap, I can eat wastes right of the defect
     # TODO: profiling
     # TODO: make tree recreation work with defects.
-    # TODO: multiple tree recreation
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

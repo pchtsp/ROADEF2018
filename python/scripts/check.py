@@ -168,7 +168,7 @@ def graph(experiment, case=None, dpi=25):
     solutions = get_solutions(exp_paths)
     solutions = sd.SuperDict(solutions).get_property(experiment)
     if case is not None:
-        solutions.filter([case])
+        solutions = solutions.filter([case])
     destination = pm.PATHS['root'] + 'graphs/'
     if os.path.exists(destination):
         shutil.rmtree(destination)
@@ -181,7 +181,7 @@ def graph(experiment, case=None, dpi=25):
 
 if __name__ == "__main__":
     # pass
-    graph(experiment='test', case='A1')
+    graph(experiment='clust1_20180718_venv_pypy', case='A16')
     benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy'])
     # dominant_experiments()
     pass

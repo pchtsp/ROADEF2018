@@ -49,7 +49,7 @@ OPTIONS = {
                       'max_candidates': 5, 'extra_jumbos': 0,
                       'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
-                      'rotation_probs': [0.70, 0.30, 0, 0],
+                      'rotation_probs': [0.50, 0.50, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.5, 0.4, 0.1],
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
@@ -63,7 +63,7 @@ OPTIONS = {
     , 'heur_optim': {
         'try_rotation': True,
         'max_candidates': 5,
-        'rotation_probs': [0.90, 0.1, 0, 0],
+        'rotation_probs': [0.50, 0.5, 0, 0],
         'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
     , 'debug': False
