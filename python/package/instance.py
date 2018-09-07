@@ -65,11 +65,11 @@ class Instance(object):
 
     def get_param(self, name=None):
         params = self.input_data['global_param']
-        if name is not None:
-            if name not in params:
-                raise ValueError("param named {} does not exist in global_param".format(name))
-            return params[name]
-        return params
+        if name is None:
+            return params
+        if name not in params:
+            raise ValueError("param named {} does not exist in global_param".format(name))
+        return params[name]
 
     def set_param(self, name, value):
         params = self.input_data['global_param']

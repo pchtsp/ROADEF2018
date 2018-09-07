@@ -24,9 +24,9 @@ node2 = self.get_node_by_name(8)
 #
 # node1, node2 = node2, node1
 insert = False
-self.check_swap_space(node1=node1, node2=node2, insert=insert)
-self.check_swap_nodes_seq(node1=node1, node2=node2, insert=insert)
-self.check_swap_nodes_defect(node1=node1, node2=node2, insert=insert)
+self.check_swap_space(node1=node1, node2=node2, global_params=self.get_param(),  insert=insert)
+self.check_swap_nodes_seq(node1=node1, node2=node2, global_params=self.get_param(), insert=insert)
+self.check_swap_nodes_defect(node1=node1, node2=node2, global_params=self.get_param(), insert=insert)
 self.evaluate_swap(node1=node1, node2=node2, insert=insert, weights=weights)
 #
 # self.change_level_by_seq2(level=2, **options['heur_params'])
@@ -47,5 +47,5 @@ self.best_objective = self.calculate_objective()
 self.best_solution= self.trees
 for k in weights:
     weights[k] *= 1000000
-self.collapse_to_left(1, **params)
+self.collapse_to_left(1, params)
 self.graph_solution()

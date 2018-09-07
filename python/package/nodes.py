@@ -5,6 +5,7 @@ import logging as log
 import random as rn
 import numpy as np
 from collections import deque
+import copy
 import functools as ft
 
 # These are auxiliary functions for nodes of trees (see ete3).
@@ -1112,12 +1113,14 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
     # return recalculate
 
 
-def check_swap_size_rotation(node1, node2, min_waste, insert=False,
-                             try_rotation=False, rotation_probs=None, rotation_tries=None):
+def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
     if node1.up == node2.up:
         return []
     rotations = [[]]
     nodes = {1: node1, 2: node2}
+    rotation_tries = params['rotation_tries']
+    try_rotation = params['try_rotation']
+    rotation_probs = params['rotation_probs']
     if rotation_tries is None:
         rotation_tries = 1
     if try_rotation:
@@ -1131,11 +1134,11 @@ def check_swap_size_rotation(node1, node2, min_waste, insert=False,
     return None
 
 
-def try_change_node_simple(node, candidates, insert, min_waste, reverse=False, **kwargs):
+def try_change_node_simple(node, candidates, insert, min_waste, params, reverse=False):
     good_candidates = {}
     rotation = {}
-    weights = kwargs.get('weights', None)
-    debug = kwargs.get('debug', False)
+    weights = params.get('weights', None)
+    debug = params.get('debug', False)
     assert weights is not None, 'weights argument cannot be empty or None!'
     for candidate in candidates:
         node1, node2 = node, candidate
@@ -1144,10 +1147,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, reverse=False, *
         if not check_assumptions_swap(node1, node2, insert):
             continue
         result = check_swap_size_rotation(node1, node2, insert=insert,
-                                          min_waste=min_waste,
-                                          try_rotation=kwargs.get('try_rotation', False),
-                                          rotation_probs=kwargs.get('rotation_probs', None),
-                                          rotation_tries=kwargs.get('rotation_tries', None))
+                                          min_waste=min_waste, params=params)
         if result is None:
             continue
         rotation[node2] = result
@@ -1162,7 +1162,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, reverse=False, *
     return inserted_nodes
 
 
-def insert_node_inside_node_traverse(node1, node_start, min_waste, kwargs):
+def insert_node_inside_node_traverse(node1, node_start, min_waste, params):
     # we want to insert node1 at the first available space in node_start's tree
     # but never before node_start.
     # If i just want to traverse the whole tree, just need to put node1= root
@@ -1177,7 +1177,7 @@ def insert_node_inside_node_traverse(node1, node_start, min_waste, kwargs):
     for node2 in post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
         node1.CUT = node2.CUT
         if is_waste(node2):
-            inserted_nodes = try_change_node_simple(node=node1, candidates=[node2], min_waste=min_waste, **kwargs)
+            inserted_nodes = try_change_node_simple(node=node1, candidates=[node2], min_waste=min_waste, params=params, insert=True)
             if inserted_nodes:
                 return inserted_nodes
             continue
@@ -1186,7 +1186,7 @@ def insert_node_inside_node_traverse(node1, node_start, min_waste, kwargs):
         next_sibling = get_next_sibling(node2)
         if next_sibling is None:
             continue
-        inserted_nodes = try_change_node_simple(node=node1, candidates=[next_sibling], min_waste=min_waste, **kwargs)
+        inserted_nodes = try_change_node_simple(node=node1, candidates=[next_sibling], min_waste=min_waste, params=params, insert=True)
         if inserted_nodes:
             return inserted_nodes
     return False
@@ -1250,7 +1250,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
         # only starting from the position of the previous node
         if item_id in item_prec:
             node2 = item_node[item_prec[item_id]]
-            inserted_nodes = insert_node_inside_node_traverse(n, node2, min_waste=min_waste, kwargs=params)
+            inserted_nodes = insert_node_inside_node_traverse(n, node2, min_waste=min_waste, params=params)
             if inserted_nodes:
                 node = get_node_by_type(inserted_nodes[1], item_id)
                 item_node[item_id] = node
@@ -1258,7 +1258,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
             t_start = node2.PLATE_ID + 2
         # The first tree is our dummy tree so we do not want to use it.
         for tree in trees[t_start:]:
-            inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, kwargs=params)
+            inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, params=params)
             if inserted_nodes:
                 break
         if inserted_nodes:
@@ -1272,7 +1272,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
             return None
         tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects.get(tree_id, []))
         trees.append(tree)
-        inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, kwargs=params)
+        inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, params=params)
         # TODO: warning, in the future this could be possible due to defects checking
         assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(n.name)
         node = get_node_by_type(inserted_nodes[1], item_id)
@@ -1304,6 +1304,272 @@ def sorting_function_2(items_by_stack):
         # cmp = ft.cmp_to_key()
         # batch_data.sort(key=cmp)
         pass
+
+
+def get_nodes_between_nodes(node1, node2, solution):
+    """
+    :param node1:
+    :param node2:
+    :return: (n1, n2, list): the order of the nodes and a list of nodes in between.
+    """
+    plate1 = node1.PLATE_ID
+    plate2 = node2.PLATE_ID
+
+    if plate1 == plate2:
+        # if they're in the same plate: I just get the nodes between them
+        node1, node2 = order_nodes(node1, node2)
+        nodes = get_nodes_between_nodes_in_tree(node1=node1, node2=node2)
+        return node1, node2, nodes
+
+    if plate1 > plate2:
+        node1, node2 = node2, node1
+        plate1, plate2 = plate2, plate1
+    # if not in the same plate: i have three parts:
+    # the rest of node1's plate:
+    nodes1 = get_nodes_between_nodes_in_tree(node1=node1)
+    # the beginning of node2's plate:
+    nodes2 = get_nodes_between_nodes_in_tree(node2=node2)
+    nodes = nodes1 + nodes2
+    # nodes in intermediate plates:
+    i = plate1 + 1
+    while i < plate2:
+        nodes += solution[i]
+        i += 1
+    return node1, node2, nodes
+
+
+def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, insert=False):
+    """
+    checks if a change is beneficial in terms of sequence violations
+    :param node1:
+    :param node2:
+    :param insert: type of swap can be insert or swap
+    :return: balance of violations. Bigger is better.
+    """
+    # get all leaves in node1 and node2
+    nodes = {1: node1, 2: node2}
+    moved_items = {k: get_node_leaves(v) for k, v in nodes.items()}
+    # precedence = self.get_previous_nodes(type_node_dict=self.type_node_dict)
+    # precedence_inv = self.get_next_nodes(type_node_dict=self.type_node_dict)
+    # items1 = get_node_leaves(node1)
+    # items2 = get_node_leaves(node2)
+    # get all leaves between the two nodes
+    first_node, second_node, neighbors = get_nodes_between_nodes(node1, node2, solution=solution)
+    first_i, second_i = 1, 2
+    if first_node != node1:
+        first_i, second_i = 2, 1
+    # print(neighbors)
+    neighbor_items = set(leaf for node in neighbors for leaf in get_node_leaves(node))
+    crossings = {k: {'items_after': set(), 'items_before': set()} for k in nodes}
+    # neighbors between nodes are almost the same.
+    # The sole difference is that the second node arrives *before* the first node
+    neighbor_items_k = {1: neighbor_items.copy(), 2: neighbor_items}
+    neighbor_items_k[second_i] |= set(moved_items[first_i])
+    nodes_iter = [1]
+    if not insert:
+        nodes_iter = [1, 2]
+    # items_after means items that are after in the sequence.
+    # for each leaf in the first node:
+        # because items are "going to the back":
+        # if I find nodes that precede it: good
+        # if I find nodes that follow it: bad
+    for k in nodes_iter:
+        for item in moved_items[k]:
+            crossings[k]['items_before'] |= neighbor_items_k[k] & set(precedence.get(item, set()))
+            crossings[k]['items_after'] |= neighbor_items_k[k] & set(precedence_inv.get(item, set()))
+    balance = (
+               len(crossings[first_i]['items_before']) -
+               len(crossings[first_i]['items_after'])
+           ) +\
+           (
+               len(crossings[second_i]['items_after']) -
+               len(crossings[second_i]['items_before'])
+           )
+    return balance
+
+
+def check_swap_nodes_defect(node1, node2, insert=False):
+    # we'll only check if exchanging the nodes gets a
+    # positive defect balance.
+    # We need to:
+    # 1. list the nodes to check (re-use the 'nodes between nodes'?)
+    # here there can be two sets of nodes if two plates.
+    # 1b. list the possible defects (for each the plate)
+    # 1c. calculate the present defect violations in each plate.
+    # 2. calculate the distance to move them.
+    # 3. create squares with new positions.
+    # 4. calculate new defect violations
+    if node1 == node2:
+        return 0
+    if node1.up is None or node2.up is None:
+        return -10000
+    nodes = {1: node1, 2: node2}
+    plate1, ch_pos1 = get_node_plate_pos(node1)
+    plate2, ch_pos2 = get_node_plate_pos(node2)
+    positions = {1: ch_pos1, 2: ch_pos2}
+    plates = {1: plate1, 2: plate2}
+    dims = {}
+    axiss = {}
+    dims_i = {}
+    axiss_i = {}
+    for k, node in nodes.items():
+        axiss[k], dims[k] = get_orientation_from_cut(node)
+        axiss_i[k], dims_i[k] = get_orientation_from_cut(node, inv=True)
+    # axis, dim = get_orientation_from_cut(node1)
+    # axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
+    siblings = node1.up == node2.up
+    if siblings:
+        # if they're siblings: I just get the nodes between them
+        first_node, second_node = 1, 2
+        if positions[1] > positions[2]:
+            first_node, second_node = 2, 1
+        neighbors = {
+            first_node: node1.up.children[positions[first_node]+1:positions[second_node]],
+            second_node: []
+        }
+        defects = {
+            first_node: get_defects(nodes[1]),
+            second_node: []
+        }
+        # If a defect is to the left of the first node
+        # or to the right of the second node: take it out.
+        right = filter_defects(nodes[first_node], defects[first_node])
+        left = filter_defects(nodes[second_node], defects[first_node], previous=False)
+        defects[first_node] = [d for d in right if d in left]
+        # defects[second_node] = filter_defects(nodes[second_node], defects[second_node], previous=False)
+    else:
+        neighbors = {k: nodes[k].up.children[positions[k]+1:] for k in nodes}
+
+        # If a defect is to the left / down of the node: take it out.
+        defects = {k: get_defects(nodes[k]) for k in nodes}
+        defects = {k: filter_defects(nodes[k], defects[k]) for k in nodes}
+
+    # if there's no defects to check: why bother??
+    if not defects[1] and not defects[2]:
+        return 0
+
+    # TODO: this can be generalized even more to make it shorter and (possibly)
+    # easier to understand
+    # and correct...
+
+    if insert:
+        move_neighbors = {
+            1: getattr(nodes[1], dims[1]),
+            2: getattr(nodes[1], dims[2])
+        }
+        pos_dif = {
+            1: {'X': nodes[2].X - nodes[1].X, 'Y': nodes[2].Y - nodes[1].Y},
+            2: {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
+        }
+    else:  # complete swap
+        # to get the movement for neighbors we need to compare the diff among
+        # each node's dimension.
+        move_neighbors = {
+            1: getattr(nodes[1], dims[1]) - getattr(nodes[2], dims[1]),
+            2: getattr(nodes[1], dims[2]) - getattr(nodes[2], dims[2])
+        }
+        pos_dif = {
+            1: {'X': nodes[2].X - nodes[1].X, 'Y': nodes[2].Y - nodes[1].Y},
+            2: {'X': - nodes[2].X + nodes[1].X, 'Y': - nodes[2].Y + nodes[1].Y}
+        }
+        # this works but does not make *any* sense:
+        if siblings:
+            pos_dif[first_node][axiss[first_node]] -= move_neighbors[first_node] * (2*(first_node == 1)-1)
+
+    # get squares
+    # first of the nodes involved
+    nodes_sq = {k: [(node_to_square(p), pos_dif[k]) for p in get_node_leaves(nodes[k])]
+                for k in nodes
+                }
+    # the destination node needs to be included in the first one in case of siblings:
+    if siblings:
+        nodes_sq[first_node] += nodes_sq[second_node]
+
+    # second of the nodes in between
+    dif = {
+        1: {axiss[1]: -move_neighbors[1], axiss_i[1]: 0},
+        2: {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
+    }
+    for k, _neighbors in neighbors.items():
+        nodes_sq[k] += [(node_to_square(p), dif[k]) for n in _neighbors for p in get_node_leaves(n)]
+
+    # finally of the defects to check
+    defects_sq = {k: [geom.defect_to_square(d) for d in defects[k]] for k in nodes}
+
+    # here we edit the squares we created in (1) and (2)
+    # squares is a list of two dictionaries.
+    # We have for 'before' and 'after' the nodes affected indexed by 1 and 2.
+    squares = [{k: [] for k in nodes_sq} for r in range(2)]
+    for k, squares_changes in nodes_sq.items():
+        for (sq, change) in squares_changes:
+            _sq = copy.deepcopy(sq)
+            squares[0][k].append(sq)
+            for n in range(2):
+                # we change the position in the two corners of the square
+                for a in ['X', 'Y']:
+                    _sq[n][a] += change[a]
+            squares[1][k].append(_sq)
+
+    # here I count the number of defects that collide with squares. Before and now.
+    defects_found = [[] for r in range(2)]
+    for pos in range(2):  # for (before) => after
+        for k, sq_list in squares[pos].items():  # for each node
+            for d in defects_sq[k]:  # for each defect
+                for sq in sq_list:  # for each neighbor
+                    if geom.square_intersects_square(d, sq):
+                        defects_found[pos].append(d)
+                        # if it's inside some node, it's not in the rest:
+                        break
+
+    # as the rest of checks: the bigger the better.
+    return len(defects_found[0]) - len(defects_found[1])
+
+
+def check_swap_space(node1, node2, global_params, insert=False):
+    # (dif density) * (dif position)
+    nodes = {1: node1, 2: node2}
+    node_density = {
+        n: get_item_density_node(node) for n, node in nodes.items()
+    }
+
+    if insert:
+        node_density[2] = 0
+
+    cost = {
+        n: get_node_position_cost_unit(node, global_params['widthPlates'])
+        for n, node in nodes.items()
+    }
+    # we divide it over cost[1] to scale it.
+    # the bigger the better
+    gains = (node_density[1] - node_density[2]) * (cost[1] - cost[2]) / cost[1]
+    return gains
+
+
+def evaluate_swap(weights, solution, precedence, precedence_inv, global_params, **kwargs):
+    # the bigger the better
+    components = {
+        'space': check_swap_space(global_params=global_params, **kwargs)
+        ,'seq': check_swap_nodes_seq(solution=solution, precedence=precedence,
+                                     precedence_inv=precedence_inv, **kwargs)
+        ,'defects': check_swap_nodes_defect(**kwargs)
+    }
+    gains = {k: v * weights[k] for k, v in components.items()}
+    return sum(gains.values())
+
+
+def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params):
+    tolerance = params['tolerance']
+    args_check_size = {**args_check_size, **nodes}
+    result = check_swap_size_rotation(**args_check_size)
+    if result is None:
+        return None
+    args_evaluate = {**args_evaluate, **nodes}
+    if not evaluate:
+        return 0
+    balance = evaluate_swap(**args_evaluate)
+    if tolerance is not None and balance <= tolerance:
+        return None
+    return (balance, result)
 
 
 if __name__ == "__main__":
