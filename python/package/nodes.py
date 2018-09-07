@@ -1199,6 +1199,12 @@ def get_node_by_type(node, type):
     return None
 
 
+def iter_insert_items_on_trees(num_iters, **kwgs):
+    result = []
+    for x in range(num_iters):
+        result.append(insert_items_on_trees(**kwgs))
+    return result
+
 def insert_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, seed, limit_trees=None):
     """
     This algorithm just iterates over the items in the order of the sequence

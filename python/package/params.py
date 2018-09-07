@@ -55,10 +55,10 @@ OPTIONS = {
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
                       }
     , 'heur_remake': {
-        'iterations_initial': 10,
-        'iterations_remake': 20,
+        'iterations_initial': 1000,
+        'iterations_remake': 200,
         'rotation': [0.50, 0.50, 0, 0],
-        'num_trees': [0.70, 0.20, 0.1],
+        'num_trees': [0.60, 0.20, 0.1, 0.05, 0.05],
     }
     , 'heur_optim': {
         'try_rotation': True,

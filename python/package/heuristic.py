@@ -1137,6 +1137,7 @@ class ImproveHeuristic(sol.Solution):
             }
         params = {**params, **defaults}
         pool = multi.Pool(processes=num_process)
+        iterator_per_proc = math.ceil(num_iterations / num_process)
         if num_trees is not None:
             incumbent = [self.trees[n] for n in num_trees]
             # incumbent = self.trees[num_tree]
@@ -1158,19 +1159,21 @@ class ImproveHeuristic(sol.Solution):
             'items_by_stack': stacks,
             'defects': self.get_defects_per_plate(),
             'sorting_function': nd.sorting_items,
-            'limit_trees': limit_trees
+            'limit_trees': limit_trees,
+            'num_iters': iterator_per_proc
         }
         result_x = {}
-        for x in range(num_iterations):
+        for x in range(num_process):
             # result = nd.place_items_on_trees(**args)
             seed = {'seed': int(rn.random()*1000)}
-            result_x[x] = pool.apply_async(nd.insert_items_on_trees, kwds={**args, **seed})
+            result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
 
         for x, result in result_x.items():
-            result_x[x] = result.get(timeout=100)
+            result_x[x] = result.get(timeout=10000)
 
         pool.close()
-        candidates = [v for v in result_x.values() if v is not None]
+
+        candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
             return None
         # Here we have two hierarchical criteria:
