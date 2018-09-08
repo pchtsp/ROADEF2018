@@ -1001,8 +1001,6 @@ def insert_node_at_position(node, destination, position):
 def check_swap_size(nodes, min_waste, insert=False, rotate=None):
     if rotate is None:
         rotate = []
-        # ideally, there should be not reference to the tree here
-        # so we can test nodes that are not part of a tree
     dims_i = {
         k: get_orientation_from_cut(node, inv=True)[1]
         for k, node in nodes.items()
@@ -1348,7 +1346,7 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     """
     # get all leaves in node1 and node2
     nodes = {1: node1, 2: node2}
-    moved_items = {k: get_node_leaves(v) for k, v in nodes.items()}
+    moved_items = {k: set(n.TYPE for n in get_node_leaves(v)) for k, v in nodes.items()}
     # precedence = self.get_previous_nodes(type_node_dict=self.type_node_dict)
     # precedence_inv = self.get_next_nodes(type_node_dict=self.type_node_dict)
     # items1 = get_node_leaves(node1)
@@ -1358,8 +1356,8 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     first_i, second_i = 1, 2
     if first_node != node1:
         first_i, second_i = 2, 1
-    # print(neighbors)
-    neighbor_items = set(leaf for node in neighbors for leaf in get_node_leaves(node))
+    # changed: before we used nodes, now we use the item codes
+    neighbor_items = set(leaf.TYPE for node in neighbors for leaf in get_node_leaves(node))
     crossings = {k: {'items_after': set(), 'items_before': set()} for k in nodes}
     # neighbors between nodes are almost the same.
     # The sole difference is that the second node arrives *before* the first node
@@ -1367,7 +1365,7 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     neighbor_items_k[second_i] |= set(moved_items[first_i])
     nodes_iter = [1]
     if not insert:
-        nodes_iter = [1, 2]
+        nodes_iter.append(2)
     # items_after means items that are after in the sequence.
     # for each leaf in the first node:
         # because items are "going to the back":
@@ -1569,7 +1567,7 @@ def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params
     balance = evaluate_swap(**args_evaluate)
     if tolerance is not None and balance <= tolerance:
         return None
-    return (balance, result)
+    return balance, result
 
 
 if __name__ == "__main__":

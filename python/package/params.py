@@ -46,10 +46,10 @@ OPTIONS = {
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
                       'temperature': 5000,
-                      'max_candidates': 5, 'extra_jumbos': 0,
+                      'max_candidates': 20, 'extra_jumbos': 0,
                       'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
-                      'try_rotation': False,
+                      'try_rotation': True,
                       'rotation_probs': [0.50, 0.50, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.5, 0.4, 0.1],
@@ -57,13 +57,13 @@ OPTIONS = {
                       }
     , 'heur_remake': {
         'iterations_initial': 1000,
-        'iterations_remake': 200,
+        'iterations_remake': 20,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.20, 0.1, 0.05, 0.05],
     }
     , 'heur_optim': {
         'try_rotation': True,
-        'max_candidates': 5,
+        'max_candidates': 20,
         'rotation_probs': [0.50, 0.5, 0, 0],
         'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
