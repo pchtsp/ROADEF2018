@@ -1,7 +1,7 @@
 # python3
 import os, sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-import importlib
+# import importlib
 import package.data_input as di
 import package.model as md
 import package.heuristic as heur
@@ -11,6 +11,7 @@ import logging as log
 import copy
 import random as rn
 import numpy as np
+import package.params as pm
 
 
 def solve_case(options):
@@ -70,28 +71,21 @@ def solve_case_iter(options):
 
 
 def solve_heuristic(options):
-    path = options['path']
+    input_path = options['input_path']
+    output_path = options['output_path']
     case = options['case_name']
-    self = heur.ImproveHeuristic.from_input_files(case_name=case, path=path)
+    filename = options['output_file_name']
+    self = heur.ImproveHeuristic.from_input_files(case_name=case, path=input_path)
     self.solve(options)
-    # self.trees = self.best_solution
     self.correct_plate_node_ids()
     if options.get('graph', False):
-        self.graph_solution(path, name="edited", dpi=50)
+        self.graph_solution(output_path, name="plate", dpi=50)
     # print(self.check_sequence(solution=self.best_solution))
-    self.export_solution(path=path, prefix=case + '_', name="solution")
+    self.export_solution(path=output_path, name=filename)
 
 
-def solve(options, case=None):
-
-    # case = args.case
-    options = copy.deepcopy(options)
-    if case is None:
-        case = options['case_name']
-
-    options['path'] += case + '/'
-    options['case_name'] = case
-    output_path = options['path']
+def solve(options):
+    output_path = options['output_path']
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
@@ -111,10 +105,6 @@ def solve(options, case=None):
     _log.handlers = [fileh]
     _log.setLevel(level)
 
-    # log.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
-    #                 filename=logFile,
-    #                 level=level)
-
     try:
         if options['solver'] == 'HEUR':
             solve_heuristic(options)
@@ -126,9 +116,9 @@ def solve(options, case=None):
 
 if __name__ == "__main__":
     import pprint as pp
+    # os.path.basename()
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
-    parser.add_argument('-c', '--config-file', dest='file', default="package.params",
-                        help='config file (default: package.params)')
+    # parser.add_argument('-c', '--config-file', dest='file', default="package.params", help='config file (default: package.params)')
     parser.add_argument('-a', '-p', '--case-name', dest='case', help='case name', nargs='*', default=[None])
     parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
     parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
@@ -139,33 +129,41 @@ if __name__ == "__main__":
     parser.add_argument('-tl', '-t', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
     parser.add_argument('-s', '--seed', dest='seed', help='seed', type=int)
     parser.add_argument('-temp', '--temperature', dest='temperature', help='initial temperature', type=int)
-    # -o new_solution_filename to designate the result file.
-    # -name to return the identifier of the team that is the author of the executable
+    parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution')
+    parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
     args = parser.parse_args()
+    root = os.path.dirname(os.path.realpath(__file__)) + '/'
     if args.root is not None:
+        root = args.root
         if 'PYTHONPATH' not in os.environ:
             os.environ['PYTHONPATH'] = ''
-        os.environ['PYTHONPATH'] += ':' + args.root + 'python'
+        os.environ['PYTHONPATH'] += ':' + root + 'python'
         # print(os.environ['PYTHONPATH'])
-    pm = importlib.import_module(args.file)
+    # pm = importlib.import_module(args.file)
 
     cases = args.case
     if args.all_cases:
         cases = ['A{}'.format(case) for case in range(1, 21)]
 
-    if args.root is not None:
-        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(args.root)}
+    pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(root)}
 
+    # Two options of configuring output.
+    # If a results path is given: a directory is used to generate the output.
     if args.results is not None:
         pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
-    if args.results_dir is not None:
-        pm.PATHS['experiments'] = pm.PATHS['results'] + args.results_dir + '/'
-        if not os.path.exists(pm.PATHS['experiments']):
-            cs.separate_cases(name=args.results_dir,
-                              data_dir=pm.PATHS['data'],
-                              results_dir=pm.PATHS['results'])
 
-    pm.OPTIONS['path'] = pm.PATHS['experiments']
+        if args.results_dir is not None:
+            pm.PATHS['experiments'] = pm.PATHS['results'] + args.results_dir + '/'
+            if not os.path.exists(pm.PATHS['experiments']):
+                cs.separate_cases(name=args.results_dir,
+                                  data_dir=pm.PATHS['data'],
+                                  results_dir=pm.PATHS['results'])
+
+        pm.OPTIONS['input_path'] = pm.OPTIONS['output_path'] = pm.PATHS['experiments']
+    # if not, the output will be written in a single file.
+    else:
+        pm.OPTIONS['input_path'] = pm.PATHS['data']
+        pm.OPTIONS['output_path'] = root
 
     if args.no_graph:
         pm.OPTIONS['graph'] = False
@@ -183,7 +181,14 @@ if __name__ == "__main__":
         rn.seed(args.seed)
         np.random.seed(args.seed)
 
-    print('Using config file in {}'.format(args.file))
-
+    # print('Using config file in {}'.format(args.file))
+    if args.name:
+        print('S22')
     for case in cases:
-        solve(pm.OPTIONS, case)
+        options = copy.deepcopy(pm.OPTIONS)
+        if case:
+            options['case_name'] = case
+        if args.results is not None:
+            options['output_path'] += options['case_name'] + '/'
+            options['input_path'] += options['case_name'] + '/'
+        solve(options)

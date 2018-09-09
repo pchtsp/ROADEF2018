@@ -1089,7 +1089,7 @@ if __name__ == "__main__":
     # TODO: for eating wastes after swap, I can eat wastes right of the defect
     # TODO: profiling
     # TODO: make tree recreation work with defects.
-    # TODO: parallelize search for candidates moves.
+    # TODO: make tree recreation good.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']

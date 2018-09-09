@@ -75,7 +75,7 @@ We're going to create a virtualenv, following the last Linux-general link, under
     git clone git@github.com:pchtsp/ROADEF2018.git
     cd ROADEF2018/python
     wget -qO- https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2 | tar -xj
-    virtualenv -p pypy3.5-6.0.0-linux_x86_64-portable//bin/virtualenv-pypy venv
+    pypy3.5-6.0.0-linux_x86_64-portable/bin/virtualenv-pypy venv
     source venv/bin/activate
     pip install git+https://bitbucket.org/pypy/numpy.git
     pip install -r requirements.txt

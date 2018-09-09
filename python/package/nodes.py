@@ -1082,11 +1082,15 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
         other_k = other_node[k]
         destination = parents[other_k]
         ch_pos_dest = ch_pos[other_k]
-        node = extract_node_from_position(node)  # 1: take out children waste
-        node = delete_only_child(node, check_parent=False)  # 1.5: collapse if only child
+        # 1: take out children waste
+        node = extract_node_from_position(node)
+        # 1.5: collapse if only child
+        node = delete_only_child(node, check_parent=False)
+        # 2: rotate
         if k in rotation:
-            rotate_node(node)  # 2: rotate
-        node = insert_node_at_position(node, destination, ch_pos_dest)  # 3, 4: insert+child
+            rotate_node(node)
+        # 3, 4: insert+child
+        node = insert_node_at_position(node, destination, ch_pos_dest)
 
         # 5: if necessary, we open the node to its children
         inserted_nodes = collapse_node(node)
@@ -1132,30 +1136,27 @@ def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
     return None
 
 
-def try_change_node_simple(node, candidates, insert, min_waste, params, reverse=False):
+def try_change_node_simple(node, candidates, insert, min_waste, params):
     good_candidates = {}
     rotation = {}
     weights = params.get('weights', None)
     debug = params.get('debug', False)
     assert weights is not None, 'weights argument cannot be empty or None!'
     for candidate in candidates:
-        node1, node2 = node, candidate
-        if reverse:
-            node1, node2 = candidate, node
-        if not check_assumptions_swap(node1, node2, insert):
+        if not check_assumptions_swap(node, candidate, insert):
             continue
-        result = check_swap_size_rotation(node1, node2, insert=insert,
+        result = check_swap_size_rotation(node, candidate, insert=insert,
                                           min_waste=min_waste, params=params)
         if result is None:
             continue
-        rotation[node2] = result
-        good_candidates[node2] = 0
+        rotation[candidate] = result
+        good_candidates[candidate] = 0
     if len(good_candidates) == 0:
         return False
     candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
     node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
     rot = rotation[node2]
-    inserted_nodes = swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
+    inserted_nodes = swap_nodes_same_level(node, node2, insert=insert, rotation=rot,
                                            debug=debug, min_waste=min_waste)
     return inserted_nodes
 

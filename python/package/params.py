@@ -1,8 +1,8 @@
 def calculate_paths_root(root):
     return {
     'root': root
-    ,'img': root + "OPTIMA/img/"
-    ,'latex': root + "OPTIMA/latex/"
+    ,'img': root + "img/"
+    ,'latex': root + "latex/"
     ,'data': root + "resources/data/dataset_A/"
     ,'checker_data': root + "resources/checker/instances_checker/"
 }
@@ -36,8 +36,10 @@ OPTIONS = {
     , 'gap': 0.1
     , 'solver': "HEUR"  # CPLEXPY, CPLEX_CMD, GUROBI, HEUR
     , 'integer': False
-    , 'path': PATHS['experiments']
-    , 'case_name': 'A8'
+    , 'input_path': PATHS['experiments']
+    , 'output_path': PATHS['experiments']
+    , 'output_file_name': 'solution'
+    , 'case_name': 'A14'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
@@ -68,7 +70,7 @@ OPTIONS = {
         'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
     , 'debug': False
-    , 'graph': True
+    , 'graph': False
     # putting a tolerance on the heuristic seems horrible for finding good solutions.
     # putting change_first is also a very bad idea.
     # , 'cluster_tolerance': 50
