@@ -41,23 +41,13 @@ a.binaries = a.binaries - TOC([
  #('_tkinter', None, None)
  ])
 
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
-exe = EXE(pyz,
-          a.scripts,
-          exclude_binaries=True,
-          name='challengeSG',
-          debug=False,
-          strip=False,
-          upx=True,
-          console=True )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               name='challengeSG')
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# for several files, keep the following two and comment the other one.
+exe = EXE(pyz, a.scripts, exclude_binaries=True, name='challengeSG', debug=False, strip=False, upx=True, console=True)
+coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=True, name='challengeSG')
 
-# pyinstaller -y --onefile challengeSG.spec
+# for one exe, replace the two above for.
+# exe = EXE(pyz, a.scripts, a.binaries, a.zipfiles, a.datas, name='challengeSG', debug=False, strip=False, upx=True, runtime_tmpdir=None, console=True)
+
+# pyinstaller -y challengeSG.spec

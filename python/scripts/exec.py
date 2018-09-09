@@ -132,7 +132,11 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution')
     parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
     args = parser.parse_args()
-    root = os.path.dirname(os.path.realpath(__file__)) + '/'
+    # root = './'
+    # print('the root path: {}'.format(root))
+    # print('the files: {}'.format(os.listdir(root)))
+    # print('the abs root path: {}'.format(os.path.abspath(root) + '/'))
+    # print('the files: {}'.format(os.listdir(root)))
     if args.root is not None:
         root = args.root
         if 'PYTHONPATH' not in os.environ:
@@ -164,6 +168,7 @@ if __name__ == "__main__":
     else:
         pm.OPTIONS['input_path'] = pm.PATHS['data']
         pm.OPTIONS['output_path'] = root
+        pm.OPTIONS['output_file_name'] = args.output_file
 
     if args.no_graph:
         pm.OPTIONS['graph'] = False
