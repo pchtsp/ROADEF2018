@@ -927,16 +927,16 @@ class ImproveHeuristic(sol.Solution):
             'num_iters': iterator_per_proc
         }
         result_x = {}
-        # pool = multi.Pool(processes=num_process)
-        with multi.Pool(processes=num_process) as pool:
-            for x in range(num_process):
-                # result = nd.place_items_on_trees(**args)
-                seed = {'seed': int(rn.random()*1000)}
-                # result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
-                result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
+        # # pool = multi.Pool(processes=num_process)
+        # with multi.Pool(processes=num_process) as pool:
+        for x in range(num_process):
+            # result = nd.place_items_on_trees(**args)
+            seed = {'seed': int(rn.random()*1000)}
+            result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
+            # result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
 
-            for x, result in result_x.items():
-                result_x[x] = result.get(timeout=10000)
+            # for x, result in result_x.items():
+            #     result_x[x] = result.get(timeout=10000)
         candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
             return None
