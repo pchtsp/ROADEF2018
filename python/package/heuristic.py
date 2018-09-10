@@ -927,16 +927,15 @@ class ImproveHeuristic(sol.Solution):
             'num_iters': iterator_per_proc
         }
         result_x = {}
-        # # pool = multi.Pool(processes=num_process)
-        # with multi.Pool(processes=num_process) as pool:
-        for x in range(num_process):
-            # result = nd.place_items_on_trees(**args)
-            seed = {'seed': int(rn.random()*1000)}
-            result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
-            # result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
+        with multi.Pool(processes=num_process) as pool:
+            for x in range(num_process):
+                # result = nd.place_items_on_trees(**args)
+                seed = {'seed': int(rn.random()*1000)}
+                result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
+                # result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
 
-            # for x, result in result_x.items():
-            #     result_x[x] = result.get(timeout=10000)
+            for x, result in result_x.items():
+                result_x[x] = result.get(timeout=10000)
         candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
             return None
@@ -1000,6 +999,7 @@ class ImproveHeuristic(sol.Solution):
         changed_flag = False
         b_accepted = b_improved = 0
         max_wastes = params['max_candidates']
+        remake_iters = p_remake.get('iterations_remake', 10)
         while True:
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
@@ -1007,11 +1007,11 @@ class ImproveHeuristic(sol.Solution):
                 # for i in range(len(self.trees)//4):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
-                # if rn.random() > 0.5:
-                self.try_change_tree(options=options,
-                                     num_iterations=p_remake.get('iterations_remake', 10),
-                                     tolerance=0)
-                fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
+                if rn.random() < 0.1 and remake_iters:
+                    self.try_change_tree(options=options,
+                                         num_iterations=remake_iters,
+                                         tolerance=0)
+                # fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
                     params = {**options['heur_params'], **options['heur_optim']}
@@ -1032,8 +1032,8 @@ class ImproveHeuristic(sol.Solution):
                 include_sisters = True
                 if rn.random() > 0.5:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
-                log.debug('DO: collapse left')
-                fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
+                # log.debug('DO: collapse left')
+                # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
                 log.debug('DO: search_waste_cuts')
                 fsc['seq2'] = self.change_level_by_seq2(level, params=params)
                 fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
