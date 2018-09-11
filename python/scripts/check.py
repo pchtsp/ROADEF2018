@@ -181,7 +181,7 @@ def graph(experiment, case=None, dpi=25):
 
 if __name__ == "__main__":
     # pass
-    graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy'])
+    # graph(experiment='clust1_20180718_venv_pypy', case='A16')
+    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy', 'hp_20180910_venv'])
     # dominant_experiments()
     pass

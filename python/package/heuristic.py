@@ -540,7 +540,7 @@ class ImproveHeuristic(sol.Solution):
             i += 1
             # first, we try siblings:
             _fails, _successes = \
-                self.change_level(node, level, siblings_only=True, fn_weights=nd.get_waste_density_node, params=params)
+                self.change_level(node, level, siblings_only=True, params=params)
             fails += _fails
             successes += _successes
             if _successes:
@@ -554,7 +554,7 @@ class ImproveHeuristic(sol.Solution):
                 continue
             # I want to give it a try doing some local changes afterwards.
             _fails, _successes = \
-                self.change_level(node, level, siblings_only=False, fn_weights=nd.get_waste_density_node, params=params)
+                self.change_level(node, level, siblings_only=False, params=params)
             fails += _fails
             successes += _successes
             if not _successes:
@@ -1007,7 +1007,7 @@ class ImproveHeuristic(sol.Solution):
                 # for i in range(len(self.trees)//4):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
-                if rn.random() < 0.1 and remake_iters:
+                if remake_iters:
                     self.try_change_tree(options=options,
                                          num_iterations=remake_iters,
                                          tolerance=0)

@@ -76,8 +76,12 @@ def get_model_solution(case_name, path=pm.PATHS['checker_data'], filename="solut
     # case_name = "A0"
     # path = pm.PATHS['checker_data']
     input_files = [filename]
-    filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
-    tables = read_files_into_tables(filenames)
+    try:
+        filenames = {file: path + case_name + '_'+ file + '.csv' for file in input_files}
+        tables = read_files_into_tables(filenames)
+    except:
+        filenames = {file: path + file + '.csv' for file in input_files}
+        tables = read_files_into_tables(filenames)
     result = \
         tables[filename].\
             assign(index=tables[filename].NODE_ID).\

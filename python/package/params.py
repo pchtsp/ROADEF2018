@@ -46,27 +46,27 @@ OPTIONS = {
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
-    , 'heur_params': {'main_iter': 5, 'max_iter': 10,
+    , 'heur_params': {'main_iter': 5, 'max_iter': 500,
                       'temperature': 3000,
-                      'max_candidates': 5, 'extra_jumbos': 2,
-                      'cooling_rate': 0.001,
+                      'max_candidates': 5, 'extra_jumbos': 0,
+                      'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
                       'try_rotation': True,
                       'rotation_probs': [0.50, 0.50, 0, 0],
                       'rotation_tries': 2,
-                      'level_probs': [0.5, 0.4, 0.1],
+                      'level_probs': [0.4, 0.4, 0.2],
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
                       }
     , 'heur_remake': {
         'iterations_initial': 100,
-        'iterations_remake': 100,
+        'iterations_remake': 0,
         'rotation': [0.50, 0.50, 0, 0],
-        'num_trees': [0.60, 0.30, 0.1],
+        'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
     }
     , 'heur_optim': {
         'try_rotation': True,
         'max_candidates': 5,
-        'rotation_probs': [0.70, 0.3, 0, 0],
+        'rotation_probs': [0.5, 0.5, 0, 0],
         'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
     }
     , 'debug': False
