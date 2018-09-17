@@ -89,6 +89,13 @@ I Ubuntu you'd do something like the following:
     source venv/bin/activate
     python3 scripts/exec.py --case-name A1 --path-root /PATH/TO/PROJECT/ROADEF2018/ --path-results /PATH/TO/PROJECT/ROADEF2018/python/results/ --results-dir test_experiment1 --time-limit 10
 
+An alternative way to use it, the challenge standard, is the following:
+
+    cd ROADEF2018/python
+    mkdir results
+    source venv/bin/activate
+    python3 scripts/exec.py -p INSTANCES_LOCATION/A1 -o PATH_TO_SOLUTIONS/A1_solution.csv -t 60
+
 This will solve the case A1 for 10 seconds and store the result and the log in the following directory: `/PATH/TO/PROJECT/ROADEF2018/python/results/test_experiment1/`. It's important to add the `/` at the end of the arguments!
 
 ## Configuring the application
@@ -100,10 +107,6 @@ Another option is to give the options as arguments. This is not possible for all
     cd ROADEF2018/python
     source venv/bin/activate
     python scripts/exec.py -h 
-
-## Configuration
-
-It's important to edit the params.py file to get the absolute path correctly. We could potentially solve this in the future by using relative paths correctly...
 
 ## Creating executable
 

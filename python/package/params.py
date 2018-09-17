@@ -38,7 +38,7 @@ OPTIONS = {
     , 'integer': False
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
-    , 'output_file_name': 'solution'
+    , 'output_file_name': 'solution.csv'
     , 'case_name': 'A14'
     , 'max_plates': 10
     , 'max_width': 6000//4
@@ -60,7 +60,7 @@ OPTIONS = {
                       }
     , 'heur_remake': {
         'iterations_initial': 100,
-        'iterations_remake': 10,
+        'iterations_remake': 20,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
         # 'num_trees': [1],

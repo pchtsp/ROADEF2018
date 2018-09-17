@@ -119,7 +119,8 @@ if __name__ == "__main__":
     # os.path.basename()
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
     # parser.add_argument('-c', '--config-file', dest='file', default="package.params", help='config file (default: package.params)')
-    parser.add_argument('-a', '-p', '--case-name', dest='case', help='case name', nargs='*', default=[None])
+    parser.add_argument('-a', '--case-name', dest='case', help='case name', nargs='*', default=[None])
+    parser.add_argument('-p', '--case-location', dest='case_loc', help='case location')
     parser.add_argument('-all', '--all-cases', dest='all_cases', help='solve all cases', action='store_true')
     parser.add_argument('-pr', '--path-root', dest='root', help='absolute path to project root')
     parser.add_argument('-rr', '--path-results', dest='results', help='absolute path to results')
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     parser.add_argument('-tl', '-t', '--time-limit', dest='time_limit', help='max time to solve instance', type=int)
     parser.add_argument('-s', '--seed', dest='seed', help='seed', type=int)
     parser.add_argument('-temp', '--temperature', dest='temperature', help='initial temperature', type=int)
-    parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution')
+    parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution.csv')
     parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
     parser.add_argument('-np', '--num-process', dest='num_process', help='num of processors', type=int)
 
@@ -171,7 +172,12 @@ if __name__ == "__main__":
         pm.OPTIONS['input_path'] = pm.OPTIONS['output_path'] = pm.PATHS['experiments']
     # if not, the output will be written in a single file.
     else:
-        pm.OPTIONS['input_path'] = pm.PATHS['data']
+        if args.case_loc:
+            location, case = os.path.split(args.case_loc)
+            cases = [case]
+            pm.OPTIONS['input_path'] = location + '/'
+        else:
+            pm.OPTIONS['input_path'] = pm.PATHS['data']
         pm.OPTIONS['output_path'] = './'
         pm.OPTIONS['output_file_name'] = args.output_file
 
@@ -197,6 +203,7 @@ if __name__ == "__main__":
     # print('Using config file in {}'.format(args.file))
     if args.name:
         print('S22')
+        exit()
     for case in cases:
         options = copy.deepcopy(pm.OPTIONS)
         if case:

@@ -532,7 +532,7 @@ class Solution(inst.Instance):
         return result
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='',
-                        name='solution', solution=None):
+                        name='solution.csv', solution=None):
         """
         When creating the output forest:
         – The trees must be given in the correct sequence of plates, i.e. first
@@ -556,7 +556,7 @@ class Solution(inst.Instance):
         table = pd.DataFrame.from_dict(result, orient='index')
         col_order = ['PLATE_ID', 'NODE_ID', 'X', 'Y', 'WIDTH', 'HEIGHT', 'TYPE', 'CUT', 'PARENT']
         table = table[col_order]
-        table.to_csv(path + '{}{}.csv'.format(prefix, name), index=False, sep=';')
+        table.to_csv(path + '{}{}'.format(prefix, name), index=False, sep=';')
         return True
 
 
