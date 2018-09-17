@@ -848,7 +848,7 @@ class ImproveHeuristic(sol.Solution):
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
         tree_options = range(1, len(probs)+1)
         nodes_cand = self.get_good_nodes_to_move()
-        trees_cand = [n.get_tree_root() for n in nodes_cand] + [rn.choice(range(len(self.trees)))]
+        trees_cand = [n.PLATE_ID for n in nodes_cand] + [rn.choice(range(len(self.trees)))]
         start = rn.choice(trees_cand)
         size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - start)
         num_trees = range(start, start + size)
