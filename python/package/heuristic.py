@@ -608,7 +608,7 @@ class ImproveHeuristic(sol.Solution):
         # Then we *should* make another cut so it lands in the second!
         fails = successes = 0
         node_defect = [(n, d) for n, d in self.get_nodes_defects()
-                        if n.TYPE in [-1, -3] and n.CUT == level]
+                        if nd.is_waste(n) and n.CUT == level]
         def_min_size = self.get_param('minWaste')
         for waste, defect in node_defect:
             wastes = []
@@ -874,7 +874,7 @@ class ImproveHeuristic(sol.Solution):
             round(self.best_objective), round(self.last_objective)
         ))
         self.last_objective = new
-        if balance > 0:
+        if balance > 0 and not len(self.check_defects()):
             log.info('Best solution updated to {}!'.format(round(new)))
             self.update_best_solution(self.trees)
             self.best_objective = new

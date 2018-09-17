@@ -41,7 +41,7 @@ def node_to_item(node):
     return {v: getattr(node, k) for k, v in equivalence.items()}
 
 
-def create_plate(width, height, id, defects):
+def create_plate(width, height, id, defects, cut_defects=False):
     args = {'WIDTH': width,
             'HEIGHT': height,
             'CUT': 0,
@@ -54,7 +54,27 @@ def create_plate(width, height, id, defects):
     plate = create_node(**args)
     duplicate_waste_into_children(plate)
     plate.add_feature('DEFECTS', defects)
+    if cut_defects:
+        pass
     return plate
+
+
+def node_cut_wastes(node, min_width):
+    for defect in get_defects_from_plate(node):
+        node_to_cut = search_node_of_defect(node, defect)
+        position = defect.X
+        pos_node = (node_to_cut.X, node_to_cut.X + node_to_cut.WIDTH)
+        pos_range = (position - min_width/2, position + min_width/2)
+        if pos_range[0] < pos_node[0]:
+            pos_range = (pos_node[0], pos_node[0] + min_width)
+        if pos_range[1] < pos_node[1]:
+            pos_range = (pos_node[1] - min_width, pos_node[1])
+        # TODO: still need to do check neighbor nodes sizes...
+
+        # nodes = split_waste(node_to_cut, pos_range[0], min_width)
+        split_waste(node_to_cut, pos_range[1], min_width)
+        pass
+    return node
 
 
 def create_dummy_tree(nodes, id=-1):
@@ -367,7 +387,7 @@ def get_descendant(node, which="first"):
         return get_descendant(children[pos], which=which)
 
 
-def get_defects(node):
+def get_defects_from_plate(node):
     return node.get_tree_root().DEFECTS
 
 def node_to_square(node):
@@ -566,7 +586,7 @@ def filter_defects(node, defects, previous=True):
 def split_waste(node1, cut, min_size):
     # first, we split one waste in two.
     # then we make a swap to one of the nodes.
-    assert node1.TYPE in [-1, -3], "node {} needs to be waste!".format(node1.name)
+    assert is_waste(node1), "node {} needs to be waste!".format(node1.name)
     parent = node1.up
     axis, dim = get_orientation_from_cut(node1)
     attributes = [axis, dim]
@@ -659,7 +679,7 @@ def assign_cut_numbers(node, cut=0, update=True):
     if update:
         node.CUT = cut
     for n in node.get_children():
-        result = {**result, **assign_cut_numbers(n, cut=cut+1, update=update)}
+        result.update(assign_cut_numbers(n, cut=cut+1, update=update))
     return result
 
 
@@ -682,7 +702,7 @@ def defects_in_node(node):
     :return: [defect1, defect2]
     """
     square = node_to_square(node)
-    defects = get_defects(node)
+    defects = get_defects_from_plate(node)
     if node.CUT == 0:
         return defects
     defects_in_node = []
@@ -1204,6 +1224,7 @@ def iter_insert_items_on_trees(num_iters, **kwgs):
         result.append(insert_items_on_trees(**kwgs))
     return result
 
+
 def insert_items_on_trees(params, global_params, items_by_stack, defects, sorting_function, seed, limit_trees=None):
     """
     This algorithm just iterates over the items in the order of the sequence
@@ -1218,11 +1239,11 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
     plate_H = global_params['heightPlates']
     min_waste = global_params['minWaste']
     ordered_nodes = [item_to_node(v) for v in values]
-    for n in ordered_nodes:
-        if n.WIDTH > n.HEIGHT:
-            rotate_node(n)
-        if n.HEIGHT > plate_H:
-            rotate_node(n)
+    for node in ordered_nodes:
+        if node.WIDTH > node.HEIGHT:
+            rotate_node(node)
+        if node.HEIGHT > plate_H:
+            rotate_node(node)
     dummy_tree = create_dummy_tree(ordered_nodes, id=-1)
     tree_id = 0
     tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects.get(tree_id, []))
@@ -1241,15 +1262,15 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
     # 2. for each item we've placed, we want it's node => this changes
     item_node = {}
 
-    for n in ordered_nodes:
-        item_id = n.TYPE
+    for node in ordered_nodes:
+        item_id = node.TYPE
         inserted_nodes = False
         t_start = 1
         # We first search the tree where the previous node in the sequence
         # only starting from the position of the previous node
         if item_id in item_prec:
             node2 = item_node[item_prec[item_id]]
-            inserted_nodes = insert_node_inside_node_traverse(n, node2, min_waste=min_waste, params=params)
+            inserted_nodes = insert_node_inside_node_traverse(node, node2, min_waste=min_waste, params=params)
             if inserted_nodes:
                 node = get_node_by_type(inserted_nodes[1], item_id)
                 item_node[item_id] = node
@@ -1257,7 +1278,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
             t_start = node2.PLATE_ID + 2
         # The first tree is our dummy tree so we do not want to use it.
         for tree in trees[t_start:]:
-            inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, params=params)
+            inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
             if inserted_nodes:
                 break
         if inserted_nodes:
@@ -1271,9 +1292,9 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
             return None
         tree = create_plate(width=plate_W, height=plate_H, id=tree_id, defects=defects.get(tree_id, []))
         trees.append(tree)
-        inserted_nodes = insert_node_inside_node_traverse(n, tree, min_waste=min_waste, params=params)
+        inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
         # TODO: warning, in the future this could be possible due to defects checking
-        assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(n.name)
+        assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(node.name)
         node = get_node_by_type(inserted_nodes[1], item_id)
         item_node[item_id] = node
 
@@ -1427,7 +1448,7 @@ def check_swap_nodes_defect(node1, node2, insert=False):
             second_node: []
         }
         defects = {
-            first_node: get_defects(nodes[1]),
+            first_node: get_defects_from_plate(nodes[1]),
             second_node: []
         }
         # If a defect is to the left of the first node
@@ -1440,7 +1461,7 @@ def check_swap_nodes_defect(node1, node2, insert=False):
         neighbors = {k: nodes[k].up.children[positions[k]+1:] for k in nodes}
 
         # If a defect is to the left / down of the node: take it out.
-        defects = {k: get_defects(nodes[k]) for k in nodes}
+        defects = {k: get_defects_from_plate(nodes[k]) for k in nodes}
         defects = {k: filter_defects(nodes[k], defects[k]) for k in nodes}
 
     # if there's no defects to check: why bother??
