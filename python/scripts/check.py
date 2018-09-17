@@ -40,9 +40,12 @@ def stats():
     pp.pprint(errors_len)
 
 
-def get_experiments_paths(path):
+def get_experiments_paths(path, filter_exps=True):
     cases = ["A{}".format(n) for n in range(1, 21)]
-    experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
+    if filter_exps:
+        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
+    else:
+        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)', f)}
     return sd.SuperDict.from_dict({c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases})
 
 
@@ -164,7 +167,7 @@ def benchmarking(value='dif_jumbo', experiments_filter=None):
 def graph(experiment, case=None, dpi=25):
     # TODO: make experiment optional to graph all
     # experiment = 'clust1_20180706'
-    exp_paths = get_experiments_paths(pm.PATHS['results'])
+    exp_paths = get_experiments_paths(pm.PATHS['results'], filter_exps=False)
     solutions = get_solutions(exp_paths)
     solutions = sd.SuperDict(solutions).get_property(experiment)
     if case is not None:
@@ -182,6 +185,7 @@ def graph(experiment, case=None, dpi=25):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy', 'hp_20180910_venv'])
+    graph(experiment='test', case='A13')
+    # benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy', 'hp_20180911_venv'])
     # dominant_experiments()
     pass

@@ -644,14 +644,18 @@ class ImproveHeuristic(sol.Solution):
         return sum(self.get_param('widthPlates') ** pos
                    for pos, tree in enumerate(solution))
 
-    def insert_nodes_somewhere(self, level, params, include_sisters=False, dif_level=1):
-        max_iter = params['max_iter']
-        max_candidates = params['max_candidates']
-        fails = successes = 0
+    def get_good_nodes_to_move(self):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
         candidates = set(rem) | set([d[0] for d in defects]) | set(items)
+        return list(candidates)
+
+    def insert_nodes_somewhere(self, level, params, include_sisters=False, dif_level=1):
+        max_iter = params['max_iter']
+        max_candidates = params['max_candidates']
+        fails = successes = 0
+        candidates = self.get_good_nodes_to_move()
         # candidates = set(rem)
         level_cand = [nd.find_ancestor_level(n, level) for n in candidates]
         if include_sisters:
@@ -838,33 +842,41 @@ class ImproveHeuristic(sol.Solution):
         return change
 
     def try_change_tree(self, options, num_iterations, tolerance=200):
+        # start_def = len(self.check_defects())
         params = options['heur_params']
         remake_opts = options['heur_remake']
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
         tree_options = range(1, len(probs)+1)
-        start = rn.choice(range(len(self.trees)))
-        size = min(
-            np.random.choice(a=tree_options, p=probs),
-            len(self.trees) - start
-        )
+        nodes_cand = self.get_good_nodes_to_move()
+        trees_cand = [n.get_tree_root() for n in nodes_cand] + [rn.choice(range(len(self.trees)))]
+        start = rn.choice(trees_cand)
+        size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - start)
         num_trees = range(start, start + size)
         incumbent = [self.trees[n] for n in num_trees]
         candidate = self.get_initial_solution(options=options, num_trees=num_trees, num_iterations=num_iterations)
         if candidate is None:
+            # if len(self.check_defects()) != start_def:
+            #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
         # candidate = trees[0]
         # if the candidate is worse, we do not even bother.
-        if self.calculate_objective(candidate) > \
-                self.calculate_objective(incumbent) - tolerance:
+        if self.calculate_objective(candidate, discard_empty_trees=True) > \
+                self.calculate_objective(incumbent, discard_empty_trees=True) - tolerance:
+            # if len(self.check_defects()) != start_def:
+            #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
         # With 20% prob we accept worse solutions even if there are more defects.
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)) and rn.random() > 0.2:
+        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)):
+            # if len(self.check_defects()) != start_def:
+                # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
         for pos, plate_id in enumerate(num_trees):
             nd.change_feature(candidate[pos], 'PLATE_ID', plate_id)
             self.trees[plate_id] = candidate[pos]
         self.update_precedence_nodes(self.trees)
+        # if len(self.check_defects()) != start_def:
+        #     print('changed, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
 
         new = self.evaluate_solution(params['weights'])
         old = self.best_objective
@@ -900,7 +912,7 @@ class ImproveHeuristic(sol.Solution):
             ,'rotation_tries': 2
             }
         params = {**params, **defaults}
-        num_process = multi.cpu_count() - 1
+        num_process = min(multi.cpu_count(), options.get('num_processors', 7))
         iterator_per_proc = math.ceil(num_iterations / num_process)
         if num_trees is not None:
             incumbent = [self.trees[n] for n in num_trees]
@@ -1007,10 +1019,6 @@ class ImproveHeuristic(sol.Solution):
                 # for i in range(len(self.trees)//4):
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
-                if remake_iters:
-                    self.try_change_tree(options=options,
-                                         num_iterations=remake_iters,
-                                         tolerance=0)
                 # fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
@@ -1020,17 +1028,18 @@ class ImproveHeuristic(sol.Solution):
                     # temp = params['temperature']
                     changed_flag = True
                     log.info('activate optimisation')
+                if rn.random() < 0.1 and remake_iters:
+                    self.try_change_tree(options=options, num_iterations=remake_iters, tolerance=0)
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
                 if rn.random() > 0.8:
                     self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
-                if level == 1:
-                    if rn.random() > 0.5:
+                if level == 1 and rn.random() > 0.2:
                         fsc['cuts'] = self.search_waste_cuts(1, params=params)
                 include_sisters = True
-                if rn.random() > 0.5:
+                if rn.random() > 0.2:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
@@ -1089,7 +1098,8 @@ if __name__ == "__main__":
     # TODO: for eating wastes after swap, I can eat wastes right of the defect
     # TODO: profiling
     # TODO: make tree recreation work with defects.
-    # TODO: make tree recreation good.
+    # TODO: switch defects with wastes (small ones? or small nodes)
+    # TODO: search_waste_cuts for other levels.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
