@@ -12,8 +12,8 @@ def get_palettable_path():
     return palettable.__path__[0]
 
 
-a = Analysis(['scripts\\exec.py'],
-             pathex=['C:\\Users\\pchtsp\\Documents\\projects\\ROADEF2018\\python'],
+a = Analysis(['scripts/exec.py'],
+             pathex=['C:/Users/pchtsp/Documents/projects/ROADEF2018/python'],
              binaries=[],
              datas=[('../resources/data/dataset_A', 'resources/data/dataset_A')],
              hiddenimports=[],

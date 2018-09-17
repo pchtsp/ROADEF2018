@@ -131,6 +131,8 @@ if __name__ == "__main__":
     parser.add_argument('-temp', '--temperature', dest='temperature', help='initial temperature', type=int)
     parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution')
     parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
+    parser.add_argument('-np', '--num-process', dest='num_process', help='num of processors', type=int)
+
     args = parser.parse_args()
     if getattr(sys, 'frozen', False):
         # we are running in a bundle
@@ -184,6 +186,9 @@ if __name__ == "__main__":
 
     if args.temperature is not None:
         pm.OPTIONS['heur_params']['temperature'] = args.temperature
+
+    if args.num_process:
+        pm.OPTIONS['num_processors'] = args.num_process
 
     if args.seed is not None:
         rn.seed(args.seed)
