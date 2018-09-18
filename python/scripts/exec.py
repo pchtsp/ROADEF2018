@@ -116,7 +116,8 @@ def solve(options):
 
 if __name__ == "__main__":
     import pprint as pp
-    # os.path.basename()
+    import json
+
     parser = argparse.ArgumentParser(description='Solve an instance ROADEF.')
     # parser.add_argument('-c', '--config-file', dest='file', default="package.params", help='config file (default: package.params)')
     parser.add_argument('-a', '--case-name', dest='case', help='case name', nargs='*', default=[None])
@@ -133,6 +134,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution.csv')
     parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
     parser.add_argument('-np', '--num-process', dest='num_process', help='num of processors', type=int)
+    parser.add_argument('-hr', '--heur-remake', dest='heur_remake', type=json.loads)
+    parser.add_argument('-hp', '--heur-params', dest='heur_params', type=json.loads)
 
     args = parser.parse_args()
     if getattr(sys, 'frozen', False):
@@ -154,6 +157,14 @@ if __name__ == "__main__":
     cases = args.case
     if args.all_cases:
         cases = ['A{}'.format(case) for case in range(1, 21)]
+
+    if args.heur_remake:
+        pm.OPTIONS['heur_remake'].update(args.heur_remake)
+
+    if args.heur_params:
+        pm.OPTIONS['heur_params'].update(args.heur_params)
+
+    # print(pm.OPTIONS['heur_remake'])
 
     pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(root)}
 
