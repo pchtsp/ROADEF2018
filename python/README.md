@@ -104,3 +104,8 @@ Another option is to give the options as arguments. This is not possible for all
 ## Configuration
 
 It's important to edit the params.py file to get the absolute path correctly. We could potentially solve this in the future by using relative paths correctly...
+
+## Creating executable
+
+I'm using PyInstaller, from the following url: https://docs.python-guide.org/shipping/freezing/
+
