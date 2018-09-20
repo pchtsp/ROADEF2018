@@ -1,0 +1,29 @@
+To ensure that your program works before the assessment phase, please send it as soon as possible and before the deadline for beta-tests on the machines dedicated to the tests. You can afterwards update your program as many times as needed until the deadline of the qualification phase. Only the last version will be used for test purpose. It will be test on a quick run (3 min) on the A2 instance as a check.
+
+The machines used to evaluate your programs have 4 CPU (8 Threads) with 3.6GHz - Intel R Xeon R W-2123 Processor, 48GB of RAM and a NVIDIA graphic card of 5GB.
+
+For now, the following OS / Software are installed: 
+
+- Ubuntu 18.04.1
+- g++ / gcc 7.3
+- Python 3.6.5. If your program uses Python, please send us your environment (by exporting your_environment.yml)
+- Cplex 12.8
+- Gurobi 8.0.1
+- SCIP 6.0
+- Local Solver 8.0
+
+If you need to install additional requirements, please let us know as soon as possible.
+To answer your question, we have to be able to run following example command lines:  
+
+* ./your_program_name -t 3600 -p instances/A15 -o solutions_3600/A15_solution.csv will execute your program with a time limit of 1h. for instance A15 read from instances folder. Your results will be stored in folder solutions_3600 under the name A15_solution.csv
+
+* ./your_program_name -t 180 -p instances/A8 -o solutions_180/A8_solution.csv will execute your program with a time limit of 3min. for instance A8 read from instances folder. Your results will be stored in folder solutions_180 under the name A8_solution.csv
+
+The computer that will be used to evaluate the programs of candidates is a Linux OS machine with 12 CPU and 79 Go of RAM. It is allowed to use all available CPUs on the machine. The following list of ILP solvers is allowed during the challenge:
+
+• CPLEX
+• Gurobi
+• LocalSolver
+
+ 
+

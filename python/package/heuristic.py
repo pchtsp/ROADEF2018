@@ -1012,6 +1012,7 @@ class ImproveHeuristic(sol.Solution):
         b_accepted = b_improved = 0
         max_wastes = params['max_candidates']
         remake_iters = p_remake.get('iterations_remake', 10)
+        remake_prob = p_remake.get('probability', 0.1)
         while True:
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
@@ -1028,7 +1029,7 @@ class ImproveHeuristic(sol.Solution):
                     # temp = params['temperature']
                     changed_flag = True
                     log.info('activate optimisation')
-                if rn.random() < 0.1 and remake_iters:
+                if rn.random() < remake_prob and remake_iters:
                     self.try_change_tree(options=options, num_iterations=remake_iters, tolerance=0)
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)

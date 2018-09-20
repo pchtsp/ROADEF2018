@@ -16,6 +16,7 @@ import matplotlib
 # matplotlib.use('Qt5Agg', warn=False, force=True)
 import shutil
 import re
+import subprocess
 
 
 
@@ -40,8 +41,12 @@ def stats():
     pp.pprint(errors_len)
 
 
+def get_all_cases():
+    return ["A{}".format(n) for n in range(1, 21)]
+
+
 def get_experiments_paths(path, filter_exps=True):
-    cases = ["A{}".format(n) for n in range(1, 21)]
+    cases = get_all_cases()
     if filter_exps:
         experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
     else:
@@ -182,10 +187,49 @@ def graph(experiment, case=None, dpi=25):
         v.graph_solution(path, dpi=dpi)
 
 
+def execute_checker(experiment):
+    # experiment = 'prise_20180917_venv'
+    cases = get_all_cases()
+    path_to_checker = "bin/Release/Checker"
+    cwd = '/home/pchtsp/Documents/projects/ROADEF2018/resources/checker/'
+    destination = cwd + 'instances_checker/'
+    files_cases = {c: pm.PATHS['results'] + experiment + '/' + c + '/solution.csv' for c in cases}
+    for case, _f in files_cases.items():
+        location, filename = os.path.split(_f)
+        dest_filename = str(case) + '_' + filename
+        _f_alt = os.path.join(location, dest_filename)
+        dest_name = os.path.join(destination, dest_filename)
+        if not os.path.exists(_f):
+            _f = _f_alt
+        if not os.path.exists(_f):
+            if os.path.exists(dest_name):
+                os.remove(dest_name)
+            continue
+        shutil.copy(_f, dest_name)
+    results = {}
+    for case in cases:
+        a = subprocess.run([path_to_checker, case],
+                       input="5\n0", universal_newlines=True,
+                       cwd=cwd, stdout=subprocess.PIPE)
+        results[case] = re.search(r'SOLUTION VALIDATED SUCCESSFULLY', a.stdout)
+    return results
+
+
+def check_experiment(experiment):
+    cases = get_all_cases()
+    path = pm.PATHS['results'] + experiment + '/'
+    solutions = {c: sol.Solution.from_io_files(path=path + c + '/', case_name=c) for c in cases}
+    return {c: s.count_errors() for c, s in solutions.items()}
+
+
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    graph(experiment='test', case='A13')
-    # benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy', 'hp_20180911_venv'])
+    # graph(experiment='test', case='A13')
+    benchmarking('dif_jumbo', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
+                                            'hp_20180911_venv', 'prise_20180917_venv'])
+    experiment = 'prise_20180918_venv'
+    rrr = execute_checker(experiment)
+    rrr2 = check_experiment(experiment)
     # dominant_experiments()
     pass
