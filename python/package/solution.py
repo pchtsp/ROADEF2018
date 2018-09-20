@@ -153,6 +153,7 @@ class Solution(inst.Instance):
             , 'types': self.check_wrong_type
             , 'ch_order': self.check_children_order
             , 'node_size': self.check_sizes
+            , 'waste_size': self.check_waste_size
         }
         result = {k: v() for k, v in func_list.items()}
         return {k: v for k, v in result.items() if len(v) > 0}
@@ -252,6 +253,14 @@ class Solution(inst.Instance):
                 defect_node.append((node, defect))
         return defect_node
 
+    def check_waste_size(self):
+        min_waste = self.get_param('minWaste')
+        bad_wastes = []
+        for tree in self.trees:
+            wastes = nd.get_node_leaves(tree, type_options=[-1, -3])
+            bad_wastes.extend([w for w in wastes if w.WIDTH < min_waste or w.HEIGHT < min_waste])
+        return bad_wastes
+
     def check_space_usage(self, solution=None):
         if solution is None:
             solution = self.trees
@@ -266,7 +275,6 @@ class Solution(inst.Instance):
         if waste is None:
             return 0
         return waste.WIDTH
-
 
     def check_siblings(self):
         # siblings must share a dimension of size and a point dimension
