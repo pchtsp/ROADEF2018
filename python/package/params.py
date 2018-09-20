@@ -1,10 +1,12 @@
 def calculate_paths_root(root):
+    path_checker = root + "resources/checker/"
     return {
     'root': root
     ,'img': root + "img/"
     ,'latex': root + "latex/"
     ,'data': root + "resources/data/dataset_A/"
-    ,'checker_data': root + "resources/checker/instances_checker/"
+    ,'checker': path_checker
+    ,'checker_data': path_checker + "instances_checker/"
 }
 
 
@@ -56,7 +58,7 @@ OPTIONS = {
                       'rotation_probs': [0.50, 0.50, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.3, 0.4, 0.3],
-                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
                       }
     , 'heur_remake': {
         'iterations_initial': 1000,
@@ -70,7 +72,7 @@ OPTIONS = {
         'try_rotation': True,
         'max_candidates': 5,
         'rotation_probs': [0.5, 0.5, 0, 0],
-        'weights': {'space': 40000, 'seq': 40000, 'defects': 40000}
+        'weights': {'space': 40000, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
     }
     , 'debug': False
     , 'graph': False

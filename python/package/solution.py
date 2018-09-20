@@ -253,12 +253,14 @@ class Solution(inst.Instance):
                 defect_node.append((node, defect))
         return defect_node
 
-    def check_waste_size(self):
+    def check_waste_size(self, solution=None):
         min_waste = self.get_param('minWaste')
+        if solution is None:
+            solution = self.trees
         bad_wastes = []
-        for tree in self.trees:
+        for tree in solution:
             wastes = nd.get_node_leaves(tree, type_options=[-1, -3])
-            bad_wastes.extend([w for w in wastes if w.WIDTH < min_waste or w.HEIGHT < min_waste])
+            bad_wastes.extend([w for w in wastes if 0 < w.WIDTH < min_waste or 0 < w.HEIGHT < min_waste])
         return bad_wastes
 
     def check_space_usage(self, solution=None):
@@ -567,6 +569,14 @@ class Solution(inst.Instance):
         table.to_csv(path + '{}{}'.format(prefix, name), index=False, sep=';')
         return True
 
+    def clean_last_trees(self, solution):
+        sol = solution[:]
+        while True:
+            if not nd.get_node_leaves(sol[-1]):
+                sol.pop()
+            else:
+                break
+        return sol
 
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])

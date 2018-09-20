@@ -781,8 +781,8 @@ def repair_dim_node(node, min_waste):
         remaining -= quantity
         # If we did all we could and still have remaining.
         # we relax the min size constraint and do one last turn.
-        if not len(wastes) and comply_min_waste:
-            wastes = find_all_wastes(node)
+        if remaining and not len(wastes) and comply_min_waste:
+            wastes = find_all_wastes_after_defect(node)
             wastes.sort(key=lambda x: getattr(x, axis_i))
             comply_min_waste = False
     if remaining > 0:
@@ -1073,7 +1073,10 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
         node_space[pos][_dim], node_space[pos][_dim_i] = \
             node_space[pos][_dim_i], node_space[pos][_dim]
 
-    return geom.check_nodespace_in_space(node_space, space, insert, min_waste)
+    result = geom.check_nodespace_in_space(node_space, space, insert, min_waste)
+    if result:
+        log.debug('node with size {} will fit in space {}'.format(node_space, space))
+    return result
 
 
 def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, debug=False):
@@ -1137,6 +1140,7 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
 
 def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
     if node1.up == node2.up:
+        log.debug('nodes are siblings, we do not check for space')
         return []
     rotations = [[]]
     nodes = {1: node1, 2: node2}

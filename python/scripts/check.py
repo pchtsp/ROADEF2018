@@ -2,10 +2,7 @@ import package.data_input as di
 import package.solution as sol
 import package.heuristic as heur
 import package.model as mod
-try:
-    import package.params_win as pm
-except:
-    import package.params as pm
+import package.params as pm
 
 import numpy as np
 import pprint as pp
@@ -108,6 +105,7 @@ def dominant_experiments():
 
 
 def benchmarking(value='dif_jumbo', experiments_filter=None):
+    assert value in ['obj', 'dif_jumbo', 'dif', 'dif_perc']
     others_path = pm.PATHS['data'] + 'solutions_A.csv'
     table1 = pd.read_csv(others_path, sep=';')
     table1.columns = ['INSTANCE', 'others', 'TEAM']
@@ -187,12 +185,17 @@ def graph(experiment, case=None, dpi=25):
         v.graph_solution(path, dpi=dpi)
 
 
-def execute_checker(experiment):
+def execute_checker(experiment, path_checker):
     # experiment = 'prise_20180917_venv'
     cases = get_all_cases()
-    path_to_checker = "bin/Release/Checker"
-    cwd = '/home/pchtsp/Documents/projects/ROADEF2018/resources/checker/'
-    destination = cwd + 'instances_checker/'
+    executable = "bin/Release/Checker"
+    complete_path = os.path.join(path_checker, executable)
+    if not os.path.exists(complete_path):
+        executable = './checker'
+        complete_path = os.path.join(path_checker, executable)
+    assert os.path.exists(complete_path), 'Checker not found, please build it first'
+    # path_checker = '/home/pchtsp/Documents/projects/ROADEF2018/resources/checker/'
+    destination = path_checker + 'instances_checker/'
     files_cases = {c: pm.PATHS['results'] + experiment + '/' + c + '/solution.csv' for c in cases}
     for case, _f in files_cases.items():
         location, filename = os.path.split(_f)
@@ -208,15 +211,18 @@ def execute_checker(experiment):
         shutil.copy(_f, dest_name)
     results = {}
     for case in cases:
-        a = subprocess.run([path_to_checker, case],
+        a = subprocess.run([executable, case],
                        input="5\n0", universal_newlines=True,
-                       cwd=cwd, stdout=subprocess.PIPE)
+                       cwd=path_checker, stdout=subprocess.PIPE)
         results[case] = re.search(r'SOLUTION VALIDATED SUCCESSFULLY', a.stdout)
     return results
 
 
-def check_experiment(experiment):
-    cases = get_all_cases()
+def check_experiment(experiment, case=None):
+    if case is None:
+        cases = get_all_cases()
+    else:
+        cases = [case]
     path = pm.PATHS['results'] + experiment + '/'
     solutions = {c: sol.Solution.from_io_files(path=path + c + '/', case_name=c) for c in cases}
     return {c: s.count_errors() for c, s in solutions.items()}
@@ -226,10 +232,12 @@ if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
     # graph(experiment='test', case='A13')
-    benchmarking('dif_jumbo', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
-                                            'hp_20180911_venv', 'prise_20180917_venv'])
-    experiment = 'prise_20180918_venv'
-    rrr = execute_checker(experiment)
-    rrr2 = check_experiment(experiment)
+    # benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
+    #                                         'hp_20180911_venv', 'prise_20180917_venv',
+    #                                               'prise_20180918_venv'])
+    experiment = 'test'
+    path_checker = pm.PATHS['checker']
+    # rrr = execute_checker(experiment, path_checker=path_checker)
+    rrr2 = check_experiment(experiment, 'A2')
     # dominant_experiments()
     pass

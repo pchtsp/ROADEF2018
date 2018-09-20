@@ -211,6 +211,7 @@ class ImproveHeuristic(sol.Solution):
             'space': - self.check_space_usage(solution)
             ,'seq': len(self.check_sequence(solution, type_node_dict=self.type_node_dict))
             ,'defects': len(self.check_defects(solution))
+            ,'wastes': len(self.check_waste_size(solution))
         }
         gains = {k: v * weights[k] for k, v in components.items()}
         return sum(gains.values())
@@ -532,11 +533,12 @@ class ImproveHeuristic(sol.Solution):
         max_iter = params['max_iter']
         fails = successes = 0
         defects = self.check_defects()
+        # wastes = self.check_waste_size()
         i = count = 0
         while count < max_iter and i < len(defects):
             count += 1
             defect = defects[i]
-            node, actual_defect = defect
+            node, _ = defect
             i += 1
             # first, we try siblings:
             _fails, _successes = \
@@ -648,7 +650,8 @@ class ImproveHeuristic(sol.Solution):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        candidates = set(rem) | set([d[0] for d in defects]) | set(items)
+        waste_size = self.check_waste_size()
+        candidates = set(rem) | set([d[0] for d in defects]) | set(items) | set(waste_size)
         return list(candidates)
 
     def insert_nodes_somewhere(self, level, params, include_sisters=False, dif_level=1):
@@ -865,9 +868,10 @@ class ImproveHeuristic(sol.Solution):
             # if len(self.check_defects()) != start_def:
             #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
-        # With 20% prob we accept worse solutions even if there are more defects.
+        # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)):
+        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)) or \
+            len(self.check_waste_size(incumbent)) < len(self.check_waste_size(candidate)):
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
@@ -886,7 +890,7 @@ class ImproveHeuristic(sol.Solution):
             round(self.best_objective), round(self.last_objective)
         ))
         self.last_objective = new
-        if balance > 0 and not len(self.check_defects()):
+        if balance > 0:
             log.info('Best solution updated to {}!'.format(round(new)))
             self.update_best_solution(self.trees)
             self.best_objective = new
@@ -912,7 +916,10 @@ class ImproveHeuristic(sol.Solution):
             ,'rotation_tries': 2
             }
         params = {**params, **defaults}
-        num_process = min(multi.cpu_count(), options.get('num_processors', 7))
+        if options.get('multiprocess', True):
+            num_process = min(multi.cpu_count(), options.get('num_processors', 7))
+        else:
+            num_process = 1
         iterator_per_proc = math.ceil(num_iterations / num_process)
         if num_trees is not None:
             incumbent = [self.trees[n] for n in num_trees]
@@ -939,21 +946,26 @@ class ImproveHeuristic(sol.Solution):
             'num_iters': iterator_per_proc
         }
         result_x = {}
-        with multi.Pool(processes=num_process) as pool:
-            for x in range(num_process):
-                # result = nd.place_items_on_trees(**args)
-                seed = {'seed': int(rn.random()*1000)}
-                result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
-                # result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
+        if options.get('multiprocess', True):
+            with multi.Pool(processes=num_process) as pool:
+                for x in range(num_process):
+                    # result = nd.place_items_on_trees(**args)
+                    seed = {'seed': int(rn.random()*1000)}
+                    result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
+                    # result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
 
-            for x, result in result_x.items():
-                result_x[x] = result.get(timeout=10000)
+                for x, result in result_x.items():
+                    result_x[x] = result.get(timeout=10000)
+        else:
+            seed = {'seed': int(rn.random() * 1000)}
+            result_x['0'] = nd.iter_insert_items_on_trees(**{**args, **seed})
         candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
             return None
-        # Here we have two hierarchical criteria:
+        # Here we have three hierarchical criteria:
         # 1. number of defects
-        # 2. objective function
+        # 2. min waste
+        # 3. objective function
         # For this, I need to change plate's ids to get the correct defects.
         if num_trees is not None:
             plate_W = self.get_param('widthPlates')
@@ -967,6 +979,7 @@ class ImproveHeuristic(sol.Solution):
                     else:
                         candidate[iter].PLATE_ID = plate_id
         candidate = min(candidates, key=lambda x: (len(self.check_defects(x)),
+                                                   len(self.check_waste_size(x)),
                                                    self.calculate_objective(x, discard_empty_trees=True)))
         return candidate
 
@@ -992,6 +1005,7 @@ class ImproveHeuristic(sol.Solution):
                 self.get_initial_solution(options = options, num_iterations=p_remake['iterations_initial'])
             self.update_precedence_nodes(self.trees)
             self.best_objective = self.evaluate_solution(params['weights'])
+            self.update_best_solution(self.trees)
             self.add_jumbo(params['extra_jumbos'])
             # return
         self.order_all_children()
@@ -1070,12 +1084,14 @@ class ImproveHeuristic(sol.Solution):
                 break
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             defects = self.check_defects()
+            wastes = self.check_waste_size()
 
             # fails, successes = tuple(map(sum, zip(*fail_success_acum)))
-            log.info("TEMP={}, seq={}, def={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
+            log.info("TEMP={}, seq={}, def={}, wastes={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
                 round(temp),
                 len(seq),
                 len(defects),
+                len(wastes),
                 round(self.best_objective),
                 round(clock),
                 self.evaluated,
@@ -1088,7 +1104,9 @@ class ImproveHeuristic(sol.Solution):
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
-        self.trees = [tree for tree in self.trees if nd.get_node_leaves(tree)]
+        # print(self.check_all())
+        self.trees = self.clean_last_trees(self.trees)
+        # print(self.check_all())
         pass
 
 
