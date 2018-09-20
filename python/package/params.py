@@ -39,7 +39,7 @@ OPTIONS = {
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
     , 'output_file_name': 'solution.csv'
-    , 'case_name': 'A14'
+    , 'case_name': 'A2'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
@@ -50,7 +50,7 @@ OPTIONS = {
     , 'heur_params': {'main_iter': 5, 'max_iter': 500,
                       'temperature': 3000,
                       'max_candidates': 5, 'extra_jumbos': 0,
-                      'cooling_rate': 0.01,
+                      'cooling_rate': 0.005,
                       'change_first': False, 'tolerance': None,
                       'try_rotation': True,
                       'rotation_probs': [0.50, 0.50, 0, 0],
@@ -59,10 +59,11 @@ OPTIONS = {
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000}
                       }
     , 'heur_remake': {
-        'iterations_initial': 100,
-        'iterations_remake': 20,
+        'iterations_initial': 1000,
+        'iterations_remake': 100,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
+        'probability': 0.3,
         # 'num_trees': [1],
     }
     , 'heur_optim': {
