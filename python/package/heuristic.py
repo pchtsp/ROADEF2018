@@ -263,6 +263,7 @@ class ImproveHeuristic(sol.Solution):
         if len(candidates_eval) == 0:
             return False
         candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
+        # TODO: do not iterate over values
         node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
         balance, rot = candidates_eval[node2]
         # node2, balance = max(good_candidates.items(), key=lambda x: x[1])
@@ -285,7 +286,6 @@ class ImproveHeuristic(sol.Solution):
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
         recalculate = nd.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
                                                  debug=self.debug, min_waste=self.get_param('minWaste'))
-
         if self.debug:
             consist = self.check_consistency()
             if len(consist):
@@ -395,6 +395,7 @@ class ImproveHeuristic(sol.Solution):
             candidates = [c for c in self.get_nodes_by_level(level) if c != node_level and
                           self.node_in_solution(c)]
         if len(candidates) > max_candidates:
+            # TODO: change dict ordering.
             candidates_prob = sd.SuperDict({k: fn_weights(k) for k in candidates}).to_weights()
             candidates = \
                 np.random.choice(
@@ -494,6 +495,7 @@ class ImproveHeuristic(sol.Solution):
             wastes_prob = wastes_prob.to_weights()
             w_candidates = wastes_prob.keys_l()
             if len(w_candidates) > max_candidates:
+                # TODO: do not iterate over values
                 w_candidates = np.random.choice(a=wastes_prob.keys_l(), size=max_candidates,
                                                 replace=False, p=wastes_prob.values_l())
             # w_before_node = [w for w in w_candidates if
@@ -533,7 +535,6 @@ class ImproveHeuristic(sol.Solution):
         max_iter = params['max_iter']
         fails = successes = 0
         defects = self.check_defects()
-        # wastes = self.check_waste_size()
         i = count = 0
         while count < max_iter and i < len(defects):
             count += 1
@@ -595,6 +596,7 @@ class ImproveHeuristic(sol.Solution):
             if not len(nodes):
                 return fails, successes
             candidates = [n for n in nodes[2].get_sisters() if not nd.is_waste(n)]
+            # TODO: do not iterate over values
             for node_level in nodes.values():
                 change = self.try_change_node(node_level, candidates, insert=False, params=params)
                 fails += not change
@@ -650,8 +652,7 @@ class ImproveHeuristic(sol.Solution):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        waste_size = self.check_waste_size()
-        candidates = set(rem) | set([d[0] for d in defects]) | set(items) | set(waste_size)
+        candidates = set(rem) | set([d[0] for d in defects]) | set(items)
         return list(candidates)
 
     def insert_nodes_somewhere(self, level, params, include_sisters=False, dif_level=1):
@@ -682,15 +683,10 @@ class ImproveHeuristic(sol.Solution):
             i += 1
         return fails, successes
 
-    # def insert_node_somewhere(self, node1, **params):
-    #     _params = dict(params)
-    #     # I want as candidates one level=1 block from each try.
-    #     return change
-
     def try_reduce_nodes(self, level):
         candidates = self.get_nodes_by_level(level)
         for c in candidates:
-            nd.reduce_children(c)
+            nd.reduce_children(c, self.get_param('minWaste'))
         return True
 
     def insert_node_inside_node(self, node1, node2, params):
@@ -870,8 +866,7 @@ class ImproveHeuristic(sol.Solution):
             return None
         # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(candidate)) or \
-            len(self.check_waste_size(incumbent)) < len(self.check_waste_size(candidate)):
+        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)):
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
@@ -979,7 +974,6 @@ class ImproveHeuristic(sol.Solution):
                     else:
                         candidate[iter].PLATE_ID = plate_id
         candidate = min(candidates, key=lambda x: (len(self.check_defects(x)),
-                                                   len(self.check_waste_size(x)),
                                                    self.calculate_objective(x, discard_empty_trees=True)))
         return candidate
 

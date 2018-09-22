@@ -75,13 +75,17 @@ def solve_heuristic(options):
     output_path = options['output_path']
     case = options['case_name']
     filename = options['output_file_name']
+    prefix = ''
+    if filename is None:
+        filename = 'solution.csv'
+        prefix = case + '_'
     self = heur.ImproveHeuristic.from_input_files(case_name=case, path=input_path)
     self.solve(options)
     self.correct_plate_node_ids()
     if options.get('graph', False):
         self.graph_solution(output_path, name="plate", dpi=50)
     # print(self.check_sequence(solution=self.best_solution))
-    self.export_solution(path=output_path, name=filename)
+    self.export_solution(path=output_path, name=filename, prefix=prefix)
 
 
 def solve(options):
@@ -187,6 +191,7 @@ if __name__ == "__main__":
             location, case = os.path.split(args.case_loc)
             cases = [case]
             pm.OPTIONS['input_path'] = location + '/'
+            pm.OPTIONS['output_file_name'] = None
         else:
             pm.OPTIONS['input_path'] = pm.PATHS['data']
         pm.OPTIONS['output_path'] = './'
@@ -208,8 +213,12 @@ if __name__ == "__main__":
         pm.OPTIONS['num_processors'] = args.num_process
 
     if args.seed is not None:
-        rn.seed(args.seed)
-        np.random.seed(args.seed)
+        pm.OPTIONS['seed'] = args.seed
+
+    if pm.OPTIONS['seed'] is None:
+        pm.OPTIONS['seed'] = rn.randint(1, 10000)
+    rn.seed(pm.OPTIONS['seed'])
+    np.random.seed(pm.OPTIONS['seed'])
 
     # print('Using config file in {}'.format(args.file))
     if args.name:

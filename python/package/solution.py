@@ -149,6 +149,7 @@ class Solution(inst.Instance):
             , 'ch_size': self.check_nodes_fit
             , 'inside': self.check_parent_of_children
             , 'cuts': self.check_cuts_number
+            , 'max_cut': self.check_max_cut
             , 'position': self.check_nodes_inside_jumbo
             , 'types': self.check_wrong_type
             , 'ch_order': self.check_children_order
@@ -291,7 +292,7 @@ class Solution(inst.Instance):
         """
         levels = {}
         for tree in self.trees:
-            levels = {**levels, **nd.assign_cut_numbers(tree, update=False)}
+            levels.update(nd.assign_cut_numbers(tree, update=False))
         bad_cut = []
         for node, level in levels.items():
             if node.CUT != level:
@@ -305,7 +306,7 @@ class Solution(inst.Instance):
         """
         levels = {}
         for tree in self.trees:
-            levels = {**levels, **nd.assign_cut_numbers(tree, update=False)}
+            levels.update(nd.assign_cut_numbers(tree, update=False))
         return [(node, level) for node, level in levels.items() if level > 4]
 
     def check_nodes_inside_jumbo(self):

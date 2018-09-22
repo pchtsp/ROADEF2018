@@ -40,7 +40,7 @@ OPTIONS = {
     , 'integer': False
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
-    , 'output_file_name': 'solution.csv'
+    , 'output_file_name': None
     , 'case_name': 'A2'
     , 'max_plates': 10
     , 'max_width': 6000//4
@@ -48,6 +48,8 @@ OPTIONS = {
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     , 'num_processors': 7
+    , 'multiprocess': True
+    , 'seed': 500
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 500,
                       'temperature': 3000,

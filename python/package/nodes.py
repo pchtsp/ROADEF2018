@@ -613,26 +613,37 @@ def split_waste(node1, cut, min_size):
     return nodes
 
 
-def reduce_children(node):
+def reduce_children(node, min_waste):
+    """
+    cuts level one nodes that have extra waste.
+    :param node:
+    :return:
+    """
     axis, dim = get_orientation_from_cut(node)
     node_size = min_size = getattr(node, dim)
-    if len(node.children) < 2:
+    if len(node.children) <= 1:
         return False
+    all_wastes = []
     for ch in node.get_children():
-        # if it has a children which is already a item... nothing to do
+        # if it has a child which is already a item... nothing to do
         waste = None
         if ch.TYPE >= 0:
             return False
-        elif ch.TYPE in [-1, -3]:
+        elif is_waste(ch):
             waste = ch
         elif ch.TYPE == -2:
             waste = find_waste(ch, child=True)
         if waste is None:
             return False
-        size = getattr(waste, dim)
-        if size < min_size:
-            min_size = size
+        all_wastes.append(waste)
+        # size = getattr(waste, dim)
+        # if size < min_size:
+        #     min_size = size
+    sizes = sorted(getattr(waste, dim) for waste in all_wastes)
+    min_size, second_min_size = sizes[:2]
     if min_size <= 0:
+        return False
+    if second_min_size - min_size < min_waste:
         return False
     # ok: we got here: we reduce all children and the node.
     log.debug("node and children {} are being reduced by {}".format(
@@ -751,9 +762,16 @@ def repair_dim_node(node, min_waste):
     # if surplus is negative: we need to add a waste, it's easier
     # if surplus is positive: we start deleting wastes.
     if change < 0:
-        add_child_waste(node, child_size=-change,
-                        waste_pos=node_size+change,
-                        increase_node=False)
+        # before creeating one, will try to increase any waste.
+        wastes = find_all_wastes_after_defect(node)
+        if not len(wastes):
+            add_child_waste(node, child_size=-change,
+                            waste_pos=node_size+change,
+                            increase_node=False)
+        else:
+            waste = wastes[-1]
+            resize_waste(waste, dim_i, -change)
+            delete_only_child(node)
         return True
     wastes = find_all_wastes_after_defect(node)
     # wastes = find_all_wastes(node)
@@ -773,7 +791,7 @@ def repair_dim_node(node, min_waste):
         quantity = size
         if remaining < size:
             waste_rem = size - remaining
-            if min_waste > waste_rem > 0 and comply_min_waste:
+            if 0 < waste_rem < min_waste and comply_min_waste:
                 quantity = size - min_waste
             else:
                 quantity = remaining
@@ -917,6 +935,8 @@ def check_assumptions_swap(node1, node2, insert):
     if is_waste(node1) and insert:
         return False
     if node1.up == node2 or node1 == node2.up:
+        return False
+    if node2.CUT >= 4 and insert:
         return False
     # for now, we do not allow swapping between different levels
     # or inserting a node from a higher to a lower level
@@ -1130,9 +1150,8 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
         nodes[k] = node
 
     # 7: we need to update the waste at both sides
-    if parent1 != parent2:
-        for parent in parents.values():
-            repair_dim_node(parent, min_waste)
+    for parent in parents.values():
+        repair_dim_node(parent, min_waste)
 
     return nodes
     # return recalculate
@@ -1177,6 +1196,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, params):
         good_candidates[candidate] = 0
     if len(good_candidates) == 0:
         return False
+    # TODO: fix dict
     candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
     node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
     rot = rotation[node2]
@@ -1198,6 +1218,8 @@ def insert_node_inside_node_traverse(node1, node_start, min_waste, params):
             ) or node2.CUT >= 3
 
     for node2 in post_traverse_from_node(node_start, is_leaf_fn=is_leaf_fn):
+        if node2.CUT >= 4:
+            continue
         node1.CUT = node2.CUT
         if is_waste(node2):
             inserted_nodes = try_change_node_simple(node=node1, candidates=[node2], min_waste=min_waste, params=params, insert=True)
@@ -1213,6 +1235,7 @@ def insert_node_inside_node_traverse(node1, node_start, min_waste, params):
         if inserted_nodes:
             return inserted_nodes
     return False
+
 
 
 def get_node_by_type(node, type):
@@ -1595,6 +1618,12 @@ def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params
         return None
     return balance, result
 
+
+def normalize_weights(weights):
+    min_value = min(weights) - 0.1
+    weights_temp = [w - min_value for w in weights]
+    total = sum(weights_temp)
+    return [w/total for w in weights_temp]
 
 if __name__ == "__main__":
 

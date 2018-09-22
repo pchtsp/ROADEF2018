@@ -1,10 +1,7 @@
 import package.heuristic as heur
 import package.data_input as di
 import package.nodes as nd
-try:
-    import package.params_win as pm
-except:
-    import package.params as pm
+import package.params as pm
 
 path = pm.PATHS['results'] + '/clust1_20180708_py/A1/'
 self = heur.ImproveHeuristic.from_io_files(path=path)
