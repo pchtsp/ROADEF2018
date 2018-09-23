@@ -47,9 +47,9 @@ OPTIONS = {
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
-    , 'num_processors': 7
+    , 'num_processors': 24
     , 'multiprocess': True
-    , 'seed': 500
+    , 'seed': None
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 500,
                       'temperature': 3000,
@@ -67,7 +67,7 @@ OPTIONS = {
         'iterations_remake': 100,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
-        'probability': 0.3,
+        'probability': 0.05,
         # 'num_trees': [1],
     }
     , 'heur_optim': {
