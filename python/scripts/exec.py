@@ -140,6 +140,7 @@ if __name__ == "__main__":
     parser.add_argument('-np', '--num-process', dest='num_process', help='num of processors', type=int)
     parser.add_argument('-hr', '--heur-remake', dest='heur_remake', type=json.loads)
     parser.add_argument('-hp', '--heur-params', dest='heur_params', type=json.loads)
+    parser.add_argument('-ho', '--heur-optim', dest='heur_optim', type=json.loads)
 
     args = parser.parse_args()
     if getattr(sys, 'frozen', False):
@@ -167,6 +168,9 @@ if __name__ == "__main__":
 
     if args.heur_params:
         pm.OPTIONS['heur_params'].update(args.heur_params)
+
+    if args.heur_optim:
+        pm.OPTIONS['heur_optim'].update(args.heur_optim)
 
     # print(pm.OPTIONS['heur_remake'])
 
