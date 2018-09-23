@@ -211,7 +211,6 @@ class ImproveHeuristic(sol.Solution):
             'space': - self.check_space_usage(solution)
             ,'seq': len(self.check_sequence(solution, type_node_dict=self.type_node_dict))
             ,'defects': len(self.check_defects(solution))
-            ,'wastes': len(self.check_waste_size(solution))
         }
         gains = {k: v * weights[k] for k, v in components.items()}
         return sum(gains.values())
@@ -596,8 +595,8 @@ class ImproveHeuristic(sol.Solution):
             if not len(nodes):
                 return fails, successes
             candidates = [n for n in nodes[2].get_sisters() if not nd.is_waste(n)]
-            # TODO: do not iterate over values
-            for node_level in nodes.values():
+            for k in [1, 2]:
+                node_level = nodes[k]
                 change = self.try_change_node(node_level, candidates, insert=False, params=params)
                 fails += not change
                 successes += change
@@ -676,7 +675,7 @@ class ImproveHeuristic(sol.Solution):
                 break
             candidates = candidates_all
             if len(candidates) > max_candidates:
-                candidates = rn.sample(candidates_all, max_candidates)
+                candidates = np.random.choice(candidates_all, max_candidates, replace=False)
             change = self.try_change_node(c, candidates, insert=True, params=params)
             fails += not change
             successes += change
@@ -986,6 +985,9 @@ class ImproveHeuristic(sol.Solution):
     def solve(self, options, warm_start=False):
         import pprint as pp
 
+        rn.seed(options['seed'])
+        np.random.seed(options['seed'])
+
         now = time.time()
         end = options['timeLimit']
         self.debug = options.get('debug', False)
@@ -1052,15 +1054,18 @@ class ImproveHeuristic(sol.Solution):
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
-                log.debug('DO: search_waste_cuts')
+                log.debug('DO: change_level_by_seq')
                 fsc['seq2'] = self.change_level_by_seq2(level, params=params)
                 fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
-                fsc['def'] = self.change_level_by_defects(level, params=params)
                 log.debug('DO: change_level_by_defects')
+                fsc['def'] = self.change_level_by_defects(level, params=params)
+                log.debug('DO: change_level_by_all')
                 fsc['all'] = self.change_level_all(level, params=params)
+                log.debug('DO: empty cuts 2')
                 if rn.random() > 0.5:
                     self.clean_empty_cuts_2()
                 self.add_1cut()
+                log.debug('DO: interlevel cuts')
                 fsc['interlevel'] = \
                     self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, params=params)
                 if level in [2, 3]:
@@ -1078,14 +1083,14 @@ class ImproveHeuristic(sol.Solution):
                 break
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             defects = self.check_defects()
-            wastes = self.check_waste_size()
+            # wastes = self.check_waste_size()
 
             # fails, successes = tuple(map(sum, zip(*fail_success_acum)))
             log.info("TEMP={}, seq={}, def={}, wastes={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
                 round(temp),
                 len(seq),
                 len(defects),
-                len(wastes),
+                0,
                 round(self.best_objective),
                 round(clock),
                 self.evaluated,

@@ -24,8 +24,8 @@ def separate_cases(name, data_dir=pm.PATHS['data'], results_dir=pm.PATHS['result
 ############################################
 ############################################
 
-def move_case_checker():
-    origin = pm.PATHS['results'] + 'heuristic1800/'
+def move_case_checker(experiment):
+    origin = pm.PATHS['results'] + experiment
     cases = ["A{}".format(n) for n in range(1, 21)]
     _files = [os.path.join(origin, f, f + '_{}.csv'.format(f_type))
               for f in cases for f_type in ['solution']]

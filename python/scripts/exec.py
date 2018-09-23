@@ -217,8 +217,6 @@ if __name__ == "__main__":
 
     if pm.OPTIONS['seed'] is None:
         pm.OPTIONS['seed'] = rn.randint(1, 10000)
-    rn.seed(pm.OPTIONS['seed'])
-    np.random.seed(pm.OPTIONS['seed'])
 
     # print('Using config file in {}'.format(args.file))
     if args.name:

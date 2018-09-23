@@ -1,7 +1,8 @@
 import numpy as np
+import collections as col
 
 
-class SuperDict(dict):
+class SuperDict(col.OrderedDict):
 
     def keys_l(self):
         return list(self.keys())

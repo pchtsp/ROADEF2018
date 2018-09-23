@@ -1196,7 +1196,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, params):
         good_candidates[candidate] = 0
     if len(good_candidates) == 0:
         return False
-    # TODO: fix dict
+    # TODO: do not iterate over values
     candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
     node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
     rot = rotation[node2]
