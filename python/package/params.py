@@ -63,7 +63,7 @@ OPTIONS = {
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
                       }
     , 'heur_remake': {
-        'iterations_initial': 1000,
+        'iterations_initial': 100,
         'iterations_remake': 100,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
@@ -74,7 +74,7 @@ OPTIONS = {
         'try_rotation': True,
         'max_candidates': 5,
         'rotation_probs': [0.5, 0.5, 0, 0],
-        'weights': {'space': 40000, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
+        'weights': {'space': 400, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
     }
     , 'debug': False
     , 'graph': False

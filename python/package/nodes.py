@@ -121,7 +121,7 @@ def resize_waste(waste, dim, quantity):
     parent = waste.up
     if parent is None:
         return False
-    log.debug('waste {} is being reduced by {}'.format(waste.name, quantity))
+    log.debug('waste {} is being changed by {}'.format(waste.name, quantity))
     setattr(waste, dim, getattr(waste, dim) + quantity)
     plate, pos = get_node_plate_pos(waste)
     for ch in parent.children[pos+1:]:

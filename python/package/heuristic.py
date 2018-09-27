@@ -300,6 +300,9 @@ class ImproveHeuristic(sol.Solution):
             return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
+        if round(balance)==0 and abs(new - self.last_objective) > 0.1:
+            a = 1
+            pass
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
                       round(balance), round(new), round(self.best_objective), round(self.last_objective)
@@ -1023,6 +1026,7 @@ class ImproveHeuristic(sol.Solution):
         max_wastes = params['max_candidates']
         remake_iters = p_remake.get('iterations_remake', 10)
         remake_prob = p_remake.get('probability', 0.1)
+        iter = 0
         while True:
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
@@ -1078,6 +1082,16 @@ class ImproveHeuristic(sol.Solution):
             b_improved = self.improved
             if new_imp_ratio < 60:
                 temp *= (1 - coolingRate)
+                iter += 1
+            else:
+                iter = 0
+            if iter > 10:
+                if rn.random() > 0.1:
+                    self.trees = self.best_solution
+                else:
+                    self.trees = self.get_initial_solution(options=options,
+                                                           num_iterations=p_remake['iterations_initial'])
+                iter = 0
             clock = time.time() - now
             if temp < 1 or clock > end:
                 break
@@ -1100,6 +1114,9 @@ class ImproveHeuristic(sol.Solution):
             )
             if count % 100 == 0:
                 log.debug(fail_success_acum_cat)
+            # self.improved = 0
+            # self.accepted = 0
+            # self.evaluated = 0
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
@@ -1118,6 +1135,7 @@ if __name__ == "__main__":
     # TODO: make tree recreation work with defects.
     # TODO: switch defects with wastes (small ones? or small nodes)
     # TODO: search_waste_cuts for other levels.
+    # TODO: IMPORTANT. correct problem with precalculating defects before change. check this works with sequence.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
