@@ -36,6 +36,9 @@ class ImproveHeuristic(sol.Solution):
     def update_best_solution(self, solution):
         self.best_solution = copy.deepcopy(solution)
 
+    def update_solution_to_best(self):
+        self.trees = copy.deepcopy(self.best_solution)
+
     def clean_empty_cuts(self):
         """
         An empty cut is a cut with a 0 distance in a dimension
@@ -1087,7 +1090,7 @@ class ImproveHeuristic(sol.Solution):
                 iter = 0
             if iter > 10:
                 if rn.random() > 0.1:
-                    self.trees = self.best_solution
+                    self.update_solution_to_best()
                 else:
                     self.trees = self.get_initial_solution(options=options,
                                                            num_iterations=p_remake['iterations_initial'])

@@ -64,7 +64,7 @@ OPTIONS = {
                       }
     , 'heur_remake': {
         'iterations_initial': 100,
-        'iterations_remake': 100,
+        'iterations_remake': 10,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
         'probability': 0.05,
