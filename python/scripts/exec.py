@@ -210,6 +210,9 @@ if __name__ == "__main__":
     if args.time_limit is not None:
         pm.OPTIONS['timeLimit'] = args.time_limit
 
+    # we'll take 5 seconds from the time limit to be sure to stop in time.
+    pm.OPTIONS['timeLimit'] -= 5
+
     if args.temperature is not None:
         pm.OPTIONS['heur_params']['temperature'] = args.temperature
 
