@@ -1,9 +1,6 @@
 # this script helps build the designs for the documentation
 
-try:
-    import package.params_win as pm
-except:
-    import package.params as pm
+import package.params as pm
 import package.solution as sol
 from scripts.check import benchmarking
 import package.heuristic as heur

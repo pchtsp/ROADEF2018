@@ -14,7 +14,7 @@ import matplotlib
 import shutil
 import re
 import subprocess
-
+# import tabulate
 
 
 def stats():
@@ -218,6 +218,26 @@ def execute_checker(experiment, path_checker):
     return results
 
 
+def get_objectives(experiment):
+    cases = get_all_cases()
+    path = pm.PATHS['results'] + experiment + '/'
+    solutions = {}
+    for c in cases:
+        try:
+            solutions[c] = sol.Solution.from_io_files(path=path + c + '/', case_name=c)
+        except:
+            pass
+    return {c: s.calculate_objective() for c, s in solutions.items()}
+
+
+def summary_table(experiment, path_out):
+    objs = get_objectives(experiment)
+    latex = pd.DataFrame.from_dict(objs, orient='index').reset_index().\
+        rename(columns={0: 'objective', 'index': 'instance'}).to_latex(bold_rows=True, index=False)
+    with open(path_out, 'w') as f:
+        f.write(latex)
+
+
 def check_experiment(experiment, case=None):
     if case is None:
         cases = get_all_cases()
@@ -231,13 +251,16 @@ def check_experiment(experiment, case=None):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    # graph(experiment='test', case='A13')
-    # benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
-    #                                         'hp_20180911_venv', 'prise_20180917_venv',
-    #                                               'prise_20180918_venv'])
+    graph(experiment='test', case='A8')
+    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
+                                            'hp_20180911_venv', 'prise_20180917_venv',
+                                                  'prise_20180926_venv'])
+    experiment = 'clust1_20180922_venv'
     experiment = 'test'
     path_checker = pm.PATHS['checker']
+    summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)
     rrr2 = check_experiment(experiment, 'A2')
+    # rrr = get_objectives()
     # dominant_experiments()
     pass
