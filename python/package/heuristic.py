@@ -267,7 +267,7 @@ class ImproveHeuristic(sol.Solution):
         candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
         # TODO: do not iterate over values
         node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
-        balance, rot = candidates_eval[node2]
+        balance, defects_to_edit, rot = candidates_eval[node2]
         # node2, balance = max(good_candidates.items(), key=lambda x: x[1])
         improve = self.acceptance_probability(balance, temperature=temperature)
         self.evaluated += 1
@@ -287,7 +287,8 @@ class ImproveHeuristic(sol.Solution):
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
         recalculate = nd.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
-                                                 debug=self.debug, min_waste=self.get_param('minWaste'))
+                                               defects_to_edit=defects_to_edit,
+                                               debug=self.debug, min_waste=self.get_param('minWaste'))
         if self.debug:
             consist = self.check_consistency()
             if len(consist):
@@ -303,7 +304,7 @@ class ImproveHeuristic(sol.Solution):
             return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        if round(balance)==0 and abs(new - self.last_objective) > 0.1:
+        if round(balance)==0 and abs(new - self.last_objective) > 0.1 and self.last_objective % 10 != 9 and not insert:
             a = 1
             pass
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
@@ -319,14 +320,6 @@ class ImproveHeuristic(sol.Solution):
         # if self.debug:
         #     self.hist_objective.append(old)
         return improve
-
-    def debug_nodes(self, node1, node2):
-        for node in [node1, node2]:
-            print("name={}\nPLATE_ID={}\nX={}\nY={}\nchildren={}\nCUT={}\nTYPE={}".format(
-                node.name, node.PLATE_ID, node.X, node.Y, [ch.name for ch in node.children],
-                node.CUT, node.TYPE)
-            )
-            print("")
 
     def get_node_by_name(self, name):
         nodes = []
@@ -1012,7 +1005,7 @@ class ImproveHeuristic(sol.Solution):
             # return
         self.order_all_children()
         self.clean_empty_cuts()
-        self.join_blanks()
+        # self.join_blanks()
         self.clean_empty_cuts_2()
         self.correct_plate_node_ids()
         assert 'weights' in params

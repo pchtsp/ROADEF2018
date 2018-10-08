@@ -32,9 +32,11 @@ class Solution(inst.Instance):
             return
 
         self.trees = []
+        defects = input_data['defects']
         data_byPlate = solution_data.index_by_property('PLATE_ID', get_list=True)
-        for plate in data_byPlate:
+        for pos, plate in enumerate(data_byPlate):
             tree = self.get_tree_from_solution_data(plate)
+            tree.add_feature('DEFECTS', defects.get(pos, []))
             self.trees.append(tree)
 
         self.order_all_children()

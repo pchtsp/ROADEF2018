@@ -301,13 +301,31 @@ def get_node_pos(node):
 
 
 def get_next_sibling(node):
-    if node.up is None:
+    next(get_next_sibling_iter(node), None)
+    # if node.up is None:
+    #     return None
+    # new_pos = get_node_pos(node) + 1
+    # children = node.up.children
+    # if len(children) == new_pos:
+    #     return None
+    # return children[new_pos]
+
+
+def get_next_sibling_iter(node):
+    parent = node.up
+    if parent is None:
         return None
     new_pos = get_node_pos(node) + 1
-    children = node.up.children
-    if len(children) == new_pos:
-        return None
-    return children[new_pos]
+    return get_next_children_iter(parent, new_pos)
+
+
+def get_next_children_iter(node, pos_start=0, pos_end=None):
+    children = node.children
+    if pos_end is None:
+        pos_end = len(children)
+    while pos_start < pos_end:
+        yield children[pos_start]
+        pos_start += 1
 
 
 def get_node_position_cost_unit(node, plate_width):
@@ -755,33 +773,36 @@ def extract_node_from_position(node):
     return node
 
 
-def repair_dim_node(node, min_waste):
+def search_wastes_to_repair_node(node, min_waste, change, after_detects=True):
+    """
+    if the object returned is a waste we edit it.
+    if the object is a non waste, we create one there.
+    if the object is None, we create one at the end.
+    :param node:
+    :param min_waste:
+    :return:  [(waste_obj or None, increase), ...]
+    """
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
-    change = get_surplus_dim(node)
-    node_size = getattr(node, dim_i)
     # if surplus is negative: we need to add a waste, it's easier
     # if surplus is positive: we start deleting wastes.
-    if change < 0:
-        # before creeating one, will try to increase any waste.
+    # before creating one, will try to increase any waste.
+    if after_detects:
         wastes = find_all_wastes_after_defect(node)
-        if not len(wastes):
-            add_child_waste(node, child_size=-change,
-                            waste_pos=node_size+change,
-                            increase_node=False)
-        else:
+    else:
+        wastes = find_all_wastes(node)
+    if change < 0:
+        if len(wastes):
             waste = wastes[-1]
-            resize_waste(waste, dim_i, -change)
-            delete_only_child(node)
-        return True
-    wastes = find_all_wastes_after_defect(node)
-    # wastes = find_all_wastes(node)
-    # TODO: get better ways to eat wastes.
-    # we revert to the previous change
+            return [(waste, -change)]
+        else:
+            return [(None, -change)]
+
     # we want the farthest at the end:
     # but we want to eliminate really small wastes before
     # wastes.sort(key=lambda x: (getattr(x, dim_i) < 20, getattr(x, axis_i)))
 
     # we want the smallest at the end:
+    result = []
     wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = change
     comply_min_waste = True
@@ -795,16 +816,43 @@ def repair_dim_node(node, min_waste):
                 quantity = size - min_waste
             else:
                 quantity = remaining
-        resize_waste(waste, dim_i, -quantity)
+        result.append((waste, -quantity))
         remaining -= quantity
         # If we did all we could and still have remaining.
         # we relax the min size constraint and do one last turn.
-        if remaining and not len(wastes) and comply_min_waste:
-            wastes = find_all_wastes_after_defect(node)
-            wastes.sort(key=lambda x: getattr(x, axis_i))
-            comply_min_waste = False
+        # if remaining and not len(wastes) and comply_min_waste:
+        #     wastes = find_all_wastes_after_defect(node)
+        #     wastes.sort(key=lambda x: getattr(x, axis_i))
+        #     comply_min_waste = False
     if remaining > 0:
-        assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
+        return None
+        # assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
+    return result
+
+
+def repair_dim_node(node, min_waste, wastes_mods=None):
+    axis_i, dim_i = get_orientation_from_cut(node, inv=True)
+    node_size = getattr(node, dim_i)
+    change = get_surplus_dim(node)
+    if wastes_mods is None:
+        wastes_mods = search_wastes_to_repair_node(node, min_waste, change)
+    if wastes_mods is None:
+        assert False, "repair_dim_node did not eliminate all waste."
+    for node_waste, change in wastes_mods:
+        if change < 0:
+            resize_waste(node_waste, dim_i, change)
+        elif node_waste is None:
+            add_child_waste(node, child_size=change,
+                            waste_pos=node_size+change,
+                            increase_node=False)
+        elif is_waste(node_waste):
+            resize_waste(node_waste, dim_i, change)
+            delete_only_child(node)
+        else:
+            # TODO insert in another waste_pos refered to waste_node
+            add_child_waste(node, child_size=change,
+                            waste_pos=node_size+change,
+                            increase_node=False)
     return True
 
 
@@ -1099,7 +1147,7 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
     return result
 
 
-def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, debug=False):
+def swap_nodes_same_level(node1, node2, min_waste, defects_to_edit, insert=False, rotation=None, debug=False):
     if rotation is None:
         rotation = []
     nodes = {1: node1, 2: node2}
@@ -1150,8 +1198,8 @@ def swap_nodes_same_level(node1, node2, min_waste, insert=False, rotation=None, 
         nodes[k] = node
 
     # 7: we need to update the waste at both sides
-    for parent in parents.values():
-        repair_dim_node(parent, min_waste)
+    for k, parent in parents.items():
+        repair_dim_node(parent, min_waste, defects_to_edit[k])
 
     return nodes
     # return recalculate
@@ -1435,7 +1483,7 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     return balance
 
 
-def check_swap_nodes_defect(node1, node2, insert=False):
+def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None):
     # we'll only check if exchanging the nodes gets a
     # positive defect balance.
     # We need to:
@@ -1446,11 +1494,18 @@ def check_swap_nodes_defect(node1, node2, insert=False):
     # 2. calculate the distance to move them.
     # 3. create squares with new positions.
     # 4. calculate new defect violations
+    if rotation is None:
+        rotation = []
     if node1 == node2:
         return 0
     if node1.up is None or node2.up is None:
         return -10000
     nodes = {1: node1, 2: node2}
+    to_swap = [1]
+    if not insert:
+        to_swap.append(2)
+    parents = {k: v.up for k, v in nodes.items()}
+    inv_k = {1: 2, 2: 1}
     plate1, ch_pos1 = get_node_plate_pos(node1)
     plate2, ch_pos2 = get_node_plate_pos(node2)
     positions = {1: ch_pos1, 2: ch_pos2}
@@ -1462,114 +1517,172 @@ def check_swap_nodes_defect(node1, node2, insert=False):
     for k, node in nodes.items():
         axiss[k], dims[k] = get_orientation_from_cut(node)
         axiss_i[k], dims_i[k] = get_orientation_from_cut(node, inv=True)
-    # axis, dim = get_orientation_from_cut(node1)
-    # axis_i, dim_i = get_orientation_from_cut(node1, inv=True)
-    siblings = node1.up == node2.up
+    siblings = parents[1] == parents[2]
     if siblings:
         # if they're siblings: I just get the nodes between them
         first_node, second_node = 1, 2
         if positions[1] > positions[2]:
             first_node, second_node = 2, 1
         neighbors = {
-            first_node: node1.up.children[positions[first_node]+1:positions[second_node]],
+            first_node: range(positions[first_node] + 1, positions[second_node]),
             second_node: []
         }
-        defects = {
-            first_node: get_defects_from_plate(nodes[1]),
-            second_node: []
-        }
+        # TODO: If I do want to filter defects... I need to do it safer.
+        # defects_all = get_defects_from_plate(nodes[1])
+        # defects = {
+        #     first_node: defects_all,
+        #     second_node: defects_all
+        # }
         # If a defect is to the left of the first node
         # or to the right of the second node: take it out.
-        right = filter_defects(nodes[first_node], defects[first_node])
-        left = filter_defects(nodes[second_node], defects[first_node], previous=False)
-        defects[first_node] = [d for d in right if d in left]
+        # right = filter_defects(nodes[first_node], defects[first_node])
+        # left = filter_defects(nodes[second_node], defects[first_node], previous=False)
+        # defects[first_node] = [d for d in right if d in left]
         # defects[second_node] = filter_defects(nodes[second_node], defects[second_node], previous=False)
     else:
-        neighbors = {k: nodes[k].up.children[positions[k]+1:] for k in nodes}
+        neighbors = {k: range(positions[k] + 1, len(parents[k].children)) for k, v in nodes.items()}
 
         # If a defect is to the left / down of the node: take it out.
-        defects = {k: get_defects_from_plate(nodes[k]) for k in nodes}
-        defects = {k: filter_defects(nodes[k], defects[k]) for k in nodes}
+        # defects = {k: get_defects_from_plate(nodes[k]) for k in nodes}
+        # TODO: we cannot filterd efects if we're reducing wastes anywhere.
+        # TODO: or we can but not as easy. only defects that are inside the parents?
+        # defects = {k: filter_defects(nodes[k], defects[k]) for k in nodes}
 
+    defects = {k: get_defects_from_plate(nodes[k]) for k in nodes}
     # if there's no defects to check: why bother??
     if not defects[1] and not defects[2]:
-        return 0
+        return 0, None
 
-    # TODO: this can be generalized even more to make it shorter and (possibly)
-    # easier to understand
-    # and correct...
+    move_neighbors = {k: getattr(nodes[1], dims[k]) for k in nodes}
+    dif_nodes = {k: {'X': nodes[ik].X - nodes[k].X, 'Y': nodes[ik].Y - nodes[k].Y}
+                 for k, ik in inv_k.items()}
 
-    if insert:
-        move_neighbors = {
-            1: getattr(nodes[1], dims[1]),
-            2: getattr(nodes[1], dims[2])
-        }
-        pos_dif = {
-            1: {'X': nodes[2].X - nodes[1].X, 'Y': nodes[2].Y - nodes[1].Y},
-            2: {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
-        }
-    else:  # complete swap
+    if insert:  # we do not swap node 2, it moves to let node1 in.
+        dif_nodes[2] = {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
+
+    else: # complete swap
         # to get the movement for neighbors we need to compare the diff among
         # each node's dimension.
-        move_neighbors = {
-            1: getattr(nodes[1], dims[1]) - getattr(nodes[2], dims[1]),
-            2: getattr(nodes[1], dims[2]) - getattr(nodes[2], dims[2])
-        }
-        pos_dif = {
-            1: {'X': nodes[2].X - nodes[1].X, 'Y': nodes[2].Y - nodes[1].Y},
-            2: {'X': - nodes[2].X + nodes[1].X, 'Y': - nodes[2].Y + nodes[1].Y}
-        }
-        # this works but does not make *any* sense:
-        if siblings:
-            pos_dif[first_node][axiss[first_node]] -= move_neighbors[first_node] * (2*(first_node == 1)-1)
+        move_neighbors = {k: v - getattr(nodes[2], dims[k]) for k, v in move_neighbors.items()}
 
-    # get squares
-    # first of the nodes involved
-    nodes_sq = {k: [(node_to_square(p), pos_dif[k]) for p in get_node_leaves(nodes[k])]
-                for k in nodes
-                }
-    # the destination node needs to be included in the first one in case of siblings:
+    # I fix the move_neighbors sense problem for node1:
+    move_neighbors[1] = - move_neighbors[1]
+
+    # the first node is going to be moved at slightly different place than where the second node was.
+    # because of the difference in dimensions.
+    if not insert and siblings:
+        dif_nodes[first_node][axiss[first_node]] += move_neighbors[first_node]
+
+    # now i need to make a decision about individual nodes' dif_neighbors.
+    # because I need to reduce and create some waste(s) in between.
+    # only if they are not siblings.
     if siblings:
-        nodes_sq[first_node] += nodes_sq[second_node]
+        change_parent = {k: 0 for k in nodes}
+    else:
+        change_parent = move_neighbors
 
-    # second of the nodes in between
-    dif = {
-        1: {axiss[1]: -move_neighbors[1], axiss_i[1]: 0},
-        2: {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
-    }
-    for k, _neighbors in neighbors.items():
-        nodes_sq[k] += [(node_to_square(p), dif[k]) for n in _neighbors for p in get_node_leaves(n)]
+    dif_per_sibling = {k: {ch: 0 for ch, _ in enumerate(v.children)} for k, v in parents.items()}
+    wastes_mods = {}
+    resize_node = {k: {} for k in nodes}
+    for k, v in nodes.items():
+        # TODO: take into account rotation here
+        if not change_parent[k]:
+            continue
+        # TODO: this procedure to search for wastes could be a lot better. for example random.
+        wastes_mods[k] = \
+            search_wastes_to_repair_node(
+                node=parents[k], min_waste=min_waste, change=change_parent[k], after_detects=False
+            )
+        if wastes_mods[k] is None:  # infeasible waste removal!
+            return - 10000, None
+        # iterate over wastes and edit the pos_dif value one way or the other.
+        for waste, change in wastes_mods[k]:
+            waste_pos = get_node_pos(waste)
+            resize_node[k][waste_pos] = change
+            for num in range(waste_pos + 1, len(parents[k].children)):
+                dif_per_sibling[k][num] += change
 
-    # finally of the defects to check
-    defects_sq = {k: [geom.defect_to_square(d) for d in defects[k]] for k in nodes}
+    # iterate over nodes to pass the move_neighbors parameter based on the actual swap
+    for k, v in nodes.items():
+        for num in neighbors[k]:
+            dif_per_sibling[k][num] += move_neighbors[k]
 
+    # editing wastes may affect the movement of the main nodes after moved:
+    # TODO: check this is working...
+    # for k, ik in inv_k.items():
+    #     pos = positions[ik]
+    #     dif_nodes[k][axiss[ik]] += dif_per_sibling[ik][pos]
+
+    # this is the amount we need to move each affected neighbor.
+    nodes_changes = {k: {ch: [{axiss[k]: change, axiss_i[k]: 0}, {axiss[k]: change, axiss_i[k]: 0}]
+                         for ch, change in v.items() if change and ch != positions[k]}
+                     for k, v in dif_per_sibling.items()}
+
+    # we resize the second dimension of the wastes we have edited.
+    for k, resizes in resize_node.items():
+        for ch, change in resizes.items():
+            if ch not in nodes_changes[k]:
+                nodes_changes[k][ch] = [{'X': 0, 'Y': 0}, {'X': 0, 'Y': 0}]
+            nodes_changes[k][ch][1][axiss[k]] += change
+
+    for k, v in dif_nodes.items():
+        ch = positions[k]
+        if ch not in nodes_changes[k]:
+            nodes_changes[k][ch] = [{'X': 0, 'Y': 0}, {'X': 0, 'Y': 0}]
+        for pos in range(2):
+            for a, change in v.items():
+                nodes_changes[k][ch][pos][a] += change
+
+    nodes_sq = {k: [] for k in nodes}
+    # we get the squares plus the modifications of all the items
+    for k, change_neighbors in nodes_changes.items():
+        # nodes_sq is a list of a tree tuple.
+        # the tuple manes: square, modifications, 1 if paert of the two swapped nodes
+        children = parents[k].children
+        nodes_sq[k] += [(node_to_square(item), v, pos == positions[k])
+                        for pos, v in change_neighbors.items()
+                        for item in get_node_leaves(children[pos])]
+
+    # finally: the defects to check
+    defects_sq = {v.PLATE_ID: [geom.defect_to_square(d) for d in defects[k]] for k, v in nodes.items()}
+    before = 0
+    after = 1
     # here we edit the squares we created in (1) and (2)
     # squares is a list of two dictionaries.
     # We have for 'before' and 'after' the nodes affected indexed by 1 and 2.
-    squares = [{k: [] for k in nodes_sq} for r in range(2)]
+    # TODO: change this to numpy
+    squares = [{v.PLATE_ID: [] for k, v in nodes.items()} for pos in [before, after]]
     for k, squares_changes in nodes_sq.items():
-        for (sq, change) in squares_changes:
+        # here, depending on the node, I should store the before and after plate.
+        before_plate = plates[k]
+        after_plate = before_plate
+        for (sq, change, swaped_nodes) in squares_changes:
+            if swaped_nodes and k in to_swap:
+                after_plate = plates[inv_k[k]]
             _sq = copy.deepcopy(sq)
-            squares[0][k].append(sq)
-            for n in range(2):
-                # we change the position in the two corners of the square
+            squares[before][before_plate].append(sq)  # we do not edit it in before
+            for n in range(2):  # for each corner of the square
                 for a in ['X', 'Y']:
-                    _sq[n][a] += change[a]
-            squares[1][k].append(_sq)
+                    _sq[n][a] += change[n][a]
+            # TODO: take into account rotation here so the after square is different
+            squares[after][after_plate].append(_sq)  # we do edit it in after
 
     # here I count the number of defects that collide with squares. Before and now.
+    # we want the following structure:
+
+    # TODO: change this to numpy
     defects_found = [[] for r in range(2)]
-    for pos in range(2):  # for (before) => after
-        for k, sq_list in squares[pos].items():  # for each node
-            for d in defects_sq[k]:  # for each defect
+    for pos in [before, after]:  # for (before) => after
+        for plate, sq_list in squares[pos].items():  # for each node
+            for d in defects_sq[plate]:  # for each defect
                 for sq in sq_list:  # for each neighbor
                     if geom.square_intersects_square(d, sq):
-                        defects_found[pos].append(d)
+                        defects_found[pos].append((d, sq))
                         # if it's inside some node, it's not in the rest:
                         break
 
     # as the rest of checks: the bigger the better.
-    return len(defects_found[0]) - len(defects_found[1])
+    return len(defects_found[0]) - len(defects_found[1]), wastes_mods
 
 
 def check_swap_space(node1, node2, global_params, insert=False):
@@ -1598,13 +1711,23 @@ def evaluate_swap(weights, solution, precedence, precedence_inv, global_params, 
         'space': check_swap_space(global_params=global_params, **kwargs)
         ,'seq': check_swap_nodes_seq(solution=solution, precedence=precedence,
                                      precedence_inv=precedence_inv, **kwargs)
-        ,'defects': check_swap_nodes_defect(**kwargs)
     }
+    defects = check_swap_nodes_defect(**kwargs, min_waste=global_params['minWaste'])
+    components['defects'] = defects[0]
     gains = {k: v * weights[k] for k, v in components.items()}
-    return sum(gains.values())
+    return sum(gains.values()), defects[1]
 
 
 def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params):
+    """
+
+    :param nodes:
+    :param args_check_size:
+    :param args_evaluate:
+    :param evaluate: evaluate or not
+    :param params:
+    :return: a tuple of size 3: (economical balance, defects to resize, rotations to make)
+    """
     tolerance = params['tolerance']
     args_check_size = {**args_check_size, **nodes}
     result = check_swap_size_rotation(**args_check_size)
@@ -1614,9 +1737,9 @@ def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params
     if not evaluate:
         return 0
     balance = evaluate_swap(**args_evaluate)
-    if tolerance is not None and balance <= tolerance:
+    if tolerance is not None and balance[0] <= tolerance:
         return None
-    return balance, result
+    return balance[0], balance[1], result
 
 
 def normalize_weights(weights):
@@ -1624,6 +1747,20 @@ def normalize_weights(weights):
     weights_temp = [w - min_value for w in weights]
     total = sum(weights_temp)
     return [w/total for w in weights_temp]
+
+
+def debug_node(node):
+    print("name={}\nPLATE_ID={}\nX={}\nY={}\nchildren={}\nCUT={}\nTYPE={}".format(
+        node.name, node.PLATE_ID, node.X, node.Y, [ch.name for ch in node.children],
+        node.CUT, node.TYPE)
+    )
+
+
+def debug_nodes( nodes):
+    for node in nodes:
+        debug_node(node)
+        print("")
+
 
 if __name__ == "__main__":
 
