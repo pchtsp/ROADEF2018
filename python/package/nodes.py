@@ -1248,8 +1248,9 @@ def try_change_node_simple(node, candidates, insert, min_waste, params):
     candidates_prob = sd.SuperDict({k: v for k, v in good_candidates.items()}).to_weights()
     node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
     rot = rotation[node2]
+    value, defects_to_edit = check_swap_nodes_defect(node, node2, min_waste, insert=False, rotation=rot)
     inserted_nodes = swap_nodes_same_level(node, node2, insert=insert, rotation=rot,
-                                           debug=debug, min_waste=min_waste)
+                                           debug=debug, min_waste=min_waste, defects_to_edit=defects_to_edit)
     return inserted_nodes
 
 
@@ -1553,9 +1554,17 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     if not defects[1] and not defects[2]:
         return 0, None
 
-    move_neighbors = {k: getattr(nodes[1], dims[k]) for k in nodes}
+    _dims = dict(dims)
+    if 1 in rotation:
+        _dims[2] = dims_i[2]
+
+    move_neighbors = {k: getattr(nodes[1], _dims[k]) for k in nodes}
+    # if rotation then in node2 the dimensions are different:
+    # if 1 in rotation:
+    #     move_neighbors[2] = {2: getattr(nodes[1], dims_i[k])}
     dif_nodes = {k: {'X': nodes[ik].X - nodes[k].X, 'Y': nodes[ik].Y - nodes[k].Y}
                  for k, ik in inv_k.items()}
+    # TODO: here I need to edit dif_nodes if nodes are rotated.
 
     if insert:  # we do not swap node 2, it moves to let node1 in.
         dif_nodes[2] = {axiss[2]: move_neighbors[2], axiss_i[2]: 0}
@@ -1563,7 +1572,10 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     else: # complete swap
         # to get the movement for neighbors we need to compare the diff among
         # each node's dimension.
-        move_neighbors = {k: v - getattr(nodes[2], dims[k]) for k, v in move_neighbors.items()}
+        _dims = dict(dims)
+        if 2 in rotation:
+            _dims[1] = dims_i[1]
+        move_neighbors = {k: v - getattr(nodes[2], _dims[k]) for k, v in move_neighbors.items()}
 
     # I fix the move_neighbors sense problem for node1:
     move_neighbors[1] = - move_neighbors[1]
@@ -1577,7 +1589,7 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     # because I need to reduce and create some waste(s) in between.
     # only if they are not siblings.
     if siblings:
-        change_parent = {k: 0 for k in nodes}
+        change_parent = {1: sum(move_neighbors.values()), 2: 0}
     else:
         change_parent = move_neighbors
 
@@ -1585,7 +1597,6 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     wastes_mods = {}
     resize_node = {k: {} for k in nodes}
     for k, v in nodes.items():
-        # TODO: take into account rotation here
         if not change_parent[k]:
             continue
         # TODO: this procedure to search for wastes could be a lot better. for example random.
@@ -1625,6 +1636,7 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
                 nodes_changes[k][ch] = [{'X': 0, 'Y': 0}, {'X': 0, 'Y': 0}]
             nodes_changes[k][ch][1][axiss[k]] += change
 
+    # I add the modifications to the swapped nodes
     for k, v in dif_nodes.items():
         ch = positions[k]
         if ch not in nodes_changes[k]:
@@ -1637,11 +1649,12 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     # we get the squares plus the modifications of all the items
     for k, change_neighbors in nodes_changes.items():
         # nodes_sq is a list of a tree tuple.
-        # the tuple manes: square, modifications, 1 if paert of the two swapped nodes
+        # the tuple means: square, modifications, 1 if part of the two swapped nodes
         children = parents[k].children
         nodes_sq[k] += [(node_to_square(item), v, pos == positions[k])
                         for pos, v in change_neighbors.items()
                         for item in get_node_leaves(children[pos])]
+    # TODO: here I need to create separately the squares of the items that are being rotated.
 
     # finally: the defects to check
     defects_sq = {v.PLATE_ID: [geom.defect_to_square(d) for d in defects[k]] for k, v in nodes.items()}
@@ -1649,8 +1662,8 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     after = 1
     # here we edit the squares we created in (1) and (2)
     # squares is a list of two dictionaries.
-    # We have for 'before' and 'after' the nodes affected indexed by 1 and 2.
-    # TODO: change this to numpy
+    # We have for 'before' and 'after' the nodes affected indexed by the plate they belong to.
+    # TODO: change this to numpy by summing quantities as arrays
     squares = [{v.PLATE_ID: [] for k, v in nodes.items()} for pos in [before, after]]
     for k, squares_changes in nodes_sq.items():
         # here, depending on the node, I should store the before and after plate.
@@ -1665,12 +1678,13 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
                 for a in ['X', 'Y']:
                     _sq[n][a] += change[n][a]
             # TODO: take into account rotation here so the after square is different
+            # here it's too late. I need to do it when I generate the squares.
             squares[after][after_plate].append(_sq)  # we do edit it in after
 
     # here I count the number of defects that collide with squares. Before and now.
     # we want the following structure:
 
-    # TODO: change this to numpy
+    # TODO: change this to numpy by comparing in dimensions as arrays.
     defects_found = [[] for r in range(2)]
     for pos in [before, after]:  # for (before) => after
         for plate, sq_list in squares[pos].items():  # for each node
@@ -1772,6 +1786,6 @@ if __name__ == "__main__":
     solution = sol.Solution.from_io_files(path=path, case_name=case)
     defects = solution.get_defects_per_plate()
     defect = defects[0][0]
-    node = solution.trees[0]
+    node1 = solution.trees[0]
 
-    search_node_of_defect(node, defect)
+    search_node_of_defect(node1, defect)
