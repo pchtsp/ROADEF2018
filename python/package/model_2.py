@@ -18,7 +18,6 @@ def solve_model(self, options):
     print('Creating variables')
     # variables:
     # each plate has a position in the bin and a bin assignment.
-    # TODO: also a rotation.
     plate_bin = pl.LpVariable.dicts(name='plate_bin', indexs=plates_bins,
                                     lowBound=0, upBound=1, cat=pl.LpInteger)
     plate_pos = pl.LpVariable.dicts(name='plate_pos', indexs=plates,

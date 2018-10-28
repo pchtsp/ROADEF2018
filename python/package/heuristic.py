@@ -144,36 +144,6 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
-    def join_blanks(self):
-        for tree in self.trees:
-            for v in tree.traverse('postorder'):
-                children = v.children
-                if not len(children):
-                    continue
-                candidates = [n for n in children if n.TYPE == -1]
-                if len(candidates) < 2:
-                    continue
-                pos = len(children) - 1
-                candidates_s = candidates[:]
-                min_pos = len(children) - len(candidates)
-                while len(candidates_s) and pos >= min_pos:
-                    if children[pos] in candidates_s:
-                        candidates_s.remove(children[pos])
-                        pos -= 1
-                        continue
-                    c = candidates_s.pop(0)
-                    nd.swap_nodes_same_level(children[pos], c, debug=self.debug, min_waste=self.get_param('minWaste'))
-                    pos -= 1
-                candidates = children[min_pos:]
-                while len(candidates) > 1:
-                    self.join_neighbors(candidates[0], candidates[1])
-                    candidates.pop(1)
-                last_waste = candidates[0]
-                if not last_waste.get_sisters():
-                    last_waste.up.TYPE = -1
-                    last_waste.detach()
-        return True
-
     def get_stacks_from_nodes(self, nodes):
         batch = self.get_batch()
         batch_filt = [batch.get(node.TYPE, None) for node in nodes]
@@ -267,7 +237,7 @@ class ImproveHeuristic(sol.Solution):
         candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
         # TODO: do not iterate over values
         node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
-        balance, defects_to_edit, rot = candidates_eval[node2]
+        balance, wastes_to_edit, rot = candidates_eval[node2]
         # node2, balance = max(good_candidates.items(), key=lambda x: x[1])
         improve = self.acceptance_probability(balance, temperature=temperature)
         self.evaluated += 1
@@ -287,11 +257,12 @@ class ImproveHeuristic(sol.Solution):
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
         recalculate = nd.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
-                                               defects_to_edit=defects_to_edit,
+                                               wastes_to_edit=wastes_to_edit,
                                                debug=self.debug, min_waste=self.get_param('minWaste'))
         if self.debug:
             consist = self.check_consistency()
             if len(consist):
+                a= 1
                 pass
 
         # seq_after = self.check_sequence()
@@ -981,11 +952,11 @@ class ImproveHeuristic(sol.Solution):
         self.next_nodes = self.previous_nodes.list_reverse()
         return True
 
-    def solve(self, options, warm_start=False):
+    def solve(self, options):
         import pprint as pp
-
-        rn.seed(options['seed'])
-        np.random.seed(options['seed'])
+        seed = options.get('seed', 42)
+        rn.seed(seed)
+        np.random.seed(seed)
 
         now = time.time()
         end = options['timeLimit']
@@ -995,7 +966,7 @@ class ImproveHeuristic(sol.Solution):
         p_remake = options['heur_remake']
         weights = params['weights']
 
-        if not warm_start:
+        if not options.get('warm_start', False):
             self.trees = \
                 self.get_initial_solution(options = options, num_iterations=p_remake['iterations_initial'])
             self.update_precedence_nodes(self.trees)

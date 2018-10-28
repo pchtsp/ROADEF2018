@@ -5,6 +5,7 @@
 
 
 def point_in_square(point, square, strict=True, lag=None):
+    # TODO: try with np.any
     """
     :param point: dict with X and Y values
     :param square: a list of two points that define a square.
@@ -26,6 +27,7 @@ def point_in_square(point, square, strict=True, lag=None):
 
 
 def square_inside_square(square1, square2, both_sides=True):
+    # TODO: try with np.any
     """
     Tests if square1 is inside square2.
     :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
@@ -45,6 +47,7 @@ def square_inside_square(square1, square2, both_sides=True):
 
 
 def square_intersects_square(square1, square2):
+    # TODO: try with np.any
     """
     Tests if some point in square1 is inside square2 (or viceversa).
     :param square1: a list of two dictionaries of type: {'X': 0, 'Y': 0}
@@ -84,6 +87,18 @@ def plate_inside_plate(plate1, plate2, turn=True, both_sides=False):
         [origin, {'X': plate2[0], 'Y': plate2[1]}],
         both_sides=both_sides
     )
+
+
+def rotate_square(square, ref_pos):
+    """
+    :param square: 1 element list of dicts with X and Y positions
+    :param ref_pos: a single point (dict of X, Y
+    :return: square roated around the ref_pos axis
+    """
+    inv_v = {'Y': 'X', 'X': 'Y'}
+    return [{k: point[ik] - ref_pos[ik] + ref_pos[k]
+             for k, ik in inv_v.items()}
+            for point in square]
 
 
 def check_nodespace_in_space(node_space, free_space, insert, min_waste):

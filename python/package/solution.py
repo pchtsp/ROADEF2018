@@ -325,14 +325,6 @@ class Solution(inst.Instance):
                 bad_position.append(node)
         return bad_position
 
-    def check_cuts_guillotine(self):
-        # TODO: this should check that the cuts are guillotine-type
-        return True
-
-    def check_distance_limits(self):
-        # TODO: check the min waste, min size of piece.
-        pass
-
     def check_wrong_type(self):
         wrong_type = []
         for tree in self.trees:
