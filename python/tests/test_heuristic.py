@@ -2,7 +2,9 @@ import unittest
 import package.params as pm
 import package.heuristic as heur
 import package.data_input as di
-import package.nodes as nd
+# import package.nodes as nd
+import package.nodes_optim as no
+import package.nodes_checks as nc
 
 # class TddInPythonExample(unittest.TestCase):
 #     def test_calculator_add_method_returns_correct_result(self):
@@ -32,15 +34,19 @@ class TestHeuristic(unittest.TestCase):
         program = heur.ImproveHeuristic.from_io_files(path=path)
         options = di.load_data(path=path + 'options.json')
         min_waste = program.get_param('minWaste')
-        # params = kwargs = options['heur_params']
+        global_params = program.get_param()
+        params = kwargs = options['heur_params']
         # weights = options['heur_weights']
 
         # self.graph_solution()
         # swap_2_before
         _nodes = {1: node1, 2: node2}
         nodes = {k: program.get_node_by_name(v) for k, v in _nodes.items()}
-        nodes_changes, wastes_to_edit = nd.get_swap_node_changes(nodes, min_waste, insert, rotation)
-        result = nd.swap_nodes_same_level(nodes[1], nodes[2], min_waste, wastes_to_edit, insert=insert, rotation=rotation)
+        rot = nc.check_swap_size_rotation(nodes[1], nodes[2], insert=insert, min_waste=min_waste, params=params)
+        self.assertIsNotNone(rot)
+        # nd.check_swap_space(nodes[1], nodes[2], insert=insert, global_params=params)
+        nodes_changes, wastes_to_edit = no.get_swap_node_changes(nodes, min_waste, insert, rotation)
+        result = no.swap_nodes_same_level(nodes[1], nodes[2], min_waste, wastes_to_edit, insert=insert, rotation=rotation)
         self.assertEqual(len(program.check_consistency()), 0)
         # self.assertEqual(expected, result)
 
@@ -56,18 +62,18 @@ class TestHeuristic(unittest.TestCase):
         # swap_2_before
         node1 = program.get_node_by_name(node1)
         node2 = program.get_node_by_name(node2)
-        result = nd.check_swap_nodes_defect(node1, node2, insert=insert, min_waste=min_waste, rotation=rotation)
+        result = no.check_swap_nodes_defect(node1, node2, insert=insert, min_waste=min_waste, rotation=rotation)
         self.assertEqual(True, True)
 
-    def check_swap_defects_squares(self, node1, node2, insert, rotation, expected):
+    def check_swap_defects_squares(self, node1, node2, insert, rotation, expected, **swap_nodes_params):
         path = pm.PATHS['root'] + 'python/examples/A6/'
         program = heur.ImproveHeuristic.from_io_files(path=path)
         _nodes = {1: node1, 2: node2}
 
         nodes = {k: program.get_node_by_name(v) for k, v in _nodes.items()}
         min_waste = program.get_param('minWaste')
-        nodes_changes, wastes_mods = nd.get_swap_node_changes(nodes, min_waste, insert, rotation)
-        squares = nd.get_swap_squares(nodes, nodes_changes, insert, rotation)
+        nodes_changes, wastes_mods = no.get_swap_node_changes(nodes, min_waste, insert, rotation, **swap_nodes_params)
+        squares = no.get_swap_squares(nodes, nodes_changes, insert, rotation)
         self.assertEqual(expected, squares)
 
     def test_check_swap_defects1(self):
@@ -101,7 +107,7 @@ class TestHeuristic(unittest.TestCase):
         ]
         return self.check_swap_defects_squares(node1=4, node2=33, insert=True, rotation=[], expected=expected)
 
-    def test_check_swap_defects_sq2(self):
+    def no_test_check_swap_defects_sq2(self):
         expected = [
             {0: [
                 [{'X': 610, 'Y': 705+1684}, {'X': 610+843, 'Y': 705+1684+821}],
@@ -166,7 +172,8 @@ class TestHeuristic(unittest.TestCase):
                 [{'X': 947, 'Y': 130+2166}, {'X': 947+784, 'Y': 130+2166+496}]
             ]}
         ]
-        return self.check_swap_defects_squares(node1=86, node2=77, insert=False, rotation=[1], expected=expected)
+        return self.check_swap_defects_squares(node1=86, node2=77, insert=False, rotation=[1], expected=expected,
+                                               add_at_end = True)
 
     def test_swap1(self):
         self.check_swap(node1=18, node2=23, insert=False, rotation=[], expected=True)
@@ -175,7 +182,7 @@ class TestHeuristic(unittest.TestCase):
         self.check_swap(node1=4, node2=17, insert=True, rotation=[], expected=True)
 
     def test_swap3(self):
-        self.check_swap(node1=4, node2=8, insert=False, rotation=[], expected=True)
+        self.check_swap(node1=4, node2=33, insert=True, rotation=[], expected=True)
 
     def test_swap4(self):
         self.check_swap(node1=67, node2=53, insert=True, rotation=[], expected=True)
@@ -183,10 +190,52 @@ class TestHeuristic(unittest.TestCase):
     def test_swap5(self):
         self.check_swap(node1=84, node2=71, insert=True, rotation=[], expected=True)
 
+    def test_swap6(self):
+        self.check_swap(node1=4, node2=35, insert=False, rotation=[], expected=True)
+
+    def test_swap7(self):
+        self.check_swap(node1=94, node2=75, insert=True, rotation=[1], expected=True)
+
+    def test_swap8(self):
+        self.check_swap(node1=67, node2=57, insert=True, rotation=[1], expected=True)
+
+    def test_swap9(self):
+        # rotation
+        self.check_swap(node1=2, node2=21, insert=True, rotation=[1], expected=True)
+
+    def test_swap10(self):
+        # interlevel 3 => 1
+        self.check_swap(node1=86, node2=82, insert=True, rotation=[], expected=True)
+
+    def test_swap11(self):
+        # interlevel 4 => 2
+        self.check_swap(node1=68, node2=57, insert=True, rotation=[], expected=True)
+
+    def test_swap12(self):
+        # interlevel 4 => 1
+        self.check_swap(node1=68, node2=73, insert=True, rotation=[], expected=True)
+
+    def test_swap13(self):
+        # interlevel 3 => 2 with waste
+        self.check_swap(node1=67, node2=57, insert=True, rotation=[], expected=True)
+
+    def test_swap14(self):
+        # interlevel 2 => 1
+        self.check_swap(node1=101, node2=120, insert=True, rotation=[], expected=True)
+
+    def test_swap15(self):
+        # interlevel rotation + unnest
+        self.check_swap(node1=84, node2=77, insert=True, rotation=[1], expected=True)
+
+    def test_swap16(self):
+        # rotation + swap
+        self.check_swap(node1=10, node2=24, insert=False, rotation=[1], expected=True)
+
 if __name__ == "__main__":
-    # t = TestHeuristic()
-    # t.test_swap4()
-    unittest.main()
+    t = TestHeuristic()
+    t.test_swap16()
+    # t.test_check_swap_defects_sq7()
+    # unittest.main()
 
 
 

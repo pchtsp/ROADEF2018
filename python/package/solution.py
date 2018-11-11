@@ -10,7 +10,6 @@ try:
 except:
     matplotlib.use('Qt5Agg', warn=False, force=True)
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import palettable as pal
 import pprint as pp
 import pandas as pd
@@ -19,6 +18,7 @@ import os
 import package.superdict as sd
 import package.tuplist as tl
 import package.nodes as nd
+import package.nodes_checks as nc
 import package.geometry as geom
 
 
@@ -166,7 +166,6 @@ class Solution(inst.Instance):
             'ch_size': self.check_nodes_fit
             , 'inside': self.check_parent_of_children
             , 'cuts': self.check_cuts_number
-            , 'position': self.check_nodes_inside_jumbo
             , 'types': self.check_wrong_type
             , 'ch_order': self.check_children_order
             , 'node_size': self.check_sizes
@@ -176,12 +175,7 @@ class Solution(inst.Instance):
         return {k: v for k, v in result.items() if len(v) > 0}
 
     def check_only_child(self):
-        only_1_child = []
-        for tree in self.trees:
-            for n in tree.traverse():
-                if len(n.get_children()) == 1 and n.CUT > 0:
-                    only_1_child.append(n)
-        return only_1_child
+        return [a for t in self.trees for a in nc.check_only_child(t)]
 
     def check_overlapping(self):
         solution = self.trees
@@ -247,6 +241,9 @@ class Solution(inst.Instance):
             solution = self.trees
         defect_node = []
         defects_by_plate = self.get_defects_per_plate()
+        # if solution is None:
+        #     a = 1
+        #     pass
         for tree in solution:
             if tree.PLATE_ID not in defects_by_plate:
                 continue
@@ -281,10 +278,17 @@ class Solution(inst.Instance):
             return 0
         return waste.WIDTH
 
-    def check_siblings(self):
-        # siblings must share a dimension of size and a point dimension
-        # for example: W and X or H and Y
-        pass
+    def check_nodes_inside_jumbo(self):
+        w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
+        plate_square = [{'X': 0, 'Y': 0}, {'X': w, 'Y': h}]
+        bad_position = []
+        for tree in self.trees:
+            for node in tree.iter_leaves():
+                square = nd.node_to_square(node)
+                if geom.square_inside_square(square, plate_square, both_sides=False):
+                    continue
+                bad_position.append(node)
+        return bad_position
 
     def check_cuts_number(self):
         """
@@ -292,14 +296,7 @@ class Solution(inst.Instance):
         the node's level.
         :return:
         """
-        levels = {}
-        for tree in self.trees:
-            levels.update(nd.assign_cut_numbers(tree, update=False))
-        bad_cut = []
-        for node, level in levels.items():
-            if node.CUT != level:
-                bad_cut.append((node, level))
-        return bad_cut
+        return [a for t in self.trees for a in nc.check_cuts_number(t)]
 
     def check_max_cut(self):
         """
@@ -311,85 +308,30 @@ class Solution(inst.Instance):
             levels.update(nd.assign_cut_numbers(tree, update=False))
         return [(node, level) for node, level in levels.items() if level > 4]
 
-    def check_nodes_inside_jumbo(self):
-        w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
-        plate_square = [{'X': 0, 'Y': 0}, {'X': w, 'Y': h}]
-        bad_position = []
-        for tree in self.trees:
-            for node in tree.iter_leaves():
-                square = nd.node_to_square(node)
-                if geom.square_inside_square(square,
-                                             plate_square,
-                                             both_sides=False):
-                    continue
-                bad_position.append(node)
-        return bad_position
-
     def check_wrong_type(self):
-        wrong_type = []
-        for tree in self.trees:
-            for node in tree.traverse():
-                if node.is_leaf():
-                    if node.TYPE == -2:
-                        wrong_type.append((node, node.TYPE))
-                elif node.TYPE != -2:
-                    wrong_type.append((node, node.TYPE))
-        return wrong_type
+        return [a for t in self.trees for a in nc.check_wrong_type(t)]
+
 
     def check_nodes_fit(self):
-        nodes_poblems = []
-        for tree in self.trees:
-            for node in tree.traverse():
-                if not nd.check_children_fit(node):
-                    nodes_poblems.append(node)
-        return nodes_poblems
+        return [a for t in self.trees for a in nc.check_nodes_fit(t)]
 
     def check_children_order(self):
         # This checks that the order of the children
         # follows the positions.
         # meaining: if children A is before B
         # it is lower or more to the left
-        bad_order = []
-        for tree in self.trees:
-            for node in tree.traverse():
-                axis, dim = nd.get_orientation_from_cut(node, inv=True)
-                axis_i, dim_i = nd.get_orientation_from_cut(node)
-                children = node.get_children()
-                if len(children) < 2:
-                    continue
-                for ch1, ch2 in zip(children, children[1:]):
-                    # For now, if one of the two children has dist=0
-                    # I'll ignore it... but I should change this.
-                    if not getattr(ch1, dim) or not getattr(ch2, dim):
-                        continue
-                    correct = getattr(ch1, axis) + getattr(ch1, dim) ==\
-                        getattr(ch2, axis)
-                    correct &= getattr(ch1, axis_i) == getattr(ch2, axis_i)
-                    correct &= getattr(ch1, dim_i) == getattr(ch2, dim_i)
-                    if not correct:
-                        bad_order.append((ch1, ch2))
-        return bad_order
+        return [a for t in self.trees for a in nc.check_children_order(t)]
 
     def check_sizes(self):
-        bad_size = []
-        for tree in self.trees:
-            for node in tree.traverse():
-                if node.WIDTH < 0 or node.HEIGHT < 0:
-                    bad_size.append(node)
-        return bad_size
+        return [a for t in self.trees for a in nc.check_sizes(t)]
 
     def check_parent_of_children(self):
         """
         We want to check if each node is inside its parent.
         :return:
         """
-        nodes_poblems = []
-        for tree in self.trees:
-            for node in tree.traverse():
-                children_with_problems = nd.check_children_inside(node)
-                if children_with_problems:
-                    nodes_poblems.append((node, children_with_problems))
-        return nodes_poblems
+        return [a for t in self.trees for a in nc.check_parent_of_children(t)]
+
 
     def check_demand_satisfied(self):
         demand = self.get_batch()
@@ -442,73 +384,18 @@ class Solution(inst.Instance):
             ax1.tick_params(axis='both', which='major', labelsize=50)
             # graph items
             for pos, leaf in enumerate(leafs.values()):
-                self.draw_leaf(ax1, leaf, stack, sequence, colors, fontsize)
+                nc.draw_leaf(ax1, leaf, stack, sequence, colors, fontsize)
             # graph wastes:
             wastes = nd.get_node_leaves(solution[plate], type_options=[-1, -3])
             for waste in wastes:
-                self.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
+                nc.draw_leaf(ax1, waste, stack, sequence, colors, fontsize)
             # graph defects
             for defect in self.get_defects_plate(plate):
-                self.draw_defect(ax1, defect)
+                nc.draw_defect(ax1, defect)
             fig_path = os.path.join(path, '{}_{}.png'.format(name, plate))
             fig1.savefig(fig_path, dpi=dpi, bbox_inches='tight')
             if not show:
                 plt.close(fig1)
-
-    @staticmethod
-    def draw_leaf(ax1, leaf, stack, sequence, colors, fontsize):
-        if leaf.TYPE in stack:
-            color = colors[stack[leaf.TYPE] % len(colors)]
-            edge_color = 'black'
-        else:
-            color = 'white'
-            edge_color = 'black'
-        ax1.add_patch(
-            patches.Rectangle(
-                (leaf.X, leaf.Y),  # (x,y)
-                leaf.WIDTH,  # width
-                leaf.HEIGHT,  # height
-                facecolor=color,
-                edgecolor=edge_color,
-                linewidth=3
-            )
-        )
-        more_info = ''
-        if leaf.TYPE >= 0:
-            parent = leaf.up
-            if parent is None:
-                parent = ""
-            else:
-                parent = parent.name
-            more_info = "\nstack={}\npos={}\ntype={}\nparent={}".format(
-                stack.get(leaf.TYPE, ''),
-                sequence.get(leaf.TYPE, ''),
-                leaf.TYPE,
-                parent
-            )
-        ax1.text(leaf.X + leaf.WIDTH / 2, leaf.Y + leaf.HEIGHT / 2,
-                 '{} x {}{}\nnode={}'.
-                 format(leaf.WIDTH,
-                        leaf.HEIGHT,
-                        more_info,
-                        leaf.name),
-                 horizontalalignment='center',
-                 verticalalignment='center',
-                 fontsize=fontsize)
-
-    @staticmethod
-    def draw_defect(ax1, defect):
-        ax1.axhline(y=defect['Y'], color="red", ls='dashed')
-        ax1.axvline(x=defect['X'], color="red", ls='dashed')
-        ax1.add_patch(
-            patches.Circle(
-                (defect['X'], defect['Y']),  # (x,y)
-                radius=20,
-                # defect['WIDTH'],  # width
-                # defect['HEIGHT'],  # height
-                color='red',
-            )
-        )
 
     def correct_plate_node_ids(self, solution=None, features=None):
         if features is None:

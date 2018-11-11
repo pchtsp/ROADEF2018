@@ -1,1 +1,31 @@
-{"timeLimit": 3600, "gap": 0.1, "solver": "HEUR", "integer": false, "path": "/home/disc/f.peschiera/Documents/roadef_results/clust1_20180706/A6/", "case_name": "A6", "max_plates": 10, "max_width": 1500, "max_items": 15, "max_iters": 200000, "ratio_plate_size": 2, "heur_weights": {"space": 0.0001, "seq": 100000, "defects": 1000}, "heur_params": {"main_iter": 5, "max_iter": 1000, "temperature": 8000, "try_rotation": false, "max_candidates": 5, "extra_jumbos": 2, "cooling_rate": 0.001, "change_first": false, "tolerance": null}, "debug": false, "graph": false}
+{
+    "case_name": "A6",
+    "debug": false,
+    "gap": 0.1,
+    "graph": false,
+    "heur_params": {"main_iter": 5, "max_iter": 500,
+                      "temperature": 100,
+                      "max_candidates": 5, "extra_jumbos": 0,
+                      "cooling_rate": 0.005,
+                      "change_first": false, "tolerance": null,
+                      "try_rotation": true,
+                      "rotation_probs": [0.50, 0.50, 0, 0],
+                      "rotation_tries": 2,
+                      "level_probs": [0.3, 0.4, 0.3],
+                      "weights": {"space": 0.00001, "seq": 40000, "defects": 40000, "wastes": 40000}
+                      },
+    "heur_weights": {
+        "defects": 1000,
+        "seq": 100000,
+        "space": 0.0001
+    },
+    "integer": false,
+    "max_items": 15,
+    "max_iters": 200000,
+    "max_plates": 10,
+    "max_width": 1500,
+    "path": "/home/disc/f.peschiera/Documents/roadef_results/clust1_20180706/A6/",
+    "ratio_plate_size": 2,
+    "solver": "HEUR",
+    "timeLimit": 3600
+}

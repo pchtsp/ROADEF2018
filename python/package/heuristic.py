@@ -4,6 +4,8 @@ import copy
 import package.superdict as sd
 import package.tuplist as tl
 import package.nodes as nd
+import package.nodes_optim as no
+import package.nodes_checks as nc
 import numpy as np
 import random as rn
 import math
@@ -223,11 +225,11 @@ class ImproveHeuristic(sol.Solution):
             node1, node2 = node, candidate
             if reverse:
                 node1, node2 = candidate, node
-            if not nd.check_assumptions_swap(node1, node2, insert):
+            if not nc.check_assumptions_swap(node1, node2, insert):
                 continue
             nodes = {'node1': node1, 'node2': node2}
             candidates_eval[node2] = \
-                nd.check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params)
+                no.check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params)
                 # pool.apply_async(nd.check_swap_two_nodes, args=(nodes, args_check_size, args_evaluate, evaluate, params))
         # for x, result in candidates_eval.items():
         #     candidates_eval[x] = result.get(timeout=10)
@@ -256,7 +258,7 @@ class ImproveHeuristic(sol.Solution):
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
-        recalculate = nd.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
+        recalculate = no.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
                                                wastes_to_edit=wastes_to_edit,
                                                debug=self.debug, min_waste=self.get_param('minWaste'))
         if self.debug:
@@ -275,7 +277,8 @@ class ImproveHeuristic(sol.Solution):
             return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        if round(balance)==0 and abs(new - self.last_objective) > 0.1 and self.last_objective % 10 != 9 and not insert:
+        # TODO: check why this is still going on.
+        if round(balance)==0 and new > self.last_objective + 0.1 and self.last_objective % 10 != 9 and not insert:
             a = 1
             pass
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
@@ -639,7 +642,9 @@ class ImproveHeuristic(sol.Solution):
         rn.shuffle(level_cand)
         # candidates_all = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
         candidates_all = self.get_nodes_by_level(level=level - dif_level)
+        candidates_all = np.array(candidates_all)
         i = 0
+        node_in_sol_v = np.vectorize(self.node_in_solution)
         for c in level_cand:
             if i >= max_iter:
                 break
@@ -647,6 +652,7 @@ class ImproveHeuristic(sol.Solution):
             if len(candidates) > max_candidates:
                 candidates = np.random.choice(candidates_all, max_candidates, replace=False)
             change = self.try_change_node(c, candidates, insert=True, params=params)
+            candidates_all = candidates_all[node_in_sol_v(candidates_all)]
             fails += not change
             successes += change
             i += 1
@@ -905,7 +911,7 @@ class ImproveHeuristic(sol.Solution):
             'global_params': self.get_param(),
             'items_by_stack': stacks,
             'defects': self.get_defects_per_plate(),
-            'sorting_function': nd.sorting_items,
+            'sorting_function': no.sorting_items,
             'limit_trees': limit_trees,
             'num_iters': iterator_per_proc
         }
@@ -915,14 +921,14 @@ class ImproveHeuristic(sol.Solution):
                 for x in range(num_process):
                     # result = nd.place_items_on_trees(**args)
                     seed = {'seed': int(rn.random()*1000)}
-                    result_x[x] = pool.apply_async(nd.iter_insert_items_on_trees, kwds={**args, **seed})
+                    result_x[x] = pool.apply_async(no.iter_insert_items_on_trees, kwds={**args, **seed})
                     # result_x[x] = nd.iter_insert_items_on_trees(**{**args, **seed})
 
                 for x, result in result_x.items():
                     result_x[x] = result.get(timeout=10000)
         else:
             seed = {'seed': int(rn.random() * 1000)}
-            result_x['0'] = nd.iter_insert_items_on_trees(**{**args, **seed})
+            result_x['0'] = no.iter_insert_items_on_trees(**{**args, **seed})
         candidates = [sol for result_proc in result_x.values() for sol in result_proc if sol is not None]
         if not candidates:
             return None
@@ -999,6 +1005,7 @@ class ImproveHeuristic(sol.Solution):
             # self.jumbos_mirroring(params, 5)
             for x in range(params['main_iter']):
                 # for i in range(len(self.trees)//4):
+                log.debug('DO: reduce nodes level 1')
                 self.try_reduce_nodes(1)
                 level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
                 # fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)

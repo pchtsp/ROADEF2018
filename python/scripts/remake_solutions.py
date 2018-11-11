@@ -25,3 +25,6 @@ _log.handlers = [fileh]
 _log.setLevel(level)
 
 program.solve(options)
+program.correct_plate_node_ids()
+program.graph_solution(options['path'], name="plate", dpi=50)
+
