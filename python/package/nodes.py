@@ -117,19 +117,20 @@ def change_feature(node, feature, value):
 
 
 def resize_waste(waste, dim, quantity, delete_if_empty=True):
-    # if not is_waste(waste):
-    #     a = 1
+    if not is_waste(waste):
+        a = 1
     assert is_waste(waste), "node is not a waste! {}".format(waste.name)
     parent = waste.up
     if parent is None:
         return False
-    log.debug('waste {} is being changed by {}'.format(waste.name, quantity))
-    setattr(waste, dim, getattr(waste, dim) + quantity)
+    new_size = getattr(waste, dim) + quantity
+    log.debug('waste {} in node {} is being changed by {} to {}'.format(waste.name, parent.name, quantity, new_size))
+    setattr(waste, dim, new_size)
     plate, pos = get_node_plate_pos(waste)
     for ch in parent.children[pos+1:]:
         mod_feature_node(ch, quantity, get_axis_of_dim(dim))
     if not getattr(waste, dim) and delete_if_empty:
-        log.debug('waste {} is being removed'.format(waste.name))
+        log.debug('waste {} is being removed from node {}'.format(waste.name, parent.name))
         waste.detach()
     return True
 
@@ -159,6 +160,7 @@ def resize_node(node, dim, quantity, delete_if_empty=True):
 
 
 def rotate_node(node, subnodes=True):
+    log.debug('Node {} is being rotated'.format(node.name))
     node.WIDTH, node.HEIGHT = node.HEIGHT, node.WIDTH
     root = node.get_tree_root()
     pos_rel_i = {'Y': node.X - root.X + root.Y,
@@ -486,11 +488,12 @@ def collapse_node(node):
         # node has only on child, cannot collapse
         return [node]
     axis, dim = get_orientation_from_cut(node)
+    # node_dim = getattr(node, dim)
+    # if np.all(node_dim==getattr(child, dim) for child in node.children):
     if getattr(node, dim) == getattr(node.children[0], dim):
-        # child is okay: no need to collapse
+        # children are okay: no need to collapse
         return [node]
-    log.debug('We collapse node {} into its children: {}'.
-              format(node.name, get_children_names(node)))
+    log.debug('We collapse node {} into its children: {}'.format(node.name, get_children_names(node)))
     parent = node.up
     assert parent is not None
     mod_feature_node(node, quantity=-1, feature='CUT')
@@ -500,8 +503,7 @@ def collapse_node(node):
     return children
 
 
-def delete_only_child(node, check_parent=True):
-    # TODO: I think this is easier if I use node.delete()
+def delete_only_child(node, check_parent=True, collapse_child=False):
     if len(node.children) != 1:
         return node
     child = node.children[0]
@@ -509,23 +511,15 @@ def delete_only_child(node, check_parent=True):
     if parent is None:
         if check_parent:
             return node
-        else:
-            node.delete()
-            return child
-    # copying features is not enough.
-    # I have to move the child one level above.
-    # and delete the node
-    mod_feature_node(child, quantity=-1, feature='CUT')
-    if child.children:
-        mod_feature_node(child, quantity=-1, feature='CUT')
-        for ch in child.get_children():
-            ch.detach()
-            parent.add_child(ch)
-    else:
-        child.detach()
-        parent.add_child(child)
-    parent.remove_child(node)
-    order_children(parent)
+    log.debug('We collapse node {} into its one children: {}'. format(node.name, child.name))
+    # if child.TYPE == -2:
+    #     a = 1
+    mod_feature_node(node, quantity=-1, feature='CUT')
+    node.delete()
+    if parent is not None:
+        order_children(parent)
+    if collapse_child:
+        collapse_node(child)
     return child
 
 
@@ -580,8 +574,8 @@ def add_child_waste(node, child_size, waste_pos=None, increase_node=True):
     features['CUT'] += 1
     features['NODE_ID'] = get_code_node(node)
     child = create_node(**features)
-    log.debug('created waste inside node {} with ID={}'.
-              format(node.NODE_ID, child.NODE_ID))
+    log.debug('created waste of size {} inside node {} with ID={}'.
+              format(child_size, node.NODE_ID, child.NODE_ID))
     node.add_child(child)
     order_children(node)
     setattr(node, dim_i, fill)

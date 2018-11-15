@@ -252,13 +252,15 @@ class ImproveHeuristic(sol.Solution):
             change = 'Swap'
         if len(rot):
             change += ' (rot={})'.format(rot)
+        log.debug('========================================')
         log.debug('Started {} nodes=({}/{}, {}/{}) gain={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
                       round(balance)))
         # seq_before = self.check_sequence()
         # balance_seq = self.check_swap_nodes_seq(node1, node2, insert=insert)
         # print('sequence before= {}\nbalance= {}'.format(len(seq_before), balance_seq))
-        recalculate = no.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
+        recalculate = \
+            no.swap_nodes_same_level(node1, node2, insert=insert, rotation=rot,
                                                wastes_to_edit=wastes_to_edit,
                                                debug=self.debug, min_waste=self.get_param('minWaste'))
         if self.debug:
@@ -277,10 +279,8 @@ class ImproveHeuristic(sol.Solution):
             return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        # TODO: check why this is still going on.
         if round(balance)==0 and new > self.last_objective + 0.1 and self.last_objective % 10 != 9 and not insert:
             a = 1
-            pass
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,
                       round(balance), round(new), round(self.best_objective), round(self.last_objective)

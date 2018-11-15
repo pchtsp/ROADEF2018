@@ -356,7 +356,6 @@ def get_swap_node_changes(nodes, min_waste, insert, rotation, **waste_find_param
     for k, v in nodes.items():
         if not change_parent[k]:
             continue
-        # TODO: this procedure to search for wastes could be a lot better. for example random.
         # if the other node is moving and is a waste, I can count it:
         ik = inv_k[k]
         other_nodes = None
@@ -368,7 +367,7 @@ def get_swap_node_changes(nodes, min_waste, insert, rotation, **waste_find_param
         wastes_mods[k] = \
             search_wastes_to_repair_node(
                 node=parents[k], min_waste=min_waste, change=change_parent[k],
-                after_detects=False, add_pos_wastes=other_nodes, ignore_wastes=filt_nodes,
+                add_pos_wastes=other_nodes, ignore_wastes=filt_nodes,
                 **waste_find_params
             )
         if wastes_mods[k] is None:  # infeasible waste removal!
@@ -493,7 +492,14 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     if not np.any(len(r) for r in defects.values()):
         return 0, None
 
-    nodes_changes, wastes_mods = get_swap_node_changes(nodes, min_waste, insert, rotation)
+    order_wastes = None
+    if rn.random() > 0.7:
+        order_wastes = lambda x: rn.random()
+
+    # candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
+    # node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
+
+    nodes_changes, wastes_mods = get_swap_node_changes(nodes, min_waste, insert, rotation, order_wastes=order_wastes)
     if np.any([n is None for n in wastes_mods.values()]):  # infeasible waste removal!
         return - 10000, None
     squares = get_swap_squares(nodes, nodes_changes, insert, rotation)
@@ -631,7 +637,7 @@ def swap_nodes_same_level(node1, node2, min_waste, wastes_to_edit, insert=False,
         # 6: now we check if we need to create a waste children on the node:
         for _node in inserted_nodes:
             dest_size = getattr(destination, dest_dim)
-            node_size = getattr(node, dest_dim)
+            node_size = getattr(_node, dest_dim)
             status, recalculate = nd.add_child_waste(node=_node, child_size=dest_size-node_size)
 
 
@@ -720,8 +726,8 @@ def insert_node_at_position(node, destination, position):
     if cut_change:
         nd.mod_feature_node(node, feature='CUT', quantity=cut_change)
 
-    log.debug('We insert node {} into destination {}'.
-              format(node.name, destination.name))
+    log.debug('We insert node {} into destination {} in position {}'.
+              format(node.name, destination.name, position))
     destination.add_child(node)
 
     # 3. update parents order:
@@ -729,8 +735,9 @@ def insert_node_at_position(node, destination, position):
     return node
 
 
-def search_wastes_to_repair_node(node, min_waste, change, after_detects=True, add_pos_wastes=None, ignore_wastes=None,
-                                 add_at_end=False):
+def search_wastes_to_repair_node(node, min_waste, change, add_pos_wastes=None, ignore_wastes=None,
+                                 add_at_end=False, order_wastes=None):
+    # It has to do with inserting two nodes without notice.
     """
     if the position we get is a waste we edit it.
     if the position is a non waste, we create one there.
@@ -742,13 +749,12 @@ def search_wastes_to_repair_node(node, min_waste, change, after_detects=True, ad
     :return:  [(position, increase), ...]
     """
     axis_i, dim_i = nd.get_orientation_from_cut(node, inv=True)
+    if order_wastes is None:
+        order_wastes = lambda x: getattr(x, dim_i)
     # if surplus is negative: we need to add a waste, it's easier
     # if surplus is positive: we start deleting wastes.
     # before creating one, will try to increase any waste.
-    if after_detects:
-        wastes = nd.find_all_wastes_after_defect(node)
-    else:
-        wastes = nd.find_all_wastes(node)
+    wastes = nd.find_all_wastes(node)
     if ignore_wastes is not None:
         _, less_wastes = zip(*ignore_wastes)
         wastes = [w for w in wastes if w not in less_wastes]
@@ -756,9 +762,11 @@ def search_wastes_to_repair_node(node, min_waste, change, after_detects=True, ad
     if add_pos_wastes is not None and len(add_pos_wastes):
         positions, additional_wastes = zip(*add_pos_wastes)
     wastes.extend(additional_wastes)
+    # we reverse it because we take them from the end first.
+    wastes.sort(key=order_wastes, reverse=True)
     if change > 0:
         if len(wastes) and not add_at_end:
-            waste = wastes[-1]
+            waste = wastes.pop()
             return [(nd.get_node_pos(waste), change)]
         else:
             return [(len(node.children), change)]
@@ -769,7 +777,6 @@ def search_wastes_to_repair_node(node, min_waste, change, after_detects=True, ad
 
     # we want the smallest at the end:
     result = []
-    wastes.sort(key= lambda x: getattr(x, dim_i), reverse=True)
     remaining = -change
     comply_min_waste = True
     while wastes and remaining:
@@ -788,14 +795,11 @@ def search_wastes_to_repair_node(node, min_waste, change, after_detects=True, ad
             waste_pos = positions[_pos]
         else:
             waste_pos = nd.get_node_pos(waste)
+        log.debug("waste {} with position {} has been selected for changing by {}".
+                  format(waste.name, waste_pos, -quantity))
+        # nd.draw(waste.up)
         result.append((waste_pos, -quantity))
         remaining -= quantity
-        # If we did all we could and still have remaining.
-        # we relax the min size constraint and do one last turn.
-        # if remaining and not len(wastes) and comply_min_waste:
-        #     wastes = nd.find_all_wastes_after_defect(node)
-        #     wastes.sort(key=lambda x: getattr(x, axis_i))
-        #     comply_min_waste = False
     if remaining > 0:
         return None
         # assert remaining == 0, "repair_dim_node did not eliminate all waste. Left={}".format(remaining)
@@ -815,25 +819,26 @@ def repair_dim_node(node, min_waste, wastes_mods=None):
                         for node_pos, change in wastes_mods]
     for ref_child, change in wastes_mods_node:
         if change < 0:
+            # if not nd.is_waste(ref_child):
+            #     a=1
             nd.resize_waste(ref_child, dim_i, change)
-            nd.delete_only_child(node)
+            nd.delete_only_child(node, collapse_child=True)
         elif ref_child is None:
             # this means add waste at the end:
-            nd.add_child_waste(node, child_size=change,
-                            waste_pos=node_size-change,
-                            increase_node=False)
+            nd.add_child_waste(node, child_size=change, waste_pos=node_size-change, increase_node=False)
         elif nd.is_waste(ref_child):
+            # this means increase waste:
             nd.resize_waste(ref_child, dim_i, change)
-            nd.delete_only_child(node)
+            nd.delete_only_child(node, collapse_child=True)
         else:
-            node_axis = getattr(ref_child, axis_i)
+            # this means create waste at specific position :
+            # we need the relative position of this children with respect to the parent
+            node_axis = getattr(ref_child, axis_i) - getattr(node, axis_i)
             node_pos = nd.get_node_pos(ref_child)
 
             # we need to make room for the node:
             for sib in nd.get_next_children_iter(node, pos_start= node_pos):
                 nd.mod_feature_node(node=sib, quantity=change, feature=axis_i)
 
-            nd.add_child_waste(node, child_size=change,
-                            waste_pos=node_axis,
-                            increase_node=False)
+            nd.add_child_waste(node, child_size=change, waste_pos=node_axis, increase_node=False)
     return True
