@@ -231,6 +231,9 @@ class TestHeuristic(unittest.TestCase):
         # rotation + swap
         self.check_swap(node1=10, node2=24, insert=False, rotation=[1], expected=True)
 
+    # test swap or insert where there is nodes that need to be collapsed.
+
+
 if __name__ == "__main__":
     t = TestHeuristic()
     t.test_swap16()

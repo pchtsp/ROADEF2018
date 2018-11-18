@@ -73,78 +73,9 @@ class ImproveHeuristic(sol.Solution):
                 if parent is None:
                     continue
                 node.detach()
-                nd.delete_only_child(parent)
+                nd.delete_only_child(parent, collapse_child=True)
         return True
 
-    def join_neighbors(self, node1, node2):
-        # this only makes sense if both
-        # nodes are type=-1 (waste)
-        if node1 == node2:
-            return False
-        parent = node1.up
-        assert parent == node2.up, \
-            '{} and {} are not siblings'.format(node1.name, node2.name)
-        assert node1.TYPE in [-1, -3] and node2.TYPE in [-1, -3], \
-            '{} and {} are not waste'.format(node1.name, node2.name)
-
-        # this is okay because they are siblings:
-        axis, dim = nd.get_orientation_from_cut(node1)
-        node1pos = getattr(node1, axis)
-        node2pos = getattr(node2, axis)
-        if not (node1pos + getattr(node1, dim) == node2pos):
-            # self.draw(node1.PLATE_ID)
-            self.draw(node1.PLATE_ID, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
-            assert (node1pos + getattr(node1, dim) == node2pos), \
-                '{} and {} are not neighbors'.format(node1.name, node2.name)
-        new_size = getattr(node1, dim) + getattr(node2, dim)
-        # we need to update the first node because is the one that comes first
-        setattr(node1, dim, new_size)
-        node2.detach()
-        return True
-
-    def join_blanks_seq(self, node):
-        """
-        :param node:
-        :return: nothing.
-        """
-        """
-        1. search for a waste.
-        2. search for waste neighbors to the left.
-        3. search for waste neighbors to the right.
-        4. join everything.
-        """
-        children = node.get_children()
-        if not children:
-            return False
-
-        # This gets a list of lists of consecutive wastes:
-        new_waste = True
-        wastes = []
-        new_wastes = []
-        for ch in children:
-            if ch.TYPE not in [-1, -3]:
-                new_waste = True
-                if len(new_wastes) > 1:
-                    wastes.append(new_wastes)
-                new_wastes = []
-                continue
-            if new_waste:
-                new_wastes = [ch]
-            else:
-                new_wastes.append(ch)
-            new_waste = False
-
-        if len(new_wastes) > 1:
-            wastes.append(new_wastes)
-        # This iterates over each sequence of wastes and joins them
-        for w_seq in wastes:
-            while len(w_seq) >= 2:
-                w_2 = w_seq.pop()
-                w_1 = w_seq[-1]
-                # for w_1, w_2 in zip(wastes, wastes[1:]):
-                self.join_neighbors(w_1, w_2)
-
-        return True
 
     def get_stacks_from_nodes(self, nodes):
         batch = self.get_batch()
@@ -267,6 +198,7 @@ class ImproveHeuristic(sol.Solution):
             consist = self.check_consistency()
             if len(consist):
                 a= 1
+                assert not len(consist), 'inconsistency reached!'
                 pass
 
         # seq_after = self.check_sequence()
@@ -498,9 +430,9 @@ class ImproveHeuristic(sol.Solution):
         for tree in self.trees:
             for node in tree.traverse('postorder'):
                 if node.children:
-                    self.join_blanks_seq(node)
+                    no.join_blanks_seq(node)
                 if len(node.children) == 1:
-                    nd.delete_only_child(node)
+                    nd.delete_only_child(node, collapse_child=True)
         return
 
     def change_level_by_defects(self, level, params):

@@ -80,7 +80,11 @@ def solve_heuristic(options):
         filename = 'solution.csv'
         prefix = case + '_'
     self = heur.ImproveHeuristic.from_input_files(case_name=case, path=input_path)
-    self.solve(options)
+    try:
+        self.solve(options)
+    except AssertionError as e:
+        self.export_solution(path=output_path, name=filename, prefix=prefix)
+        raise e
     self.correct_plate_node_ids()
     if options.get('graph', False):
         self.graph_solution(output_path, name="plate", dpi=50)

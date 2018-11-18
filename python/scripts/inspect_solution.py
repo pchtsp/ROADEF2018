@@ -4,12 +4,15 @@ import package.nodes as nd
 import package.params as pm
 
 path = pm.PATHS['results'] + '/clust1_20180708_py/A1/'
+path = pm.PATHS['results'] + 'test/A2/'
 self = heur.ImproveHeuristic.from_io_files(path=path)
 options = di.load_data(path= path + 'options.json')
-options['heur_params']['weights'] = options['heur_weights']
+# options['heur_params']['weights'] = options['heur_weights']
 params = kwargs = options['heur_params']
-weights = options['heur_weights']
+weights = options['heur_params']['weights']
 
+consist = self.check_consistency()
+consist['ch_size'][0].X
 # seq = self.check_sequence()
 # # self.graph_solution(name='', path=path)
 # pos = 1

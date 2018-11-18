@@ -493,7 +493,7 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
         return 0, None
 
     order_wastes = None
-    if rn.random() > 0.7:
+    if rn.random() > 0.5:
         order_wastes = lambda x: rn.random()
 
     # candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
@@ -665,7 +665,6 @@ def swap_nodes_same_level(node1, node2, min_waste, wastes_to_edit, insert=False,
             wastes = wastes_to_edit[k]
         repair_dim_node(parent, min_waste, wastes)
 
-
     return nodes
     # return recalculate
 
@@ -819,17 +818,16 @@ def repair_dim_node(node, min_waste, wastes_mods=None):
                         for node_pos, change in wastes_mods]
     for ref_child, change in wastes_mods_node:
         if change < 0:
-            # if not nd.is_waste(ref_child):
-            #     a=1
+            # TODO: still needed
+            if not nd.is_waste(ref_child):
+                nd.draw(node)
             nd.resize_waste(ref_child, dim_i, change)
-            nd.delete_only_child(node, collapse_child=True)
         elif ref_child is None:
             # this means add waste at the end:
             nd.add_child_waste(node, child_size=change, waste_pos=node_size-change, increase_node=False)
         elif nd.is_waste(ref_child):
             # this means increase waste:
             nd.resize_waste(ref_child, dim_i, change)
-            nd.delete_only_child(node, collapse_child=True)
         else:
             # this means create waste at specific position :
             # we need the relative position of this children with respect to the parent
@@ -841,4 +839,51 @@ def repair_dim_node(node, min_waste, wastes_mods=None):
                 nd.mod_feature_node(node=sib, quantity=change, feature=axis_i)
 
             nd.add_child_waste(node, child_size=change, waste_pos=node_axis, increase_node=False)
+    # After all the waste editions, it could be possible that we need to collapse the node:
+    nd.delete_only_child(node, collapse_child=True)
+    return True
+
+
+def join_blanks_seq(node):
+    """
+    :param node:
+    :return: nothing.
+    """
+    """
+    1. search for a waste.
+    2. search for waste neighbors to the left.
+    3. search for waste neighbors to the right.
+    4. join everything.
+    """
+    children = node.get_children()
+    if not children:
+        return False
+
+    # This gets a list of lists of consecutive wastes:
+    new_waste = True
+    wastes = []
+    new_wastes = []
+    for ch in children:
+        if not nd.is_waste(ch):
+            new_waste = True
+            if len(new_wastes) > 1:
+                wastes.append(new_wastes)
+            new_wastes = []
+            continue
+        if new_waste:
+            new_wastes = [ch]
+        else:
+            new_wastes.append(ch)
+        new_waste = False
+
+    if len(new_wastes) > 1:
+        wastes.append(new_wastes)
+    # This iterates over each sequence of wastes and joins them
+    for w_seq in wastes:
+        while len(w_seq) >= 2:
+            w_2 = w_seq.pop()
+            w_1 = w_seq[-1]
+            # for w_1, w_2 in zip(wastes, wastes[1:]):
+            nd.join_neighbors(w_1, w_2)
+
     return True

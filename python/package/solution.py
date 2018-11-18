@@ -397,7 +397,7 @@ class Solution(inst.Instance):
             if not show:
                 plt.close(fig1)
 
-    def correct_plate_node_ids(self, solution=None, features=None):
+    def correct_plate_node_ids(self, solution=None, features=None, edit_features=True):
         if features is None:
             features = nd.default_features()
         if solution is None:
@@ -407,7 +407,8 @@ class Solution(inst.Instance):
         for pos, tree in enumerate(solution):
             for v in tree.traverse("preorder"):
                 # rename the NODE_IDs and PLATE_ID
-                v.add_features(PLATE_ID=pos, NODE_ID=order)
+                if edit_features:
+                    v.add_features(PLATE_ID=pos, NODE_ID=order)
                 v.name = v.NODE_ID
                 # correct all wastes to -1 by default
                 if 'TYPE' in features:
@@ -417,14 +418,13 @@ class Solution(inst.Instance):
                 v.add_features(PARENT=d['PARENT'])
                 result[int(v.NODE_ID)] = d
                 order += 1
-        # last waste is -3
-        if 'TYPE' in features:
+        if 'TYPE' in features and edit_features:
             if result[order-1]['TYPE'] == -1 and result[order-1]['CUT'] == 1:
                 result[order - 1]['TYPE'] = -3
         return result
 
     def export_solution(self, path=pm.PATHS['results'] + aux.get_timestamp(), prefix='',
-                        name='solution.csv', solution=None):
+                        name='solution.csv', solution=None, correct_naming=True):
         """
         When creating the output forest:
         – The trees must be given in the correct sequence of plates, i.e. first
@@ -444,7 +444,7 @@ class Solution(inst.Instance):
             solution = self.trees
         if not os.path.exists(path):
             os.mkdir(path)
-        result = self.correct_plate_node_ids(solution)
+        result = self.correct_plate_node_ids(solution, edit_features=correct_naming)
         table = pd.DataFrame.from_dict(result, orient='index')
         col_order = ['PLATE_ID', 'NODE_ID', 'X', 'Y', 'WIDTH', 'HEIGHT', 'TYPE', 'CUT', 'PARENT']
         table = table[col_order]

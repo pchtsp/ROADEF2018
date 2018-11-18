@@ -52,6 +52,7 @@ def create_plate(width, height, id, defects, cut_defects=False):
             'PLATE_ID': id
             }
     plate = create_node(**args)
+    plate.NODE_ID = get_code_node(plate)
     duplicate_waste_into_children(plate)
     plate.add_feature('DEFECTS', defects)
     if cut_defects:
@@ -117,6 +118,14 @@ def change_feature(node, feature, value):
 
 
 def resize_waste(waste, dim, quantity, delete_if_empty=True):
+    """
+
+    :param waste:
+    :param dim:
+    :param quantity:
+    :param delete_if_empty:
+    :return: 2 if succesully deleted waste. 1 if only edited
+    """
     if not is_waste(waste):
         a = 1
     assert is_waste(waste), "node is not a waste! {}".format(waste.name)
@@ -132,13 +141,14 @@ def resize_waste(waste, dim, quantity, delete_if_empty=True):
     if not getattr(waste, dim) and delete_if_empty:
         log.debug('waste {} is being removed from node {}'.format(waste.name, parent.name))
         waste.detach()
-    return True
+        return 2
+    return 1
 
 
 def resize_node(node, dim, quantity, delete_if_empty=True):
     waste = find_waste(node, child=True)
-    # if we need to create a waste: no problemo.
     if waste is None:
+        # if we need to create a waste: no problemo.
         if quantity <= 0:
             return False
         # We need to add a waste at the end...
@@ -151,7 +161,7 @@ def resize_node(node, dim, quantity, delete_if_empty=True):
     # if we eliminate the waste to 0, we delete the node.
     if not getattr(waste, dim) and delete_if_empty:
         waste.detach()
-    delete_only_child(node)
+    delete_only_child(node, collapse_child=True)
     return True
 
 #
@@ -549,7 +559,7 @@ def add_child_waste(node, child_size, waste_pos=None, increase_node=True):
         # sometimes we want a node without children
         # (because it had waste as only other child and now it hasn't).
         if len(node.children) == 1:
-            delete_only_child(node)
+            delete_only_child(node, collapse_child=True)
         return False, recalculate
 
     if node.is_leaf():
@@ -639,13 +649,13 @@ def reduce_children(node, min_waste):
     :return:
     """
     axis, dim = get_orientation_from_cut(node)
-    node_size = min_size = getattr(node, dim)
+    node_size = getattr(node, dim)
     if len(node.children) <= 1:
         return False
     all_wastes = []
     for ch in node.get_children():
-        # if it has a child which is already a item... nothing to do
         waste = None
+        # if it has a child which is already an item... nothing to do
         if ch.TYPE >= 0:
             return False
         elif is_waste(ch):
@@ -941,6 +951,32 @@ def debug_nodes( nodes):
     for node in nodes:
         debug_node(node)
         print("")
+
+
+def join_neighbors(node1, node2):
+    # this only makes sense if both
+    # nodes are type=-1 (waste)
+    if node1 == node2:
+        return False
+    parent = node1.up
+    assert parent == node2.up, \
+        '{} and {} are not siblings'.format(node1.name, node2.name)
+    assert is_waste(node1) and is_waste(node2), \
+        '{} and {} are not waste'.format(node1.name, node2.name)
+
+    # this is okay because they are siblings:
+    axis, dim = get_orientation_from_cut(node1)
+    node1pos = getattr(node1, axis)
+    node2pos = getattr(node2, axis)
+    if not (node1pos + getattr(node1, dim) == node2pos):
+        draw(node1.up, 'name','X', 'Y', 'WIDTH', 'HEIGHT')
+        assert (node1pos + getattr(node1, dim) == node2pos), \
+            '{} and {} are not neighbors'.format(node1.name, node2.name)
+    new_size = getattr(node1, dim) + getattr(node2, dim)
+    # we need to update the first node because is the one that comes first
+    setattr(node1, dim, new_size)
+    node2.detach()
+    return True
 
 
 if __name__ == "__main__":
