@@ -120,24 +120,23 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
         item_id = node.TYPE
         inserted_nodes = False
         t_start = 1
-        # We first search the tree where the previous node in the sequence
+        # We first search the tree where the previous node in the sequence was inserted
         # only starting from the position of the previous node
         if item_id in item_prec:
             node2 = item_node[item_prec[item_id]]
             inserted_nodes = insert_node_inside_node_traverse(node, node2, min_waste=min_waste, params=params)
             if inserted_nodes:
-                node = nd.get_node_by_type(inserted_nodes[1], item_id)
-                item_node[item_id] = node
+                item_node[item_id] = nd.get_node_by_type(inserted_nodes[1], item_id)
                 continue
             t_start = node2.PLATE_ID + 2
+        #     TODO: check this in partial solutions
         # The first tree is our dummy tree so we do not want to use it.
         for tree in trees[t_start:]:
             inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
             if inserted_nodes:
                 break
         if inserted_nodes:
-            node = nd.get_node_by_type(inserted_nodes[1], item_id)
-            item_node[item_id] = node
+            item_node[item_id] = nd.get_node_by_type(inserted_nodes[1], item_id)
             continue
         tree_id = len(trees) - 1
         # If we arrive to the limit, it means we lost.
@@ -149,8 +148,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
         inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
         # TODO: warning, in the future this could be possible due to defects checking
         assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(node.name)
-        node = nd.get_node_by_type(inserted_nodes[1], item_id)
-        item_node[item_id] = node
+        item_node[item_id] = nd.get_node_by_type(inserted_nodes[1], item_id)
 
     # we take out the dummy tree
     return trees[1:]
@@ -463,7 +461,8 @@ def get_swap_squares(nodes, nodes_changes, insert, rotation):
     return squares
 
 
-def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None):
+def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None, order_wastes=None):
+    # TODO: check sibling swap
     # we'll only check if exchanging the nodes gets a
     # positive defect balance.
     # We need to:
@@ -492,8 +491,8 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
     if not np.any(len(r) for r in defects.values()):
         return 0, None
 
-    order_wastes = None
-    if rn.random() > 0.5:
+    # order_wastes = None
+    if order_wastes is None and rn.random() > 0.5:
         order_wastes = lambda x: rn.random()
 
     # candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()

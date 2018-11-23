@@ -251,12 +251,13 @@ def check_experiment(experiment, case=None):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    graph(experiment='test', case='A8')
-    benchmarking('obj', experiments_filter=['hp_20180905_venv', 'hp_20180718_venv_pypy',
+    graph(experiment='len_20181118_venv')
+    benchmarking('obj', experiments_filter=['len_20181118_venv', 'hp_20180718_venv_pypy',
                                             'hp_20180911_venv', 'prise_20180917_venv',
                                                   'prise_20180926_venv'])
     experiment = 'clust1_20180922_venv'
     experiment = 'test'
+    # experiment = 'len_20180718_venv_py'
     path_checker = pm.PATHS['checker']
     summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)

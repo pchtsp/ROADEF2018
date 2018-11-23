@@ -172,6 +172,7 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
 
 
 def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
+    # TODO: here we could return if needed reduction of parent to fit
     if node1.up == node2.up:
         log.debug('nodes are siblings, we do not check for space')
         return []

@@ -2,7 +2,7 @@ import unittest
 import package.params as pm
 import package.heuristic as heur
 import package.data_input as di
-# import package.nodes as nd
+import package.nodes as nd
 import package.nodes_optim as no
 import package.nodes_checks as nc
 
@@ -29,8 +29,8 @@ types of swapping cases:
 
 class TestHeuristic(unittest.TestCase):
 
-    def check_swap(self, node1, node2, insert, rotation, expected):
-        path = pm.PATHS['root'] + 'python/examples/A6/'
+    def check_swap(self, node1, node2, insert, rotation, expected, case='A6'):
+        path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
         program = heur.ImproveHeuristic.from_io_files(path=path)
         options = di.load_data(path=path + 'options.json')
         min_waste = program.get_param('minWaste')
@@ -46,12 +46,13 @@ class TestHeuristic(unittest.TestCase):
         self.assertIsNotNone(rot)
         # nd.check_swap_space(nodes[1], nodes[2], insert=insert, global_params=params)
         nodes_changes, wastes_to_edit = no.get_swap_node_changes(nodes, min_waste, insert, rotation)
-        result = no.swap_nodes_same_level(nodes[1], nodes[2], min_waste, wastes_to_edit, insert=insert, rotation=rotation)
+        result = \
+            no.swap_nodes_same_level(nodes[1], nodes[2], min_waste, wastes_to_edit, insert=insert, rotation=rotation)
         self.assertEqual(len(program.check_consistency()), 0)
         # self.assertEqual(expected, result)
 
-    def check_swap_defects(self, node1, node2, insert, rotation, expected):
-        path = pm.PATHS['root'] + 'python/examples/A6/'
+    def check_swap_defects(self, node1, node2, insert, rotation, expected, case='A6'):
+        path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
         program = heur.ImproveHeuristic.from_io_files(path=path)
         options = di.load_data(path=path + 'options.json')
         min_waste = program.get_param('minWaste')
@@ -62,11 +63,20 @@ class TestHeuristic(unittest.TestCase):
         # swap_2_before
         node1 = program.get_node_by_name(node1)
         node2 = program.get_node_by_name(node2)
-        result = no.check_swap_nodes_defect(node1, node2, insert=insert, min_waste=min_waste, rotation=rotation)
-        self.assertEqual(True, True)
 
-    def check_swap_defects_squares(self, node1, node2, insert, rotation, expected, **swap_nodes_params):
-        path = pm.PATHS['root'] + 'python/examples/A6/'
+        def order_wastes(node):
+            axis_i, dim_i = nd.get_orientation_from_cut(node, inv=True)
+            return getattr(node, dim_i)
+
+        result, waste_changes= \
+            no.check_swap_nodes_defect(node1, node2, insert=insert, min_waste=min_waste,
+                                       rotation=rotation, order_wastes=order_wastes)
+        self.assertEqual(result, expected)
+        # add_at_end = True
+
+
+    def check_swap_defects_squares(self, node1, node2, insert, rotation, expected, case='A6', **swap_nodes_params):
+        path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
         program = heur.ImproveHeuristic.from_io_files(path=path)
         _nodes = {1: node1, 2: node2}
 
@@ -80,7 +90,7 @@ class TestHeuristic(unittest.TestCase):
         return self.check_swap_defects(node1=4, node2=33, insert=True, rotation=[], expected=-1)
 
     def test_check_swap_defects2(self):
-        return self.check_swap_defects(node1=11, node2=8, insert=False, rotation=[], expected=-1)
+        return self.check_swap_defects(node1=11, node2=8, insert=False, rotation=[], expected=-10000)
 
     def test_check_swap_defects3(self):
         return self.check_swap_defects(node1=10, node2=8, insert=False, rotation=[], expected=-1)
@@ -231,14 +241,19 @@ class TestHeuristic(unittest.TestCase):
         # rotation + swap
         self.check_swap(node1=10, node2=24, insert=False, rotation=[1], expected=True)
 
+    def test_swap17_A15(self):
+        # swap siblings
+        self.check_swap(node1=179, node2=180, insert=False, rotation=[], expected=True, case='A15')
+
     # test swap or insert where there is nodes that need to be collapsed.
 
 
 if __name__ == "__main__":
-    t = TestHeuristic()
-    t.test_swap16()
-    # t.test_check_swap_defects_sq7()
-    # unittest.main()
+    # t = TestHeuristic()
+    # t.test_check_swap_defects2()
+    # # t.test_swap17_A15()
+    # # t.test_check_swap_defects_sq7()
+    unittest.main()
 
 
 

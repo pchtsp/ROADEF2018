@@ -2,6 +2,8 @@
 title:  ROADEF 2018 summary
 author: Team S22
 documentclass: report
+header-includes: |
+    \usepackage{booktabs}
 ...
 
 ## Introduction
@@ -95,20 +97,27 @@ This is the basic logic to insert a node inside a destination node. This is use 
 6. if needed, add a children waste on the node(s) that has /have just been inserted.
 7. Since a node has just been inserted, modify the residual waste at the end of the destination node.
 
-#### Characteristics of the computer used
+## Results
+
+### Summary
+
+\input{results.tex}
+
+### Characteristics of the computer used
 
 <!-- free -mh -->
 <!-- lscpu -->
 
-**prise-srv3**:
+<!-- **prise-srv3**:
 
 * 62 GB RAM
 * 12 cores were used from 48
 * CPU speed (in MHz): 2300.000
+ -->
 
-**serv-cluster1**:
+<!-- **serv-cluster1**: -->
 
 * 62 GB RAM
-* 12 cores were used from 12
+* 12 cores.
 * CPU speed (in MHz): 2927.000
 
