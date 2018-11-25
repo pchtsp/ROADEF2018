@@ -34,7 +34,7 @@ cut_level_next_o = {
 }
 
 OPTIONS = {
-    'timeLimit': 600
+    'timeLimit': 3600
     , 'gap': 0.1
     , 'solver': "HEUR"  # CPLEXPY, CPLEX_CMD, GUROBI, HEUR
     , 'integer': False
@@ -50,11 +50,12 @@ OPTIONS = {
     , 'num_processors': 24
     , 'multiprocess': True
     , 'seed': None
+    , 'warm_start': False
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
     , 'heur_params': {'main_iter': 5, 'max_iter': 500,
-                      'temperature': 3000,
+                      'temperature': 100,
                       'max_candidates': 5, 'extra_jumbos': 0,
-                      'cooling_rate': 0.005,
+                      'cooling_rate': 0.00005,
                       'change_first': False, 'tolerance': None,
                       'try_rotation': True,
                       'rotation_probs': [0.50, 0.50, 0, 0],
@@ -67,13 +68,13 @@ OPTIONS = {
         'iterations_remake': 10,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.60, 0.1, 0.1, 0.1, 0.1],
-        'probability': 0.05,
-        # 'num_trees': [1],
+        'options': ['best', 'partial', 'restart', ],
+        'probability': [0.2, 0.7, 0.1],
     }
     , 'heur_optim': {
-        'try_rotation': True,
-        'max_candidates': 5,
-        'rotation_probs': [0.5, 0.5, 0, 0],
+        # 'try_rotation': True,
+        # 'max_candidates': 5,
+        # 'rotation_probs': [0.5, 0.5, 0, 0],
         'weights': {'space': 400, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
     }
     , 'debug': False

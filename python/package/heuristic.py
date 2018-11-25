@@ -40,6 +40,7 @@ class ImproveHeuristic(sol.Solution):
 
     def update_solution_to_best(self):
         self.trees = copy.deepcopy(self.best_solution)
+        self.last_objective = self.best_objective
 
     def clean_empty_cuts(self):
         """
@@ -767,13 +768,14 @@ class ImproveHeuristic(sol.Solution):
         # candidate = trees[0]
         # if the candidate is worse, we do not even bother.
         if self.calculate_objective(candidate, discard_empty_trees=True) > \
-                self.calculate_objective(incumbent, discard_empty_trees=True) - tolerance:
+                (self.calculate_objective(incumbent, discard_empty_trees=True) - tolerance) \
+                and rn.random() < 0.8:
             # if len(self.check_defects()) != start_def:
             #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
         # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)):
+        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)) and rn.random() < 0.8:
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
@@ -930,7 +932,6 @@ class ImproveHeuristic(sol.Solution):
         b_accepted = b_improved = 0
         max_wastes = params['max_candidates']
         remake_iters = p_remake.get('iterations_remake', 10)
-        remake_prob = p_remake.get('probability', 0.1)
         iter = 0
         while True:
             # self.jumbos_swapping(params, 5)
@@ -949,8 +950,6 @@ class ImproveHeuristic(sol.Solution):
                     # temp = params['temperature']
                     changed_flag = True
                     log.info('activate optimisation')
-                if rn.random() < remake_prob and remake_iters:
-                    self.try_change_tree(options=options, num_iterations=remake_iters, tolerance=0)
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
@@ -992,11 +991,20 @@ class ImproveHeuristic(sol.Solution):
             else:
                 iter = 0
             if iter > 10:
-                if rn.random() > 0.1:
+                remake_prob = p_remake.get('probability', [1])
+                remake_ops = p_remake.get('options', ['partial'])
+                opt = np.random.choice(a=remake_ops, size=1, p=remake_prob)
+                if opt == 'best':
+                    log.info('restarted to best solution')
                     self.update_solution_to_best()
-                else:
+                elif opt == 'partial' and remake_iters:
+                    log.info('partial change to solution')
+                    self.try_change_tree(options=options, num_iterations=remake_iters, tolerance=0)
+                elif opt == 'restart':
+                    log.info('restarted solution')
                     self.trees = self.get_initial_solution(options=options,
                                                            num_iterations=p_remake['iterations_initial'])
+
                 iter = 0
             clock = time.time() - now
             if temp < 1 or clock > end:
@@ -1006,11 +1014,11 @@ class ImproveHeuristic(sol.Solution):
             # wastes = self.check_waste_size()
 
             # fails, successes = tuple(map(sum, zip(*fail_success_acum)))
-            log.info("TEMP={}, seq={}, def={}, wastes={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
+            log.info("TEMP={}, seq={}, def={}, current={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
                 round(temp),
                 len(seq),
                 len(defects),
-                0,
+                round(self.last_objective),
                 round(self.best_objective),
                 round(clock),
                 self.evaluated,
@@ -1036,12 +1044,10 @@ if __name__ == "__main__":
     # TODO: add more random movements.
     # TODO: dynamic weights.
     # TODO: implement the multilevel swap
-    # TODO: for eating wastes after swap, I can eat wastes right of the defect
     # TODO: profiling
     # TODO: make tree recreation work with defects.
     # TODO: switch defects with wastes (small ones? or small nodes)
     # TODO: search_waste_cuts for other levels.
-    # TODO: IMPORTANT. correct problem with precalculating defects before change. check this works with sequence.
     # cut.
     import pprint as pp
     case = pm.OPTIONS['case_name']
