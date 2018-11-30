@@ -41,7 +41,7 @@ OPTIONS = {
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
     , 'output_file_name': None
-    , 'case_name': 'A6'
+    , 'case_name': 'A15'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
@@ -61,7 +61,7 @@ OPTIONS = {
                       'rotation_probs': [0.70, 0.30, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.3, 0.3, 0.3, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 4000, 'defects': 40000, 'wastes': 40000}
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
                       }
     , 'heur_remake': {
         'iterations_initial': 100,

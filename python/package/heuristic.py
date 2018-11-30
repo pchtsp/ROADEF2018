@@ -970,8 +970,8 @@ class ImproveHeuristic(sol.Solution):
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
                 log.debug('DO: change_level_by_seq')
-                # fsc['seq2'] = self.change_level_by_seq2(level, params=params)
-                # fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
+                fsc['seq2'] = self.change_level_by_seq2(level, params=params)
+                fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
                 log.debug('DO: change_level_by_defects')
                 fsc['def'] = self.change_level_by_defects(level, params=params)
                 log.debug('DO: change_level_by_all')
@@ -983,7 +983,7 @@ class ImproveHeuristic(sol.Solution):
                 log.debug('DO: interlevel cuts')
                 include_sisters = True
                 for level2 in range(1, 5):
-                    if not abs(level - level2):
+                    if not abs(level - level2) in [1, 2]:
                         continue
                     for insert in [True]:
                         if (insert and level2 == 4):
