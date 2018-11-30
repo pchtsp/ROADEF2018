@@ -724,15 +724,26 @@ def assign_cut_numbers(node, cut=0, update=True):
 
 
 def search_node_of_defect(node, defect):
+    nodes = []
     def before_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
         return defect[axis] > getattr(_node, axis) + getattr(_node, dim)
+
+    def after_defect(_node):
+        axis, dim = get_orientation_from_cut(_node)
+        return defect[axis] + defect[dim] < getattr(_node, axis)
+
     for n in node.traverse('preorder', is_leaf_fn=before_defect):
+        # we have not arrived yet to the defect
         if before_defect(n):
             continue
+        # we have passed the defect
+        if after_defect(n):
+            return nodes
+        # we have found a node that intersects the defect
         if n.TYPE != -2:
-            return n
-    return None
+            nodes.append(n)
+    return nodes
 
 
 def defects_in_node(node):

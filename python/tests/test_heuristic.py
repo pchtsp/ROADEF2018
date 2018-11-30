@@ -29,6 +29,14 @@ types of swapping cases:
 
 class TestHeuristic(unittest.TestCase):
 
+    # test search_node_of_defect
+
+    # def check_defects(self, case, expected):
+    #     path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
+    #     program = heur.ImproveHeuristic.from_io_files(path=path)
+    #     program.check_defects()
+        # expected
+
     def check_swap(self, node1, node2, insert, rotation, expected, case='A6'):
         path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
         program = heur.ImproveHeuristic.from_io_files(path=path)
@@ -245,15 +253,35 @@ class TestHeuristic(unittest.TestCase):
         # swap siblings
         self.check_swap(node1=179, node2=180, insert=False, rotation=[], expected=True, case='A15')
 
+    def test_check_swap_defects_A2_1(self):
+        return self.check_swap_defects(node1=130, node2=159, insert=False, rotation=[], expected=-1, case='A2')
+
+    def test_check_swap_defects_sq_A2_1(self):
+        expected = [
+            {2: [
+                [{'X': 947+1398+821+602, 'Y': 0}, {'X': 947+1398+821+602+496, 'Y': 784}]
+            ]},
+            {2: [
+                [{'X': 947, 'Y': 130+2166}, {'X': 947+784, 'Y': 130+2166+496}]
+            ]}
+        ]
+        return self.check_swap_defects_squares(
+            node1=130, node2=159, insert=False, rotation=[], expected=expected, add_at_end = True, case='A2'
+        )
+
+    # def test_swap1_A2(self):
+    #     # swap siblings
+    #     self.check_swap(node1=130, node2=159, insert=False, rotation=[], expected=True, case='A2')
+
     # test swap or insert where there is nodes that need to be collapsed.
 
 
 if __name__ == "__main__":
-    # t = TestHeuristic()
-    # t.test_check_swap_defects2()
+    t = TestHeuristic()
+    t.check_defects()
     # # t.test_swap17_A15()
     # # t.test_check_swap_defects_sq7()
-    unittest.main()
+    # unittest.main()
 
 
 

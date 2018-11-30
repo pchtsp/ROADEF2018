@@ -145,6 +145,7 @@ if __name__ == "__main__":
     parser.add_argument('-hr', '--heur-remake', dest='heur_remake', type=json.loads)
     parser.add_argument('-hp', '--heur-params', dest='heur_params', type=json.loads)
     parser.add_argument('-ho', '--heur-optim', dest='heur_optim', type=json.loads)
+    parser.add_argument('-mp', '--main-param', dest='main_param', type=json.loads)
 
     args = parser.parse_args()
     if getattr(sys, 'frozen', False):
@@ -164,8 +165,12 @@ if __name__ == "__main__":
     # pm = importlib.import_module(args.file)
 
     cases = args.case
+
     if args.all_cases:
         cases = ['A{}'.format(case) for case in range(1, 21)]
+
+    if args.main_param:
+        pm.OPTIONS.update(args.main_param)
 
     if args.heur_remake:
         pm.OPTIONS['heur_remake'].update(args.heur_remake)
