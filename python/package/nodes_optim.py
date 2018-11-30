@@ -215,16 +215,12 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     checks if a change is beneficial in terms of sequence violations
     :param node1:
     :param node2:
-    :param insert: type of swap can be insert or swap
+    :param insert: type of swap can be insert (true) or swap (false)
     :return: balance of violations. Bigger is better.
     """
     # get all leaves in node1 and node2
     nodes = {1: node1, 2: node2}
     moved_items = {k: set(n.TYPE for n in nd.get_node_leaves(v)) for k, v in nodes.items()}
-    # precedence = self.get_previous_nodes(type_node_dict=self.type_node_dict)
-    # precedence_inv = self.get_next_nodes(type_node_dict=self.type_node_dict)
-    # items1 = nd.get_node_leaves(node1)
-    # items2 = nd.get_node_leaves(node2)
     # get all leaves between the two nodes
     first_node, second_node, neighbors = get_nodes_between_nodes(node1, node2, solution=solution)
     first_i, second_i = 1, 2
@@ -240,7 +236,7 @@ def check_swap_nodes_seq(node1, node2, solution, precedence, precedence_inv, ins
     nodes_iter = [1]
     if not insert:
         nodes_iter.append(2)
-    # items_after means items that are after in the sequence.
+    # items_after means items that are 'later' in the sequence.
     # for each leaf in the first node:
         # because items are "going to the back":
         # if I find nodes that precede it: good

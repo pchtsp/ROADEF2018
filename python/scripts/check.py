@@ -9,7 +9,7 @@ import pprint as pp
 import package.superdict as sd
 import pandas as pd
 import os
-import matplotlib
+# import matplotlib
 # matplotlib.use('Qt5Agg', warn=False, force=True)
 import shutil
 import re
@@ -171,10 +171,10 @@ def graph(experiment, case=None, dpi=25):
     # TODO: make experiment optional to graph all
     # experiment = 'clust1_20180706'
     exp_paths = get_experiments_paths(pm.PATHS['results'], filter_exps=False)
+    if case is not None:
+        exp_paths = exp_paths.filter([case])
     solutions = get_solutions(exp_paths)
     solutions = sd.SuperDict(solutions).get_property(experiment)
-    if case is not None:
-        solutions = solutions.filter([case])
     destination = pm.PATHS['root'] + 'graphs/'
     if os.path.exists(destination):
         shutil.rmtree(destination)
@@ -251,15 +251,15 @@ def check_experiment(experiment, case=None):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    graph(experiment='len_20181118_venv')
-    benchmarking('obj', experiments_filter=['len_20181118_venv', 'hp_20180718_venv_pypy',
+    # graph(experiment='hp_20181125', case="A1")
+    benchmarking('obj', experiments_filter=['hp_20181125', 'hp_20181126', 'hp_20180718_venv_pypy',
                                             'hp_20180911_venv', 'prise_20180917_venv',
                                                   'prise_20180926_venv'])
     experiment = 'clust1_20180922_venv'
     experiment = 'test'
     # experiment = 'len_20180718_venv_py'
     path_checker = pm.PATHS['checker']
-    summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
+    # summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)
     rrr2 = check_experiment(experiment, 'A2')
     # rrr = get_objectives()

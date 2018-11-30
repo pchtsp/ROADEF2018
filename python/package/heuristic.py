@@ -560,7 +560,7 @@ class ImproveHeuristic(sol.Solution):
         candidates = set(rem) | set([d[0] for d in defects]) | set(items)
         return list(candidates)
 
-    def insert_nodes_somewhere(self, level, params, include_sisters=False, dif_level=1):
+    def multi_level_swap(self, level, level2, params, include_sisters=False, insert=True):
         max_iter = params['max_iter']
         max_candidates = params['max_candidates']
         fails = successes = 0
@@ -571,20 +571,26 @@ class ImproveHeuristic(sol.Solution):
             level_cand = [n for n in set(level_cand) if n is not None]
             level_cand_s = [s for n in level_cand for s in n.get_sisters()]
             level_cand.extend(level_cand_s)
-        level_cand = [n for n in set(level_cand) if n is not None]
+        # From now on, this only swaps leafs of TYPE >= 0
+        level_cand = [n for n in set(level_cand) if n is not None and n.TYPE >= 0]
         rn.shuffle(level_cand)
         # candidates_all = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
-        candidates_all = self.get_nodes_by_level(level=level - dif_level)
+        candidates_all = self.get_nodes_by_level(level=level2)
         candidates_all = np.array(candidates_all)
         i = 0
         node_in_sol_v = np.vectorize(self.node_in_solution)
         for c in level_cand:
             if i >= max_iter:
                 break
+            if not self.node_in_solution(c):
+                i += 1
+                continue
             candidates = candidates_all
             if len(candidates) > max_candidates:
                 candidates = np.random.choice(candidates_all, max_candidates, replace=False)
-            change = self.try_change_node(c, candidates, insert=True, params=params)
+            change = self.try_change_node(c, candidates, insert=insert, params=params)
+            if not len(candidates_all):
+                break
             candidates_all = candidates_all[node_in_sol_v(candidates_all)]
             fails += not change
             successes += change
@@ -769,7 +775,7 @@ class ImproveHeuristic(sol.Solution):
         # if the candidate is worse, we do not even bother.
         if self.calculate_objective(candidate, discard_empty_trees=True) > \
                 (self.calculate_objective(incumbent, discard_empty_trees=True) - tolerance) \
-                and rn.random() < 0.8:
+                and rn.random() < 0.95:
             # if len(self.check_defects()) != start_def:
             #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
@@ -933,6 +939,7 @@ class ImproveHeuristic(sol.Solution):
         max_wastes = params['max_candidates']
         remake_iters = p_remake.get('iterations_remake', 10)
         iter = 0
+        levels = range(1, len(params['level_probs']) + 1)
         while True:
             # self.jumbos_swapping(params, 5)
             # self.jumbos_mirroring(params, 5)
@@ -940,7 +947,7 @@ class ImproveHeuristic(sol.Solution):
                 # for i in range(len(self.trees)//4):
                 log.debug('DO: reduce nodes level 1')
                 self.try_reduce_nodes(1)
-                level = np.random.choice(a=[1, 2, 3], p=params['level_probs'])
+                level = np.random.choice(a=levels, p=params['level_probs'])
                 # fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
                 if not changed_flag and self.best_objective < weights['defects']//2:
@@ -953,19 +960,18 @@ class ImproveHeuristic(sol.Solution):
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
-                if rn.random() > 0.8:
+                if rn.random() > 0.5:
                     self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
                 if level == 1 and rn.random() > 0.2:
                         fsc['cuts'] = self.search_waste_cuts(1, params=params)
-                include_sisters = True
-                if rn.random() > 0.2:
+                if rn.random() > 0.5:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
                 log.debug('DO: change_level_by_seq')
-                fsc['seq2'] = self.change_level_by_seq2(level, params=params)
-                fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
+                # fsc['seq2'] = self.change_level_by_seq2(level, params=params)
+                # fsc['seq'] = self.change_level_by_seq(level, include_sisters=False, params=params)
                 log.debug('DO: change_level_by_defects')
                 fsc['def'] = self.change_level_by_defects(level, params=params)
                 log.debug('DO: change_level_by_all')
@@ -975,11 +981,19 @@ class ImproveHeuristic(sol.Solution):
                     self.clean_empty_cuts_2()
                 self.add_1cut()
                 log.debug('DO: interlevel cuts')
-                fsc['interlevel'] = \
-                    self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, params=params)
-                if level in [2, 3]:
-                    fsc['interlevel'] = \
-                        self.insert_nodes_somewhere(level + 1, include_sisters=include_sisters, dif_level=2, params=params)
+                include_sisters = True
+                for level2 in range(1, 5):
+                    if not abs(level - level2):
+                        continue
+                    for insert in [True]:
+                        if (insert and level2 == 4):
+                            continue
+                        fsc['interlevel'] = \
+                            self.multi_level_swap(level, include_sisters=include_sisters,
+                                                  params=params, level2=level2, insert=insert)
+                # if level in [2, 3]:
+                #     fsc['interlevel'] = \
+                #         self.multi_level_swap(level + 1, include_sisters=include_sisters, dif_level=2, params=params)
                 count += 1
 
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)
