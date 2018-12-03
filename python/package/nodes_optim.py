@@ -398,6 +398,15 @@ def get_swap_node_changes(nodes, min_waste, insert, rotation, **waste_find_param
                 nodes_changes[k][ch] = [{'X': 0, 'Y': 0}, {'X': 0, 'Y': 0}]
             nodes_changes[k][ch][1][axiss[k]] += change
 
+    # Before using dif_nodes, we need to update it
+    # with a possible modification based on dif_per_sibling
+    # (modified wastes, for example)
+    for k in to_swap:
+        ik = inv_k[k]
+        _pos = positions[ik]
+        _axis = axiss[ik]
+        dif_nodes[k][_axis] += dif_per_sibling[ik][_pos]
+
     # I add the modifications to the swapped nodes
     for k, v in dif_nodes.items():
         ch = positions[k]

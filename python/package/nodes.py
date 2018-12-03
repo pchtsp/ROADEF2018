@@ -60,22 +60,22 @@ def create_plate(width, height, id, defects, cut_defects=False):
     return plate
 
 
-def node_cut_wastes(node, min_width):
-    for defect in get_defects_from_plate(node):
-        node_to_cut = search_node_of_defect(node, defect)
-        position = defect.X
-        pos_node = (node_to_cut.X, node_to_cut.X + node_to_cut.WIDTH)
-        pos_range = (position - min_width/2, position + min_width/2)
-        if pos_range[0] < pos_node[0]:
-            pos_range = (pos_node[0], pos_node[0] + min_width)
-        if pos_range[1] < pos_node[1]:
-            pos_range = (pos_node[1] - min_width, pos_node[1])
-        # TODO: still need to do check neighbor nodes sizes...
-
-        # nodes = split_waste(node_to_cut, pos_range[0], min_width)
-        split_waste(node_to_cut, pos_range[1], min_width)
-        pass
-    return node
+# def node_cut_wastes(node, min_width):
+#     for defect in get_defects_from_plate(node):
+#         node_to_cut = search_node_of_defect(node, defect)
+#         position = defect.X
+#         pos_node = (node_to_cut.X, node_to_cut.X + node_to_cut.WIDTH)
+#         pos_range = (position - min_width/2, position + min_width/2)
+#         if pos_range[0] < pos_node[0]:
+#             pos_range = (pos_node[0], pos_node[0] + min_width)
+#         if pos_range[1] < pos_node[1]:
+#             pos_range = (pos_node[1] - min_width, pos_node[1])
+#         # TODO: still need to do check neighbor nodes sizes...
+#
+#         # nodes = split_waste(node_to_cut, pos_range[0], min_width)
+#         split_waste(node_to_cut, pos_range[1], min_width)
+#         pass
+#     return node
 
 
 def create_dummy_tree(nodes, id=-1):
@@ -723,7 +723,7 @@ def assign_cut_numbers(node, cut=0, update=True):
     return result
 
 
-def search_node_of_defect(node, defect):
+def search_nodes_of_defect(node, defect):
     nodes = []
     def before_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
@@ -731,7 +731,7 @@ def search_node_of_defect(node, defect):
 
     def after_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
-        return defect[axis] + defect[dim] < getattr(_node, axis)
+        return defect[axis] + defect[dim] <= getattr(_node, axis)
 
     for n in node.traverse('preorder', is_leaf_fn=before_defect):
         # we have not arrived yet to the defect
@@ -1002,4 +1002,4 @@ if __name__ == "__main__":
     defect = defects[0][0]
     node1 = solution.trees[0]
 
-    search_node_of_defect(node1, defect)
+    # search_node_of_defect(node1, defect)

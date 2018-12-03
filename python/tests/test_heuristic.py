@@ -6,36 +6,19 @@ import package.nodes as nd
 import package.nodes_optim as no
 import package.nodes_checks as nc
 
-# class TddInPythonExample(unittest.TestCase):
-#     def test_calculator_add_method_returns_correct_result(self):
-#         calc = Calculator()
-#         result = calc.add(2, 2)
-#         self.assertEqual(4, result)
-
-# test checking defects when swapping.
-# test sequence when swapping.
-# test correct swapping under several conditions
-# test
-
-"""
-types of swapping cases:
-* same plate siblings
-* same plate, not siblings
-* different plate same level
-* different plate different level
-*
-
-"""
-
 class TestHeuristic(unittest.TestCase):
 
     # test search_node_of_defect
 
-    # def check_defects(self, case, expected):
-    #     path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
-    #     program = heur.ImproveHeuristic.from_io_files(path=path)
-    #     program.check_defects()
-        # expected
+    def check_defects(self, case, expected, plates=None):
+        path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
+        program = heur.ImproveHeuristic.from_io_files(path=path)
+        if plates is None:
+            plates = range(len(program.trees))
+        solution = [program.trees[n] for n in plates]
+        defects = program.check_defects(solution)
+        defect_codes = [d[0].name for d in defects]
+        self.assertEqual(defect_codes, expected)
 
     def check_swap(self, node1, node2, insert, rotation, expected, case='A6'):
         path = pm.PATHS['root'] + 'python/examples/{}/'.format(case)
@@ -93,6 +76,7 @@ class TestHeuristic(unittest.TestCase):
         nodes_changes, wastes_mods = no.get_swap_node_changes(nodes, min_waste, insert, rotation, **swap_nodes_params)
         squares = no.get_swap_squares(nodes, nodes_changes, insert, rotation)
         self.assertEqual(expected, squares)
+        # self.assertDictEqual(expected[1], squares[1])
 
     def test_check_swap_defects1(self):
         return self.check_swap_defects(node1=4, node2=33, insert=True, rotation=[], expected=-1)
@@ -254,20 +238,7 @@ class TestHeuristic(unittest.TestCase):
         self.check_swap(node1=179, node2=180, insert=False, rotation=[], expected=True, case='A15')
 
     def test_check_swap_defects_A2_1(self):
-        return self.check_swap_defects(node1=130, node2=159, insert=False, rotation=[], expected=-1, case='A2')
-
-    def test_check_swap_defects_sq_A2_1(self):
-        expected = [
-            {2: [
-                [{'X': 947+1398+821+602, 'Y': 0}, {'X': 947+1398+821+602+496, 'Y': 784}]
-            ]},
-            {2: [
-                [{'X': 947, 'Y': 130+2166}, {'X': 947+784, 'Y': 130+2166+496}]
-            ]}
-        ]
-        return self.check_swap_defects_squares(
-            node1=130, node2=159, insert=False, rotation=[], expected=expected, add_at_end = True, case='A2'
-        )
+        return self.check_swap_defects(node1=130, node2=159, insert=False, rotation=[], expected=0, case='A2')
 
     # def test_swap1_A2(self):
     #     # swap siblings
@@ -275,13 +246,66 @@ class TestHeuristic(unittest.TestCase):
 
     # test swap or insert where there is nodes that need to be collapsed.
 
+    def test_def_A2(self):
+        expected = [144]
+        self.check_defects(case='A2', expected=expected, plates=[3])
+
+    def test_def_A2_2(self):
+        expected = [106, 97]
+        self.check_defects(case='A2_2', expected=expected, plates=[2])
+
+    def test_check_swap_defects_A2_3(self):
+        return self.check_swap_defects(node1=173, node2=57, insert=False, rotation=[], expected=-1,
+                                       case='A2_3')
+
+    def test_check_swap_defects_A2_3_sq(self):
+        dif_width = -1294+1077
+        expected = [
+            {4: [
+                [{'X': 6000 - 1077, 'Y': 0}, {'X': 6000-621, 'Y': 469}],
+                [{'X': 6000 - 1077, 'Y': 469+296}, {'X': 6000-139-469, 'Y': 3210-1989}],
+                [{'X': 6000 - 139-469, 'Y': 469 + 296}, {'X': 6000 - 139, 'Y': 3210 - 1989}],
+                [{'X': 6000 - 1077, 'Y': 3210-1989}, {'X': 6000, 'Y': 3210}]
+            ],
+            1: [
+                [{'X': 6000 - 3371, 'Y': 0}, {'X': 6000, 'Y': 810}],
+                [{'X': 6000 - 3371, 'Y': 810}, {'X': 6000 - 65, 'Y': 810 + 803}],
+                [{'X': 6000 - 3371, 'Y': 810 + 803}, {'X': 6000, 'Y': 3210 - 423 - 364}],
+                [{'X': 6000 - 3371, 'Y': 3210 - 423}, {'X': 6000 - 2462, 'Y': 3210}],
+                [{'X': 1288+47, 'Y': 0}, {'X': 1288 +47+469, 'Y': 456}],
+                [{'X': 1288 + 47, 'Y': 456+286}, {'X': 1288 + 47 + 746, 'Y': 456+286+426}],
+                [{'X': 1288 + 47, 'Y': 456 + 286+426}, {'X': 1288 + 47 + 456, 'Y': 3210-1573}],
+                [{'X': 1288 + 47, 'Y': 3210-1573}, {'X': 6000-3371, 'Y': 3210}],
+            ]
+            },
+            {4: [
+                [{'X': 6000 - 1294, 'Y': 0}, {'X': 6000 - 825, 'Y': 456}],
+                [{'X': 6000 - 1294, 'Y': 456+286}, {'X': 6000-548, 'Y': 456+286+426}],
+                [{'X': 6000 - 1294, 'Y': 456+286+426}, {'X': 6000 - 838, 'Y': 3210 - 1573}],
+                [{'X': 6000 - 1294, 'Y': 3210-1573}, {'X': 6000, 'Y': 3210}]
+            ],
+            1: [
+                [{'X': 1288+47, 'Y': 0}, {'X': 1288 +47+456, 'Y': 469}],
+                [{'X': 1288 + 47, 'Y': 469+296}, {'X': 1288 + 47 + 469, 'Y': 3210-1989}],
+                [{'X': 1288 + 47+ 469, 'Y': 469 + 296}, {'X': 1288 + 47 + 469+469, 'Y': 3210-1989}],
+                [{'X': 1288 + 47, 'Y': 3210-1989}, {'X': 1288 + 47+1077, 'Y': 3210}],
+                [{'X': 6000-3371+dif_width, 'Y': 0}, {'X': 6000+dif_width, 'Y': 810}],
+                [{'X': 6000 - 3371+dif_width, 'Y': 810}, {'X': 6000-65+dif_width, 'Y': 810+803}],
+                [{'X': 6000 - 3371+dif_width, 'Y': 810+803}, {'X': 6000+dif_width, 'Y': 3210-423-364}],
+                [{'X': 6000 - 3371+dif_width, 'Y': 3210-423}, {'X': 6000-2462+dif_width, 'Y': 3210 }],
+            ],
+            }
+        ]
+        return self.check_swap_defects_squares(node1=173, node2=57, insert=False, rotation=[], expected=expected,
+                                               add_at_end = True, case='A2_3')
+
 
 if __name__ == "__main__":
-    t = TestHeuristic()
-    t.check_defects()
+    # t = TestHeuristic()
+    # t.test_check_swap_defects_A2_3_sq()
     # # t.test_swap17_A15()
     # # t.test_check_swap_defects_sq7()
-    # unittest.main()
+    unittest.main()
 
 
 

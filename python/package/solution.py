@@ -249,9 +249,9 @@ class Solution(inst.Instance):
             if tree.PLATE_ID not in defects_by_plate:
                 continue
             for defect in defects_by_plate[tree.PLATE_ID]:
-                node = nd.search_node_of_defect(tree, defect)
-                assert node is not None, 'defect {} doesnt have node'.format(defect)
-                defect_node.append((node, defect))
+                nodes = nd.search_nodes_of_defect(tree, defect)
+                assert nodes is not None, 'defect {} doesnt have node'.format(defect)
+                defect_node.extend((node, defect) for node in nodes)
         return defect_node
 
     def check_waste_size(self, solution=None):
