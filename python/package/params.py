@@ -16,9 +16,10 @@ def calculate_paths_results(results):
     ,'experiments': results + "test/"
     }
 
-
-root = '/home/pchtsp/Documents/projects/ROADEF2018/'
-results = '/home/pchtsp/Dropbox/ROADEF2018/'
+base = '/home'
+base = 'C:/Users'
+root = base + '/pchtsp/Documents/projects/ROADEF2018/'
+results = base + '/pchtsp/Dropbox/ROADEF2018/'
 
 PATHS = {**calculate_paths_root(root), **calculate_paths_results(results)}
 

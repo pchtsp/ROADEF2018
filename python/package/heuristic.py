@@ -212,7 +212,7 @@ class ImproveHeuristic(sol.Solution):
             return improve
         new = self.evaluate_solution(weights)
         old = self.best_objective
-        if round(balance)==0 and new > self.last_objective + 0.1 and self.last_objective % 10 != 9 and not insert:
+        if round(balance)==0 and abs(new - self.last_objective) > 0.1 and self.last_objective % 10 != 9:
             a = 1
         log.debug('Finished {} nodes=({}/{}, {}/{}) gain={}, new={}, best={}, last={}'.
                   format(change, node1.name, node1.PLATE_ID, node2.name, node2.PLATE_ID,

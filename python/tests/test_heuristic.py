@@ -299,6 +299,8 @@ class TestHeuristic(unittest.TestCase):
         return self.check_swap_defects_squares(node1=173, node2=57, insert=False, rotation=[], expected=expected,
                                                add_at_end = True, case='A2_3')
 
+    def test_check_swap_defects_A2_4(self):
+        return self.check_swap_defects(node1=194, node2=195, insert=False, rotation=[], expected=0, case='A2_4')
 
 if __name__ == "__main__":
     # t = TestHeuristic()

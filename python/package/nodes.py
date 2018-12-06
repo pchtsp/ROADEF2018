@@ -727,7 +727,7 @@ def search_nodes_of_defect(node, defect):
     nodes = []
     def before_defect(_node):
         axis, dim = get_orientation_from_cut(_node)
-        return defect[axis] > getattr(_node, axis) + getattr(_node, dim)
+        return defect[axis] >= getattr(_node, axis) + getattr(_node, dim)
 
     def after_defect(_node):
         axis, dim = get_orientation_from_cut(_node)

@@ -121,9 +121,9 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
         k: nd.get_orientation_from_cut(node)[1]
         for k, node in nodes.items()
     }
-    # TODO: delete this
-    if nodes[1].up is None or nodes[2].up is None:
-        a=1
+    # # TODO: delete this
+    # if nodes[1].up is None or nodes[2].up is None:
+    #     a=1
 
     wastes = {k: [
         w for w in nd.find_all_wastes(node.up)

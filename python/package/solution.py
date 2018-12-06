@@ -236,7 +236,6 @@ class Solution(inst.Instance):
         return [(node, defect) for node, defect in node_defect if node.TYPE >= 0]
 
     def get_nodes_defects(self, solution=None):
-        # TODO: I could give a level as argument to filter when searching.
         # A defect can be in more than one node/
         if solution is None:
             solution = self.trees

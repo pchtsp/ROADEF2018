@@ -467,7 +467,6 @@ def get_swap_squares(nodes, nodes_changes, insert, rotation):
 
 
 def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None, order_wastes=None):
-    # TODO: check sibling swap
     # we'll only check if exchanging the nodes gets a
     # positive defect balance.
     # We need to:
