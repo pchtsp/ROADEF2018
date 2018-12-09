@@ -709,13 +709,6 @@ def insert_node_at_position(node, destination, position):
     else:
         axis_dest = {a: getattr(destination, a) for a in ref}
 
-    # when doing weird multilevel swaps,
-    # we need to keep the CUT level and hierarchy:
-    # or we put the node inside itself.
-    # or we take all nodes out of the node and insert them separately.
-    if (node.CUT >= destination.CUT + 2) and node.children:
-        node = nd.duplicate_node_as_its_parent(node)
-
     # we make the move:
     nd.change_feature(node, 'PLATE_ID', destination.PLATE_ID)
     dist = {a: axis_dest[a] - getattr(node, a) for a in ref}

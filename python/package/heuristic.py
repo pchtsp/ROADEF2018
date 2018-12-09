@@ -133,6 +133,11 @@ class ImproveHeuristic(sol.Solution):
 
         return True
 
+    def get_random_tree(self, trees_prob):
+        if trees_prob:
+            return np.random.choice(a=range(len(self.trees)), p=trees_prob)
+        return np.random.choice(a=range(len(self.trees)))
+
     def try_change_node(self, node, candidates, insert, params, reverse=False, evaluate=True):
         weights = params['weights']
         temperature = params['temperature']
@@ -269,10 +274,17 @@ class ImproveHeuristic(sol.Solution):
             prec = seq.to_dict(result_col=1)
         return fails, successes
 
-    def get_nodes_by_level(self, level, filter_fn=None):
+    def get_nodes_by_level(self, level, filter_fn=None, trees_prob=None):
+        """
+        :param level: of the nodes to search
+        :param filter_fn: where to stop searching
+        :param trees: option to give probabilities to each tree to search
+        :return:
+        """
+        tree = self.get_random_tree(trees_prob)
         if filter_fn is None:
            def filter_fn(x): return True
-        return [ch for tree in self.trees for ch in tree.traverse(is_leaf_fn=lambda x: x.CUT == level)
+        return [ch for ch in self.trees[tree].traverse(is_leaf_fn=lambda x: x.CUT == level)
             if ch.CUT == level and filter_fn(ch)]
 
     def change_level(self, node, level, params, siblings_only=False, fn_weights=None):
@@ -280,7 +292,7 @@ class ImproveHeuristic(sol.Solution):
         General function that searches nodes in the same level of the node and try to swap them
         :param node:
         :param level: cut level
-        :param siblings_only: wether to search for the node's siblings only or not.
+        :param siblings_only: whether to search for the node's siblings only or not.
         :param fn_weights: a function that applied to the candidate returns the probability to choose it.
         :param params: tolerance, temperature, ...
         :return: True if swap was successful
@@ -300,14 +312,14 @@ class ImproveHeuristic(sol.Solution):
             candidates = [c for c in self.get_nodes_by_level(level) if c != node_level and
                           self.node_in_solution(c)]
         if len(candidates) > max_candidates:
-            # TODO: change dict ordering.
             candidates_prob = sd.SuperDict({k: fn_weights(k) for k in candidates}).to_weights()
             candidates = \
                 np.random.choice(
                     a=candidates_prob.keys_l(), size=max_candidates,
                     p=candidates_prob.values_l(), replace=False
                 )
-            # candidates = rn.sample(candidates, max_candidates)
+        else:
+            rn.shuffle(candidates)
         # always try insert first
         for _insert in [True, False]:
             change = self.try_change_node(node=node_level, candidates=candidates, insert=_insert, params=params)
@@ -353,7 +365,8 @@ class ImproveHeuristic(sol.Solution):
     def change_level_all(self, level, params):
         max_iter = params['max_iter']
         fails = successes = 0
-        candidates = [c for c in self.get_nodes_by_level(level)]
+        trees_prob = geom.get_probs_trees(len(self.trees))
+        candidates = [c for c in self.get_nodes_by_level(level, trees_prob=trees_prob)]
         i = 0
         rn.shuffle(candidates)
         for c in candidates:
@@ -376,16 +389,15 @@ class ImproveHeuristic(sol.Solution):
         max_candidates = params['max_candidates']
         max_iter = params['max_iter']
         fails = successes = 0
-        # TODO: now, wastes can be any level...
-        wastes = self.get_nodes_by_level(level, filter_fn=nd.is_waste)
-        # wastes.sort(key=lambda x: nd.get_node_pos_tup(x))
-        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: not nd.is_waste(x)) + \
-                     self.get_nodes_by_level(level+1, filter_fn=lambda x: not nd.is_waste(x))
+        trees_prob = geom.get_probs_trees(len(self.trees))
+        trees_prob_r = list(reversed(trees_prob))
+        wastes = self.get_nodes_by_level(level, filter_fn=nd.is_waste, trees_prob=trees_prob_r)
+        candidates = self.get_nodes_by_level(level, filter_fn=lambda x: not nd.is_waste(x), trees_prob=trees_prob) + \
+                     self.get_nodes_by_level(level+1, filter_fn=lambda x: not nd.is_waste(x), trees_prob=trees_prob)
 
         wastes_prob = sd.SuperDict(
             {c: nd.get_node_position_cost_unit(c, self.get_param('widthPlates')) for c in wastes}
         )
-        # candidates.sort(reverse=True, key=lambda x: nd.get_node_pos_tup(x))
         rn.shuffle(candidates)
         i = 0
         for c in candidates:

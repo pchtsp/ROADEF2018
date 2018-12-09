@@ -126,3 +126,11 @@ def check_nodespace_in_space(node_space, free_space, insert, min_waste):
             if dif < min_waste and dif != 0:
                 return False
     return True
+
+
+def get_probs_trees(num_trees, reverse=False):
+    step = 2 / (num_trees * (num_trees + 1))
+    probs = [(t+1)*step for t in range(num_trees)]
+    if reverse:
+        probs = list(reversed(probs))
+    return probs
