@@ -256,7 +256,7 @@ class ImproveHeuristic(sol.Solution):
             node_level = nd.find_ancestor_level(node, level)
             if node_level is None:
                 continue
-            other_nodes = set([nd.find_ancestor_level(p, level) for p in prec[node]])
+            other_nodes =[nd.find_ancestor_level(p, level) for p in prec[node]]
             candidates = [s for p in other_nodes if p is not None and p.up is not None
                           for s in p.up.get_children()]
             if len(candidates) > max_candidates:
@@ -341,7 +341,7 @@ class ImproveHeuristic(sol.Solution):
             rem_2 = [n2 for n in rem for n2 in n.get_sisters()]
             rem_2 = [n for n in rem_2 if n is not None]
             rem.extend(rem_2)
-        rem = list(set(rem))
+        # rem = list(set(rem))
         i = count = 0
         while count < max_iter and i < len(rem):
             count += 1
@@ -359,7 +359,7 @@ class ImproveHeuristic(sol.Solution):
                 rem_2 = [n2 for n in rem for n2 in n.get_sisters()]
                 rem_2 = [n for n in rem_2 if n is not None]
                 rem.extend(rem_2)
-            rem = list(set(rem))
+            # rem = list(set(rem))
         return fails, successes
 
     def change_level_all(self, level, params):
@@ -569,8 +569,8 @@ class ImproveHeuristic(sol.Solution):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        candidates = set(rem) | set([d[0] for d in defects]) | set(items)
-        return list(candidates)
+        candidates = rem + [d[0] for d in defects] + items
+        return candidates
 
     def multi_level_swap(self, level, level2, params, include_sisters=False, insert=True):
         max_iter = params['max_iter']
@@ -580,11 +580,11 @@ class ImproveHeuristic(sol.Solution):
         # candidates = set(rem)
         level_cand = [nd.find_ancestor_level(n, level) for n in candidates]
         if include_sisters:
-            level_cand = [n for n in set(level_cand) if n is not None]
+            level_cand = [n for n in level_cand if n is not None]
             level_cand_s = [s for n in level_cand for s in n.get_sisters()]
             level_cand.extend(level_cand_s)
         # From now on, this only swaps leafs of TYPE >= 0
-        level_cand = [n for n in set(level_cand) if n is not None and n.TYPE >= 0]
+        level_cand = [n for n in level_cand if n is not None and n.TYPE >= 0]
         rn.shuffle(level_cand)
         # candidates_all = self.get_nodes_by_level(level=level-dif_level, filter_fn=lambda x: x.TYPE in [-1, -3])
         candidates_all = self.get_nodes_by_level(level=level2)
@@ -1003,9 +1003,6 @@ class ImproveHeuristic(sol.Solution):
                         fsc['interlevel'] = \
                             self.multi_level_swap(level, include_sisters=include_sisters,
                                                   params=params, level2=level2, insert=insert)
-                # if level in [2, 3]:
-                #     fsc['interlevel'] = \
-                #         self.multi_level_swap(level + 1, include_sisters=include_sisters, dif_level=2, params=params)
                 count += 1
 
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)

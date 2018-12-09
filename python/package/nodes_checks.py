@@ -114,12 +114,10 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
     if rotate is None:
         rotate = []
     dims_i = {
-        k: nd.get_orientation_from_cut(node, inv=True)[1]
-        for k, node in nodes.items()
+        k: nd.get_dim_of_node(node, inv=True) for k, node in nodes.items()
     }
     dims = {
-        k: nd.get_orientation_from_cut(node)[1]
-        for k, node in nodes.items()
+        k: nd.get_dim_of_node(node) for k, node in nodes.items()
     }
     # # TODO: delete this
     # if nodes[1].up is None or nodes[2].up is None:
@@ -294,6 +292,9 @@ def check_assumptions_swap(node1, node2, insert):
     # or inserting a node from a higher to a lower level
     if node1.CUT == 0 or node2.CUT == 0:
         return False
+    # nodes cannot be ancestors of themselves. Too weird
+    # if node2 in node1.get_ancestors() or node1 in node2.get_ancestors():
+    #     return False
     # if node1.CUT != node2.CUT and not insert:
     #     return False
     # if node1.CUT < node2.CUT:

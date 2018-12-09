@@ -266,7 +266,7 @@ def get_code_node(node):
     return rn.randint(1, 100000)
 
 
-def get_dim_of_node(node, inv):
+def get_dim_of_node(node, inv=False):
     result = node.CUT % 2
     if inv:
         result = not result
@@ -431,6 +431,10 @@ def node_to_square(node):
     axis_dim = {'X': 'WIDTH', 'Y': 'HEIGHT'}
     return [{a: getattr(node, a) for a in axis},
      {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
+    # return {
+    #     'DL': {a: getattr(node, a) for a in axis},
+    #     'UR': {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}
+    # }
 
 
 def node_to_plate(node):
