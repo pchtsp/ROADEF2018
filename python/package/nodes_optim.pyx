@@ -458,9 +458,11 @@ def get_swap_squares(nodes, nodes_changes, insert, rotation):
                 # if rotation, we rotate the node before moving it.
                 if k in rotation:
                     _sq = geom.rotate_square(_sq, ref_pos)
-            for n in range(2):  # for each corner of the square
+            for pos, n in enumerate(['DL', 'UR']):  # for each corner of the square
                 for a in ['X', 'Y']:
-                    _sq[n][a] += change[n][a]
+#                    print(_sq)
+#                    print(change)
+                    _sq[n][a] += change[pos][a]
             squares[after][after_plate].append(_sq)  # we do edit it in after
 
     return squares
@@ -515,20 +517,21 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
 
     # TODO: test if sum is faster than using for with break.
     defects_found = [0 for pos in squares]
-    for pos, sqs in enumerate(squares):  # for (before) => after
-        defects_found[pos] = \
-        np.sum(geom.square_intersects_square(d, sq)
-               for plate, sq_list in sqs.items()
-               for d in defects_sq[plate]
-               for sq in sq_list)
+#    for pos, sqs in enumerate(squares):  # for (before) => after
+#        defects_found[pos] = \
+#        np.sum(geom.square_intersects_square(d, sq)
+#               for plate, sq_list in sqs.items()
+#               for d in defects_sq[plate]
+#               for sq in sq_list)
 
-        # for plate, sq_list in squares[pos].items():  # for each node
-        #     for d in defects_sq[plate]:  # for each defect
-        #         for sq in sq_list:  # for each neighbor
-        #             if geom.square_intersects_square(d, sq):
-        #                 defects_found[pos].append((d, sq))
-        #                 # if it's inside some node, it's not in the rest:
-        #                 break
+    for pos, sqs in enumerate(squares):  # for (before) => after
+        for plate, sq_list in sqs.items():  # for each node
+            for d in defects_sq[plate]:  # for each defect
+                for sq in sq_list:  # for each neighbor
+                    if geom.square_intersects_square(d, sq):
+                        defects_found[pos] += 1
+                         # if it's inside some node, it's not in the rest:
+                        break
 
     # as the rest of checks: the bigger the better.
     return defects_found[0] - defects_found[1], wastes_mods

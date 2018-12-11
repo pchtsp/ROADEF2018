@@ -1,5 +1,6 @@
 import package.nodes as nd
 import logging as log
+# import pyximport; pyximport.install()
 import package.geometry as geom
 import numpy as np
 import matplotlib.pyplot as plt
@@ -114,10 +115,12 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
     if rotate is None:
         rotate = []
     dims_i = {
-        k: nd.get_dim_of_node(node, inv=True) for k, node in nodes.items()
+        k: nd.get_orientation_from_cut(node, inv=True)[1]
+        for k, node in nodes.items()
     }
     dims = {
-        k: nd.get_dim_of_node(node) for k, node in nodes.items()
+        k: nd.get_orientation_from_cut(node)[1]
+        for k, node in nodes.items()
     }
     # # TODO: delete this
     # if nodes[1].up is None or nodes[2].up is None:
@@ -179,16 +182,12 @@ def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
         return []
     rotations = [[]]
     nodes = {1: node1, 2: node2}
-    rotation_tries = params.get('rotation_tries', None)
+    rotation_tries = params.get('rotation_tries', 1)
     try_rotation = params.get('try_rotation', False)
-    rotation_probs = params.get('rotation_probs', None)
-    if rotation_tries is None:
-        rotation_tries = 1
+    rotation_probs = params.get('rotation_probs', [0.8, 0.1, 0.05, 0.05])
     if try_rotation:
         rotations_av = [[], [1], [2], [1, 2]]
-        if rotation_probs is None:
-            rotation_probs = [0.8, 0.1, 0.05, 0.05]
-        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
+        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries)
     for rotation in rotations:
         if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
             return rotation

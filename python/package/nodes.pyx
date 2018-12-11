@@ -119,7 +119,6 @@ def change_feature(node, feature, value):
 
 def resize_waste(waste, dim, quantity, delete_if_empty=True):
     """
-
     :param waste:
     :param dim:
     :param quantity:
@@ -429,12 +428,12 @@ def node_to_square(node):
     """
     axis = ['X', 'Y']
     axis_dim = {'X': 'WIDTH', 'Y': 'HEIGHT'}
-    return [{a: getattr(node, a) for a in axis},
-     {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
-    # return {
-    #     'DL': {a: getattr(node, a) for a in axis},
-    #     'UR': {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}
-    # }
+#    return [{a: getattr(node, a) for a in axis},
+#     {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
+    return {
+     'DL': {a: getattr(node, a) for a in axis},
+     'UR': {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}
+    }
 
 
 def node_to_plate(node):
@@ -923,9 +922,10 @@ def check_node_order(node1, node2):
     :param node2:
     :return: True if node2 comes before node2
     """
-    ancestor = node1.get_common_ancestor(node2)
     n1ancestors = set([node1] + node1.get_ancestors())
     n2ancestors = set([node2] + node2.get_ancestors())
+    common_ancestors = n1ancestors & n2ancestors
+    ancestor = max(common_ancestors, key=lambda x: x.CUT)
     for n in ancestor.children:
         if n in n1ancestors:
             return True

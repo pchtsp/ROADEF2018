@@ -1,10 +1,31 @@
+cdef struct Point:
+    int X
+    int Y
 
+#cdef struct Point Square[2];
+
+cdef struct Square:
+    Point DL
+    Point UR
 
 # These are auxiliary functions for points, squares, plates.
 # They involve coordinates and positions, etc.
 
+#def dict_to_point(point):
+#    cdef Point p
+#    p.X = point['X']
+#    p.Y = point['Y']
+#    return p
+#
+#def dict_to_square(square):
+#    cdef Square sq
+#    sq.DL.X = square[0].X
+#    sq.DL.Y = square[0].Y
+#    sq.UR.X = square[1].X
+#    sq.UR.Y = square[1].Y
+#    return sq
 
-def point_in_square(point, square, strict=True, lag=None):
+cpdef bint point_in_square(Point point, Square square, bint strict=True):
     # TODO: try with np.any
     """
     :param point: dict with X and Y values
@@ -14,19 +35,18 @@ def point_in_square(point, square, strict=True, lag=None):
     :param lag: move the node in some distance
     :return: True if point is inside square (with <)
     """
-    if lag is None:
-        lag = {'X': 0, 'Y': 0}
+
     if strict:
         return \
-            square[0]['X'] < point['X'] + lag['X'] < square[1]['X'] and \
-            square[0]['Y'] < point['Y'] + lag['Y'] < square[1]['Y']
+            square.DL.X < point.X < square.UR.X and \
+            square.DL.Y < point.Y < square.UR.Y
     else:
         return \
-            square[0]['X'] <= point['X'] + lag['X'] <= square[1]['X'] and \
-            square[0]['Y'] <= point['Y'] + lag['Y'] <= square[1]['Y']
+            square.DL.X <= point.X <= square.UR.X and \
+            square.DL.Y <= point.Y <= square.UR.Y
 
 
-def square_inside_square(square1, square2, both_sides=True):
+cpdef int square_inside_square(Square square1, Square square2, both_sides=True):
     # TODO: try with np.any
     """
     Tests if square1 is inside square2.
@@ -35,18 +55,18 @@ def square_inside_square(square1, square2, both_sides=True):
     :param both_sides: if true, alse see if square2 is inside square1
     :return: number of square inside the other. or 0 if not
     """
-    if point_in_square(square1[0], square2, strict=False):
-        if point_in_square(square1[1], square2, strict=False):
+    if point_in_square(square1.DL, square2, strict=False):
+        if point_in_square(square1.UR, square2, strict=False):
             return 1
     if not both_sides:
         return 0
-    if point_in_square(square2[0], square1, strict=False):
-        if point_in_square(square2[1], square1, strict=False):
+    if point_in_square(square2.DL, square1, strict=False):
+        if point_in_square(square2.UR, square1, strict=False):
             return 2
     return 0
 
 
-def square_intersects_square(square1, square2):
+cpdef bint square_intersects_square(square1, square2):
     # TODO: try with np.any
     """
     Tests if some point in square1 is inside square2 (or viceversa).
@@ -54,10 +74,10 @@ def square_intersects_square(square1, square2):
     :param square2: a list of two dictionaries of type: {'X': 0, 'Y': 0}
     :return: True if both squares share some (smaller) area
     """
-    for point in square1:
+    for point in square1.values():
         if point_in_square(point, square2, strict=True):
             return True
-    for point in square2:
+    for point in square2.values():
         if point_in_square(point, square1, strict=True):
             return True
     return False
@@ -65,26 +85,28 @@ def square_intersects_square(square1, square2):
 
 def defect_to_square(defect):
     """
-    Reformats a defect to a list of two points
+    Reformats a defect to a Square
     :param defect: a dict.
-    :return: list of two points {'X': 1, 'Y': 1}
+    :return: Square
     """
-    return [{'X': defect['X'], 'Y': defect['Y']},
-            {'X': defect['X'] + defect['WIDTH'], 'Y': defect['Y'] + defect['HEIGHT']}]
+    return {
+        'DL': {'X': defect['X'], 'Y': defect['Y']},
+        'UR': {'X': defect['X'] + defect['WIDTH'], 'Y': defect['Y'] + defect['HEIGHT']}
+    }
 
 
-def plate_inside_plate(plate1, plate2, turn=True, both_sides=False):
+cpdef int plate_inside_plate(plate1, plate2, turn=True, both_sides=False):
     origin = {'X': 0, 'Y': 0}
     result = square_inside_square(
-        [origin, {'X': plate1[0], 'Y': plate1[1]}],
-        [origin, {'X': plate2[0], 'Y': plate2[1]}],
+        {'DL': origin, 'UR': {'X': plate1[0], 'Y': plate1[1]}},
+        {'DL': origin, 'UR': {'X': plate2[0], 'Y': plate2[1]}},
         both_sides=both_sides
     )
     if result or not turn:
         return result
     return square_inside_square(
-        [origin, {'X': plate1[1], 'Y': plate1[0]}],
-        [origin, {'X': plate2[0], 'Y': plate2[1]}],
+        {'DL': origin, 'UR': {'X': plate1[1], 'Y': plate1[0]}},
+        {'DL': origin, 'UR': {'X': plate2[0], 'Y': plate2[1]}},
         both_sides=both_sides
     )
 
@@ -93,15 +115,15 @@ def rotate_square(square, ref_pos):
     """
     :param square: 1 element list of dicts with X and Y positions
     :param ref_pos: a single point (dict of X, Y
-    :return: square roated around the ref_pos axis
+    :return: square rotated around the ref_pos axis
     """
     inv_v = {'Y': 'X', 'X': 'Y'}
-    return [{k: point[ik] - ref_pos[ik] + ref_pos[k]
+    return {side: {k: point[ik] - ref_pos[ik] + ref_pos[k]
              for k, ik in inv_v.items()}
-            for point in square]
+            for side, point in square.items()}
 
 
-def check_nodespace_in_space(node_space, free_space, insert, min_waste):
+cpdef bint check_nodespace_in_space(node_space, free_space, bint insert, int min_waste):
     """
     :param node_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
     :param free_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
@@ -113,14 +135,12 @@ def check_nodespace_in_space(node_space, free_space, insert, min_waste):
     # in insert=True we only check node1 movement
     # Important! we want to have at least 20 of waste. Or 0.
     nodes_to_check = [(2, 1)]
+    cdef int dif
     if not insert:
         nodes_to_check.append((1, 2))
     for n1, n2 in nodes_to_check:
         fs = free_space[n1]
         ns = node_space[n2]
-        # if the area is smaller... no need to continue:
-        # if fs['HEIGHT']*fs['WIDTH'] < ns['HEIGHT']*ns['WIDTH']:
-        #     return False
         for d in ['HEIGHT', 'WIDTH']:
             dif = fs[d] - ns[d]
             if dif < min_waste and dif != 0:
