@@ -264,10 +264,11 @@ class Solution(inst.Instance):
         return bad_wastes
 
     def check_space_usage(self, solution=None):
-        if solution is None:
-            solution = self.trees
-        return sum(self.calculate_residual_plate(tree)*(pos+1)**4 for pos, tree in enumerate(solution)) / \
-               (self.get_param('widthPlates') * len(solution)**4)
+        # if solution is None:
+        #     solution = self.trees
+        return self.calculate_objective(solution, discard_empty_trees=True)
+        # return sum(self.calculate_residual_plate(tree)*(pos+1)**4 for pos, tree in enumerate(solution)) / \
+        #        (self.get_param('widthPlates') * len(solution)**4)
                 # sum(nd.get_node_position_cost(n, self.get_param('widthPlates')) for tree in solution
                 #     for n in nd.get_node_leaves(tree, type_options=[-1, -3])) / \
                 # ((self.get_param('widthPlates') * len(solution))**2 *self.get_param('widthPlates')*self.get_param('heightPlates'))
@@ -357,13 +358,13 @@ class Solution(inst.Instance):
         items_area = self.get_items_area()
         last_tree = len(solution) - 1
         if discard_empty_trees:
-            while not len(nd.get_node_leaves(solution[last_tree])) and last_tree >= 0:
+            while last_tree >= 0  and not len(nd.get_node_leaves(solution[last_tree])):
                 last_tree -= 1
         last_tree_children = solution[last_tree].get_children()
         last_waste_width = 0
         if last_tree_children and nd.is_waste(last_tree_children[-1]):
             last_waste_width = last_tree_children[-1].WIDTH
-        return len(solution) * height * width - last_waste_width * height - items_area
+        return (last_tree+1) * height * width - last_waste_width * height - items_area
 
     def graph_solution(self, path="", name="rect", show=False, pos=None, dpi=50, fontsize=30, solution=None):
         if solution is None:

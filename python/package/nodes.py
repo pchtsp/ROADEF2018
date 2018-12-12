@@ -342,7 +342,7 @@ def get_next_children_iter(node, pos_start=0, pos_end=None):
 
 
 def get_node_position_cost_unit(node, plate_width):
-    return ((node.PLATE_ID+1) * plate_width + node.X + node.Y/10)**2
+    return (node.PLATE_ID+1) * plate_width + node.X
 
 
 def get_node_position_cost(node, plate_width):

@@ -115,7 +115,7 @@ class ImproveHeuristic(sol.Solution):
     def evaluate_solution(self, weights, solution=None):
         # the smaller the better
         components = {
-            'space': - self.check_space_usage(solution)
+            'space': self.check_space_usage(solution)
             ,'seq': len(self.check_sequence(solution, type_node_dict=self.type_node_dict))
             ,'defects': len(self.check_defects(solution))
         }
@@ -772,9 +772,11 @@ class ImproveHeuristic(sol.Solution):
         remake_opts = options['heur_remake']
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
         tree_options = range(1, len(probs)+1)
-        nodes_cand = self.get_good_nodes_to_move()
-        trees_cand = [n.PLATE_ID for n in nodes_cand] + [rn.choice(range(len(self.trees)))]
-        start = rn.choice(trees_cand)
+        # nodes_cand = self.get_good_nodes_to_move()
+        trees_prob = geom.get_probs_trees(len(self.trees))
+        # trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
+        # start = rn.choice(trees_cand)
+        start = self.get_random_tree(trees_prob)
         size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - start)
         num_trees = range(start, start + size)
         incumbent = [self.trees[n] for n in num_trees]
@@ -1011,8 +1013,6 @@ class ImproveHeuristic(sol.Solution):
             if new_imp_ratio < 60:
                 temp *= (1 - coolingRate)
                 iter += 1
-            else:
-                iter = 0
             if iter > 10:
                 remake_prob = p_remake.get('probability', [1])
                 remake_ops = p_remake.get('options', ['partial'])
