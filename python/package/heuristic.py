@@ -1064,8 +1064,6 @@ class ImproveHeuristic(sol.Solution):
 
 
 if __name__ == "__main__":
-    # TODO: change objective function of remaining space to objective function.
-
     # 1. find defect problems, get node and ancestors.
     # 2. find wastes that are neighbors of each ancestor.
     # 3. test if swapping those wastes (with insert=True) with its neighbors fixes aything.

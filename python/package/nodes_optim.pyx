@@ -1,5 +1,7 @@
+# cython: profile=True
+
 import package.nodes as nd
-import package.nodes_checks as nc
+cimport package.nodes_checks as nc
 import package.geometry as geom
 import logging as log
 import numpy as np
@@ -51,8 +53,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, params):
     for candidate in candidates:
         if not nc.check_assumptions_swap(node, candidate, insert):
             continue
-        result = nc.check_swap_size_rotation(node, candidate, insert=insert,
-                                          min_waste=min_waste, params=params)
+        result = nc.check_swap_size_rotation(node, candidate, insert=insert, min_waste=min_waste, params=params)
         if result is None:
             continue
         rotation[candidate] = result
@@ -578,19 +579,16 @@ def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params
     :param args_evaluate:
     :param evaluate: evaluate or not
     :param params:
-    :return: a tuple of size 3: (economical balance, defects to resize, rotations to make)
+    :return: a tuple of size 3: (economical balance, wastes to resize, rotations to make)
     """
-    tolerance = params['tolerance']
-    args_check_size = {**args_check_size, **nodes}
-    rotation = nc.check_swap_size_rotation(**args_check_size)
+    a = {**args_check_size, **nodes}
+    rotation = nc.check_swap_size_rotation(a['node1'], a['node2'], a['min_waste'], a['params'], a['insert'])
     if rotation is None:
         return None
     args_evaluate = {**args_evaluate, **nodes}
     if not evaluate:
-        return 0
+        return 0, [], []
     balance = evaluate_swap(**args_evaluate, rotation=rotation)
-    if tolerance is not None and balance[0] <= tolerance:
-        return None
     return balance[0], balance[1], rotation
 
 

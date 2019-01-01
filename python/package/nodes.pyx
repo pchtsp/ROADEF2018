@@ -265,27 +265,40 @@ def get_code_node(node):
     return rn.randint(1, 100000)
 
 
-def get_dim_of_node(node, inv=False):
+cpdef char* get_dim_of_node(node, bint inv=False):
+    cdef bint result
     result = node.CUT % 2
     if inv:
         result = not result
     if result:  # cuts 1 and 3
-        return 'WIDTH'
+        return b'WIDTH'
     # cut 2 and 4
-    return 'HEIGHT'
+    return b'HEIGHT'
+
+#Encoding text to bytes¶
+#py_byte_string = py_unicode_string.encode('UTF-8')
+#cdef char* c_string = py_byte_string
+
+#Decoding bytes to text¶
+#ustring = some_c_string.decode('UTF-8')
 
 
-def get_orientation_from_cut(node, inv=False):
+def get_orientation_from_cut(node, bint inv=False):
     # inv: means inverse the result.
+    cdef char* dim
+    cdef char* axis
     dim = get_dim_of_node(node, inv)
     axis = get_axis_of_dim(dim)
-    return axis, dim
+#    print(dim, axis)
+    return axis.decode('UTF-8'), dim.decode('UTF-8')
 
 
-def get_axis_of_dim(dim):
+cpdef char* get_axis_of_dim(char* dim):
+#    print(dim)
+    cdef dict r
     r = {
-        'HEIGHT': 'Y',
-        'WIDTH': 'X'
+        b'HEIGHT': b'Y',
+        b'WIDTH': b'X'
     }
     return r[dim]
 
@@ -350,14 +363,14 @@ def get_node_position_cost(node, plate_width):
     return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
 
 
-def get_size_without_waste(node, dim):
+cdef int get_size_without_waste(node, char* dim):
     waste = find_waste(node, child=True)
     if waste is None:
         return getattr(node, dim)
     return getattr(node, dim) - getattr(waste, dim)
 
 
-def get_size_without_wastes(node, dim):
+cdef int  get_size_without_wastes(node, char* dim):
     wastes = find_all_wastes(node)
     sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
     return getattr(node, dim) - sum_waste_dims
@@ -480,6 +493,7 @@ def duplicate_waste_into_children(node):
         'node {} needs to be a waste!'.format(node.name)
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     child1 = duplicate_node_as_child(node, node_mod=200)
+#    print(dim_i)
     setattr(child1, dim_i, 0)
     child2 = duplicate_node_as_child(node, node_mod=400)
     child2.TYPE = -1
@@ -766,11 +780,11 @@ def defects_in_node(node):
     return defects_in_node
 
 
-def is_waste(node):
+cpdef bint is_waste(object node):
     return node.TYPE in [-1, -3]
 
 
-def is_last_sibling(node):
+cdef bint is_last_sibling(object node):
     return get_last_sibling(node) == node
 
 

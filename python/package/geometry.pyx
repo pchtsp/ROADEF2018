@@ -1,10 +1,11 @@
+# cython: profile=True
+
 cdef struct Point:
     int X
     int Y
 
-#cdef struct Point Square[2];
-
 cdef struct Square:
+#    Point points[2]  #I should have used this...
     Point DL
     Point UR
 
@@ -123,7 +124,7 @@ def rotate_square(square, ref_pos):
             for side, point in square.items()}
 
 
-cpdef bint check_nodespace_in_space(node_space, free_space, bint insert, int min_waste):
+cdef bint check_nodespace_in_space(node_space, free_space, bint insert, int min_waste):
     """
     :param node_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}
     :param free_space: {1: {WIDTH: XX, HEIGHT: XX}, 2: {WIDTH: XX, HEIGHT: XX}}

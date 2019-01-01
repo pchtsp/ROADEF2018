@@ -1,3 +1,5 @@
+# cython: profile=True
+
 import package.nodes as nd
 import logging as log
 # import pyximport; pyximport.install()
@@ -10,7 +12,7 @@ import palettable as pal
 import os
 
 
-def check_consistency(tree):
+cdef object check_consistency(tree):
     func_list = {
         'ch_size': check_nodes_fit
         , 'inside': check_parent_of_children
@@ -111,15 +113,15 @@ def check_only_child(tree):
 
 
 
-def check_swap_size(nodes, min_waste, insert=False, rotate=None):
+cdef bint check_swap_size(nodes, min_waste, bint insert=False, rotate=None):
     if rotate is None:
         rotate = []
     dims_i = {
-        k: nd.get_orientation_from_cut(node, inv=True)[1]
+        k: nd.get_dim_of_node(node, inv=True)
         for k, node in nodes.items()
     }
     dims = {
-        k: nd.get_orientation_from_cut(node)[1]
+        k: nd.get_dim_of_node(node)
         for k, node in nodes.items()
     }
     # # TODO: delete this
@@ -175,19 +177,28 @@ def check_swap_size(nodes, min_waste, insert=False, rotate=None):
     return result
 
 
-def check_swap_size_rotation(node1, node2, min_waste, params, insert=False):
+cdef object check_swap_size_rotation(object node1, object node2, int min_waste, dict params, bint insert=False):
     # TODO: here we could return if needed reduction of parent to fit
     if node1.up == node2.up:
         log.debug('nodes are siblings, we do not check for space')
         return []
+    cdef dict nodes
+    cdef int rotation_tries
+    cdef float rotation_probs[4]
+    cdef bint try_rotation
+    rotation_tries = params['rotation_tries']
+    try_rotation = params['try_rotation']
+    rotation_probs = params['rotation_probs']
+
+#    cdef int rotations[4][1]
+#    cdef int rotation[1]
     rotations = [[]]
     nodes = {1: node1, 2: node2}
-    rotation_tries = params.get('rotation_tries', 1)
-    try_rotation = params.get('try_rotation', False)
-    rotation_probs = params.get('rotation_probs', [0.8, 0.1, 0.05, 0.05])
+
     if try_rotation:
         rotations_av = [[], [1], [2], [1, 2]]
-        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries)
+        print(rotation_probs)
+        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
     for rotation in rotations:
         if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
             return rotation
@@ -275,7 +286,7 @@ def graph_solution(node, path="", name="rect", show=False, dpi=50, fontsize=30, 
     if not show:
         plt.close(fig1)
 
-def check_assumptions_swap(node1, node2, insert):
+cdef bint check_assumptions_swap(object node1, object node2, bint insert):
     siblings = node1.up == node2.up
     if siblings and insert:
         return False
