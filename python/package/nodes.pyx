@@ -265,15 +265,17 @@ def get_code_node(node):
     return rn.randint(1, 100000)
 
 
-cpdef char* get_dim_of_node(node, bint inv=False):
+#TODO: stop passing strings all around
+#cpdef char* get_dim_of_node(node, bint inv=False):
+cpdef get_dim_of_node(node, bint inv=False):
     cdef bint result
     result = node.CUT % 2
     if inv:
         result = not result
     if result:  # cuts 1 and 3
-        return b'WIDTH'
+        return 'WIDTH'
     # cut 2 and 4
-    return b'HEIGHT'
+    return 'HEIGHT'
 
 #Encoding text to bytes¶
 #py_byte_string = py_unicode_string.encode('UTF-8')
@@ -285,20 +287,22 @@ cpdef char* get_dim_of_node(node, bint inv=False):
 
 def get_orientation_from_cut(node, bint inv=False):
     # inv: means inverse the result.
-    cdef char* dim
-    cdef char* axis
+#    cdef char* dim
+#    cdef char* axis
     dim = get_dim_of_node(node, inv)
     axis = get_axis_of_dim(dim)
 #    print(dim, axis)
-    return axis.decode('UTF-8'), dim.decode('UTF-8')
+#    return axis.decode('UTF-8'), dim.decode('UTF-8')
+    return axis, dim
 
 
-cpdef char* get_axis_of_dim(char* dim):
+#cpdef char* get_axis_of_dim(char* dim):
+cpdef get_axis_of_dim(dim):
 #    print(dim)
     cdef dict r
     r = {
-        b'HEIGHT': b'Y',
-        b'WIDTH': b'X'
+        'HEIGHT': 'Y',
+        'WIDTH': 'X'
     }
     return r[dim]
 
@@ -363,14 +367,16 @@ def get_node_position_cost(node, plate_width):
     return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
 
 
-cdef int get_size_without_waste(node, char* dim):
+#cdef int get_size_without_waste(node, char* dim):
+def get_size_without_waste(node, dim):
     waste = find_waste(node, child=True)
     if waste is None:
         return getattr(node, dim)
     return getattr(node, dim) - getattr(waste, dim)
 
 
-cdef int  get_size_without_wastes(node, char* dim):
+#cdef int  get_size_without_wastes(node, char* dim):
+def get_size_without_wastes(node, dim):
     wastes = find_all_wastes(node)
     sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
     return getattr(node, dim) - sum_waste_dims

@@ -107,6 +107,7 @@ def solve(options):
     logFormat = '%(asctime)s %(levelname)s:%(message)s'
     open(logFile, 'w').close()
     fileh = log.FileHandler(logFile, 'a')
+    # print(logFile)
     formatter = log.Formatter(logFormat)
     fileh.setFormatter(formatter)
     _log = log.getLogger()

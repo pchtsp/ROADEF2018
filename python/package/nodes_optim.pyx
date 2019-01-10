@@ -148,6 +148,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
         trees.append(tree)
         inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
         # TODO: warning, in the future this could be possible due to defects checking
+#        print(inserted_nodes)
         assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(node.name)
         item_node[item_id] = nd.get_node_by_type(inserted_nodes[1], item_id)
 

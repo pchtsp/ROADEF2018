@@ -23,17 +23,6 @@ results = base + '/pchtsp/Dropbox/ROADEF2018/'
 
 PATHS = {**calculate_paths_root(root), **calculate_paths_results(results)}
 
-ORIENTATIONS = [0, 1]
-ORIENT_H = 0
-ORIENT_V = 1
-
-cut_level_next_o = {
-    0: ORIENT_V
-    , 1: ORIENT_H
-    , 2: ORIENT_V
-    , 3: ORIENT_H
-}
-
 OPTIONS = {
     'timeLimit': 600
     , 'gap': 0.1
@@ -42,14 +31,14 @@ OPTIONS = {
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
     , 'output_file_name': None
-    , 'case_name': 'A15'
+    , 'case_name': 'A1'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     , 'num_processors': 24
-    , 'multiprocess': True
+    , 'multiprocess': False
     , 'seed': 42
     , 'warm_start': False
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
@@ -65,8 +54,8 @@ OPTIONS = {
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
                       }
     , 'heur_remake': {
-        'iterations_initial': 100,
-        'iterations_remake': 50,
+        'iterations_initial': 10,
+        'iterations_remake': 5,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.90, 0.1],
         'options': ['best', 'partial', 'restart', ],

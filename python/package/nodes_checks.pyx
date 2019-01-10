@@ -3,7 +3,7 @@
 import package.nodes as nd
 import logging as log
 # import pyximport; pyximport.install()
-import package.geometry as geom
+cimport package.geometry as geom
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -113,7 +113,7 @@ def check_only_child(tree):
 
 
 
-cdef bint check_swap_size(nodes, min_waste, bint insert=False, rotate=None):
+cdef bint check_swap_size(dict nodes, int min_waste, bint insert=False, rotate=None):
     if rotate is None:
         rotate = []
     dims_i = {
@@ -197,7 +197,7 @@ cdef object check_swap_size_rotation(object node1, object node2, int min_waste, 
 
     if try_rotation:
         rotations_av = [[], [1], [2], [1, 2]]
-        print(rotation_probs)
+#        print(rotation_probs)
         rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
     for rotation in rotations:
         if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
@@ -286,7 +286,7 @@ def graph_solution(node, path="", name="rect", show=False, dpi=50, fontsize=30, 
     if not show:
         plt.close(fig1)
 
-cdef bint check_assumptions_swap(object node1, object node2, bint insert):
+cpdef bint check_assumptions_swap(object node1, object node2, bint insert):
     siblings = node1.up == node2.up
     if siblings and insert:
         return False
