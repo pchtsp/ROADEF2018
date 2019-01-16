@@ -1,3 +1,5 @@
+# cython: profile=False
+
 import ete3
 import package.geometry as geom
 import package.superdict as sd

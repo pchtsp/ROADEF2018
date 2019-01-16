@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: profile=False
 
 import package.nodes as nd
 cimport package.nodes_checks as nc
