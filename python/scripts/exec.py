@@ -142,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output-file', dest='output_file', help='file to write solution', default='solution.csv')
     parser.add_argument('-name', '--name-group', dest='name', help='name of group', action='store_true')
     parser.add_argument('-np', '--num-process', dest='num_process', help='num of processors', type=int)
+    parser.add_argument('-ds', '--data-set', dest='data_set', help='dataset to solve', default='A')
     parser.add_argument('-hr', '--heur-remake', dest='heur_remake', type=json.loads)
     parser.add_argument('-hp', '--heur-params', dest='heur_params', type=json.loads)
     parser.add_argument('-ho', '--heur-optim', dest='heur_optim', type=json.loads)
@@ -164,11 +165,6 @@ if __name__ == "__main__":
         # print(os.environ['PYTHONPATH'])
     # pm = importlib.import_module(args.file)
 
-    cases = args.case
-
-    if args.all_cases:
-        cases = ['A{}'.format(case) for case in range(1, 21)]
-
     if args.main_param:
         pm.OPTIONS.update(args.main_param)
 
@@ -183,19 +179,28 @@ if __name__ == "__main__":
 
     # print(pm.OPTIONS['heur_remake'])
 
-    pm.PATHS = {**pm.PATHS, **pm.calculate_paths_root(root)}
+    pm.PATHS.update(pm.calculate_paths_root(root, data_set=args.data_set))
+
+    cases = args.case
+    data_set = args.data_set
+
+    num_cases = {'A': 21, 'B': 15}
+
+    if args.all_cases:
+        cases = ['{}{}'.format(data_set, case) for case in range(1, num_cases[data_set])]
 
     # Two options of configuring output.
     # If a results path is given: a directory is used to generate the output.
     if args.results is not None:
-        pm.PATHS = {**pm.PATHS, **pm.calculate_paths_results(args.results)}
+        pm.PATHS.update(pm.calculate_paths_results(args.results))
 
         if args.results_dir is not None:
             pm.PATHS['experiments'] = pm.PATHS['results'] + args.results_dir + '/'
             if not os.path.exists(pm.PATHS['experiments']):
                 cs.separate_cases(name=args.results_dir,
                                   data_dir=pm.PATHS['data'],
-                                  results_dir=pm.PATHS['results'])
+                                  results_dir=pm.PATHS['results'],
+                                  cases=cases)
 
         pm.OPTIONS['input_path'] = pm.OPTIONS['output_path'] = pm.PATHS['experiments']
     # if not, the output will be written in a single file.

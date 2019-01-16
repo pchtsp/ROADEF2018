@@ -16,49 +16,31 @@ import re
 import subprocess
 # import tabulate
 
-
-def stats():
-    cases = ["A{}".format(n) for n in range(1, 21)]
-    errors = {}
-    errors_len = {}
-    solution = {}
-
-    for case in cases:
-    # case = cases[0]
-        path = pm.PATHS['experiments'] + case + '/'
-        solution[case] = sol.Solution.from_io_files(path=path, case_name=case)
-        errors[case] = sd.SuperDict(solution[case].check_all())
-        errors_len[case] = errors[case].to_lendict()
-
-    [n for n in errors_len if errors_len[n]]
-    # [n[0].PLATE_ID for n in errors['A13']['sequence']]
-    # defect_nodes = solution['A2'].get_defects_nodes()
-    # solution['A20'].check_all()
-
-    pp.pprint(errors_len)
-
-
-def get_all_cases():
-    return ["A{}".format(n) for n in range(1, 21)]
+def get_all_cases(exp_path):
+    return os.listdir(exp_path)
 
 
 def get_experiments_paths(path, filter_exps=True):
-    cases = get_all_cases()
+    # cases = get_all_cases()
     if filter_exps:
         experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
     else:
         experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)', f)}
-    return sd.SuperDict.from_dict({c: {exp: path + c + '/' for exp, path in experiments.items()} for c in cases})
+
+    cases = {f: os.listdir(path + f + '/') for f in os.listdir(path) if not re.match('^(old)', f)}
+    result = {exp: {c: path + c + '/' for c in cases[exp]} for exp, path in experiments.items()}
+    return sd.SuperDict.from_dict(result)
 
 
 def get_solutions(exp_paths):
-    return \
-        {c: {
-            exp: sol.Solution.from_io_files(path=p, case_name=c)
-            for exp, p in experiments.items() if di.dir_has_solution(p)
+    result = {
+        exp: {
+            c: sol.Solution.from_io_files(path=p, case_name=c)
+            for c, p in cases.items() if di.dir_has_solution(p)
         }
-            for c, experiments in exp_paths.items()
-        }
+        for exp, cases in exp_paths.items()
+    }
+    return sd.SuperDict.from_dict(result)
 
 
 def is_pareto_dominated(costs):
@@ -73,32 +55,33 @@ def is_pareto_dominated(costs):
 
 
 def dominant_experiments():
+    # TODO: last for loop is not working.
     others_path = pm.PATHS['data'] + 'solutions_A.csv'
     table1 = pd.read_csv(others_path, sep=';')
     table1.columns = ['INSTANCE', 'others', 'TEAM']
     exp_paths = get_experiments_paths(pm.PATHS['results'])
-    experiments_names = list(set(i for k in exp_paths.values() for i in k))
+    # experiments_names = list(set(i for k in exp_paths.values() for i in k))
+    experiments_names = exp_paths.keys_l()
 
     solutions = get_solutions(exp_paths)
 
-    feasibility = \
-        {c: {
-            exp: s.count_errors()
-            for exp, s in experiments.items()
+    feasibility = {
+        exp: {
+            c: s.count_errors()
+            for c, s in cases.items()
         }
-            for c, experiments in solutions.items()
-        }
+        for exp, cases in solutions.items()
+    }
 
     objectives = np.zeros((len(experiments_names), len(solutions)))
-    case_pos = 0
-    for c, experiments in solutions.items():
-        exp_pos = 0
-        for exp in experiments_names:
-            if exp in experiments and feasibility[c][exp] == 0:
-                objectives[exp_pos][case_pos] = experiments[exp].calculate_objective()
-            else:
-                objectives[exp_pos][case_pos] = 9000000000
-            exp_pos += 1
+        # exp_pos = 0
+    for exp_pos, exp in enumerate(experiments_names):
+        case_pos = 0
+
+        if exp in solutions and feasibility[c][exp] == 0:
+            objectives[exp_pos][case_pos] = experiments[exp].calculate_objective()
+        else:
+            objectives[exp_pos][case_pos] = 9000000000
         case_pos += 1
 
     return np.array(experiments_names)[is_pareto_dominated(objectives)]
@@ -116,26 +99,27 @@ def benchmarking(value='dif_jumbo', experiments_filter=None):
 
     solutions = get_solutions(exp_paths)
 
-    feasibility = \
-        {c: {
-            exp: s.count_errors()
-            for exp, s in experiments.items()
+    feasibility = {
+        exp: {
+            c: s.count_errors()
+            for c, s in cases.items()
         }
-            for c, experiments in solutions.items()
-        }
+        for exp, cases in solutions.items()
+    }
 
-    objectives = \
-        {c: {
-            exp: s.calculate_objective()
-            for exp, s in experiments.items()
-            if feasibility[c][exp] == 0
+    objectives = {
+        exp: {
+            c: s.calculate_objective()
+            for c, s in cases.items()
+            if feasibility[exp][c] == 0
         }
-            for c, experiments in solutions.items()
-        }
+        for exp, cases in solutions.items()
+    }
+
 
     f_experiment = 'heuristic1800'
-    items_area = {c: s[f_experiment].get_items_area() for c, s in solutions.items()}
-    instance_case1 = solutions['A1'][f_experiment]
+    items_area = {c: s.get_items_area() for c, s in solutions[f_experiment].items()}
+    instance_case1 = solutions[f_experiment]['A1']
     jumbo_area = instance_case1.get_param('widthPlates') * instance_case1.get_param('heightPlates')
 
     table_items = pd.DataFrame.from_dict(items_area, orient='index').reset_index().\
@@ -169,17 +153,17 @@ def benchmarking(value='dif_jumbo', experiments_filter=None):
 
 def graph(experiment, case=None, dpi=25):
     # TODO: make experiment optional to graph all
-    # experiment = 'clust1_20180706'
+    # experiment = 'clust1_20180918_venv'
     exp_paths = get_experiments_paths(pm.PATHS['results'], filter_exps=False)
     if case is not None:
         exp_paths = exp_paths.filter([case])
     solutions = get_solutions(exp_paths)
-    solutions = sd.SuperDict(solutions).get_property(experiment)
+    solutions_n = solutions[experiment]
     destination = pm.PATHS['root'] + 'graphs/'
     if os.path.exists(destination):
         shutil.rmtree(destination)
     os.makedirs(destination)
-    for k, v in solutions.items():
+    for k, v in solutions_n.items():
         path = destination + k
         os.makedirs(path)
         v.graph_solution(path, dpi=dpi)
@@ -187,7 +171,8 @@ def graph(experiment, case=None, dpi=25):
 
 def execute_checker(experiment, path_checker):
     # experiment = 'prise_20180917_venv'
-    cases = get_all_cases()
+    exp_path = pm.PATHS['results'] + experiment + '/'
+    cases = get_all_cases(exp_path)
     executable = "bin/Release/Checker"
     complete_path = os.path.join(path_checker, executable)
     if not os.path.exists(complete_path):
@@ -196,7 +181,7 @@ def execute_checker(experiment, path_checker):
     assert os.path.exists(complete_path), 'Checker not found, please build it first'
     # path_checker = '/home/pchtsp/Documents/projects/ROADEF2018/resources/checker/'
     destination = path_checker + 'instances_checker/'
-    files_cases = {c: pm.PATHS['results'] + experiment + '/' + c + '/solution.csv' for c in cases}
+    files_cases = {c: exp_path + c + '/solution.csv' for c in cases}
     for case, _f in files_cases.items():
         location, filename = os.path.split(_f)
         dest_filename = str(case) + '_' + filename
@@ -219,8 +204,8 @@ def execute_checker(experiment, path_checker):
 
 
 def get_objectives(experiment):
-    cases = get_all_cases()
     path = pm.PATHS['results'] + experiment + '/'
+    cases = get_all_cases(path)
     solutions = {}
     for c in cases:
         try:
@@ -239,11 +224,11 @@ def summary_table(experiment, path_out):
 
 
 def check_experiment(experiment, case=None):
+    path = pm.PATHS['results'] + experiment + '/'
     if case is None:
-        cases = get_all_cases()
+        cases = get_all_cases(path)
     else:
         cases = [case]
-    path = pm.PATHS['results'] + experiment + '/'
     solutions = {c: sol.Solution.from_io_files(path=path + c + '/', case_name=c) for c in cases}
     return {c: s.count_errors() for c, s in solutions.items()}
 
@@ -251,17 +236,20 @@ def check_experiment(experiment, case=None):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    # graph(experiment='hp_20181125', case="A1")
-    benchmarking('obj', experiments_filter=['hp_20181125', 'hp_20181126', 'hp_20180718_venv_pypy',
+    graph(experiment='hp_20181210')
+    benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20181126', 'hp_20180718_venv_pypy',
                                             'hp_20180911_venv', 'prise_20180917_venv',
                                                   'prise_20180926_venv'])
-    experiment = 'clust1_20180922_venv'
+    experiment = 'hp_20181209'
     experiment = 'test'
+    # exp_paths = get_experiments_paths(pm.PATHS['results'])
     # experiment = 'len_20180718_venv_py'
     path_checker = pm.PATHS['checker']
     # summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)
     rrr2 = check_experiment(experiment, 'A2')
+    A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/A15' + '/', case_name='A15')
+    A2sol.graph_solution()
     # rrr = get_objectives()
     # dominant_experiments()
     pass

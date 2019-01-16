@@ -4,13 +4,14 @@ import re
 import shutil
 
 
-def separate_cases(name, data_dir=pm.PATHS['data'], results_dir=pm.PATHS['results']):
+def separate_cases(name, data_dir=pm.PATHS['data'], results_dir=pm.PATHS['results'], cases=None):
     destination = results_dir + name + '/'
     if not os.path.exists(destination):
         os.makedirs(destination)
 
     files = os.listdir(data_dir)
-    cases = ["A{}".format(n) for n in range(1, 21)]
+    if cases is None:
+        cases = ["A{}".format(n) for n in range(1, 21)]
     for case in cases:
         _files = [os.path.join(data_dir, f) for f in files if f.startswith(case + '_')]
         _dest = destination + case + '/'
