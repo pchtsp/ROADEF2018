@@ -1,10 +1,10 @@
-def calculate_paths_root(root):
+def calculate_paths_root(root, data_set='A'):
     path_checker = root + "resources/checker/"
     return {
     'root': root
     ,'img': root + "img/"
     ,'latex': root + "latex/"
-    ,'data': root + "resources/data/dataset_A/"
+    ,'data': root + "resources/data/dataset_{}/".format(data_set)
     ,'checker': path_checker
     ,'checker_data': path_checker + "instances_checker/"
 }
@@ -17,7 +17,7 @@ def calculate_paths_results(results):
     }
 
 base = '/home'
-base = 'C:/Users'
+# base = 'C:/Users'
 root = base + '/pchtsp/Documents/projects/ROADEF2018/'
 results = base + '/pchtsp/Dropbox/ROADEF2018/'
 
@@ -66,9 +66,9 @@ OPTIONS = {
                       }
     , 'heur_remake': {
         'iterations_initial': 100,
-        'iterations_remake': 50,
+        'iterations_remake': 100,
         'rotation': [0.50, 0.50, 0, 0],
-        'num_trees': [0.90, 0.1],
+        'num_trees': [0.20, 0.20, 0.20, 0.20, 0.20],
         'options': ['best', 'partial', 'restart', ],
         'probability': [0.2, 0.7, 0.1],
     }
@@ -76,7 +76,7 @@ OPTIONS = {
         # 'try_rotation': True,
         # 'max_candidates': 5,
         # 'rotation_probs': [0.5, 0.5, 0, 0],
-        'weights': {'space': 400, 'seq': 20000, 'defects': 40000, 'wastes': 40000}
+        # 'weights': {'space': 400, 'seq': 20000, 'defects': 40000, 'wastes': 40000}
     }
     , 'debug': False
     , 'graph': False
