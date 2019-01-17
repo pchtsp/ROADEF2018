@@ -1,0 +1,1 @@
+cdef bint check_nodespace_in_space(node_space, free_space, bint insert, int min_waste)

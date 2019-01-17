@@ -1,5 +1,7 @@
+# cython: profile=False
+
 import package.nodes as nd
-import package.nodes_checks as nc
+cimport package.nodes_checks as nc
 import package.geometry as geom
 import logging as log
 import numpy as np
@@ -51,8 +53,7 @@ def try_change_node_simple(node, candidates, insert, min_waste, params):
     for candidate in candidates:
         if not nc.check_assumptions_swap(node, candidate, insert):
             continue
-        result = nc.check_swap_size_rotation(node, candidate, insert=insert,
-                                          min_waste=min_waste, params=params)
+        result = nc.check_swap_size_rotation(node, candidate, insert=insert, min_waste=min_waste, params=params)
         if result is None:
             continue
         rotation[candidate] = result
@@ -147,6 +148,7 @@ def insert_items_on_trees(params, global_params, items_by_stack, defects, sortin
         trees.append(tree)
         inserted_nodes = insert_node_inside_node_traverse(node, tree, min_waste=min_waste, params=params)
         # TODO: warning, in the future this could be possible due to defects checking
+#        print(inserted_nodes)
         assert inserted_nodes, "node {} apparently doesn't fit in a blank new tree".format(node.name)
         item_node[item_id] = nd.get_node_by_type(inserted_nodes[1], item_id)
 
@@ -458,9 +460,11 @@ def get_swap_squares(nodes, nodes_changes, insert, rotation):
                 # if rotation, we rotate the node before moving it.
                 if k in rotation:
                     _sq = geom.rotate_square(_sq, ref_pos)
-            for n in range(2):  # for each corner of the square
+            for pos, n in enumerate(['DL', 'UR']):  # for each corner of the square
                 for a in ['X', 'Y']:
-                    _sq[n][a] += change[n][a]
+#                    print(_sq)
+#                    print(change)
+                    _sq[n][a] += change[pos][a]
             squares[after][after_plate].append(_sq)  # we do edit it in after
 
     return squares
@@ -515,20 +519,21 @@ def check_swap_nodes_defect(node1, node2, min_waste, insert=False, rotation=None
 
     # TODO: test if sum is faster than using for with break.
     defects_found = [0 for pos in squares]
-    for pos, sqs in enumerate(squares):  # for (before) => after
-        defects_found[pos] = \
-        np.sum(geom.square_intersects_square(d, sq)
-               for plate, sq_list in sqs.items()
-               for d in defects_sq[plate]
-               for sq in sq_list)
+#    for pos, sqs in enumerate(squares):  # for (before) => after
+#        defects_found[pos] = \
+#        np.sum(geom.square_intersects_square(d, sq)
+#               for plate, sq_list in sqs.items()
+#               for d in defects_sq[plate]
+#               for sq in sq_list)
 
-        # for plate, sq_list in squares[pos].items():  # for each node
-        #     for d in defects_sq[plate]:  # for each defect
-        #         for sq in sq_list:  # for each neighbor
-        #             if geom.square_intersects_square(d, sq):
-        #                 defects_found[pos].append((d, sq))
-        #                 # if it's inside some node, it's not in the rest:
-        #                 break
+    for pos, sqs in enumerate(squares):  # for (before) => after
+        for plate, sq_list in sqs.items():  # for each node
+            for d in defects_sq[plate]:  # for each defect
+                for sq in sq_list:  # for each neighbor
+                    if geom.square_intersects_square(d, sq):
+                        defects_found[pos] += 1
+                         # if it's inside some node, it's not in the rest:
+                        break
 
     # as the rest of checks: the bigger the better.
     return defects_found[0] - defects_found[1], wastes_mods
@@ -575,19 +580,16 @@ def check_swap_two_nodes(nodes, args_check_size, args_evaluate, evaluate, params
     :param args_evaluate:
     :param evaluate: evaluate or not
     :param params:
-    :return: a tuple of size 3: (economical balance, defects to resize, rotations to make)
+    :return: a tuple of size 3: (economical balance, wastes to resize, rotations to make)
     """
-    tolerance = params['tolerance']
-    args_check_size = {**args_check_size, **nodes}
-    rotation = nc.check_swap_size_rotation(**args_check_size)
+    a = {**args_check_size, **nodes}
+    rotation = nc.check_swap_size_rotation(a['node1'], a['node2'], a['min_waste'], a['params'], a['insert'])
     if rotation is None:
         return None
     args_evaluate = {**args_evaluate, **nodes}
     if not evaluate:
-        return 0
+        return 0, [], []
     balance = evaluate_swap(**args_evaluate, rotation=rotation)
-    if tolerance is not None and balance[0] <= tolerance:
-        return None
     return balance[0], balance[1], rotation
 
 

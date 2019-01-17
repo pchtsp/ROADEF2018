@@ -1,3 +1,5 @@
+# cython: profile=False
+
 import ete3
 import package.geometry as geom
 import package.superdict as sd
@@ -119,7 +121,6 @@ def change_feature(node, feature, value):
 
 def resize_waste(waste, dim, quantity, delete_if_empty=True):
     """
-
     :param waste:
     :param dim:
     :param quantity:
@@ -266,7 +267,10 @@ def get_code_node(node):
     return rn.randint(1, 100000)
 
 
-def get_dim_of_node(node, inv=False):
+#TODO: stop passing strings all around
+#cpdef char* get_dim_of_node(node, bint inv=False):
+cpdef get_dim_of_node(node, bint inv=False):
+    cdef bint result
     result = node.CUT % 2
     if inv:
         result = not result
@@ -275,15 +279,29 @@ def get_dim_of_node(node, inv=False):
     # cut 2 and 4
     return 'HEIGHT'
 
+#Encoding text to bytes¶
+#py_byte_string = py_unicode_string.encode('UTF-8')
+#cdef char* c_string = py_byte_string
 
-def get_orientation_from_cut(node, inv=False):
+#Decoding bytes to text¶
+#ustring = some_c_string.decode('UTF-8')
+
+
+def get_orientation_from_cut(node, bint inv=False):
     # inv: means inverse the result.
+#    cdef char* dim
+#    cdef char* axis
     dim = get_dim_of_node(node, inv)
     axis = get_axis_of_dim(dim)
+#    print(dim, axis)
+#    return axis.decode('UTF-8'), dim.decode('UTF-8')
     return axis, dim
 
 
-def get_axis_of_dim(dim):
+#cpdef char* get_axis_of_dim(char* dim):
+cpdef get_axis_of_dim(dim):
+#    print(dim)
+    cdef dict r
     r = {
         'HEIGHT': 'Y',
         'WIDTH': 'X'
@@ -351,6 +369,7 @@ def get_node_position_cost(node, plate_width):
     return get_node_position_cost_unit(node, plate_width) * (node.WIDTH * node.HEIGHT)
 
 
+#cdef int get_size_without_waste(node, char* dim):
 def get_size_without_waste(node, dim):
     waste = find_waste(node, child=True)
     if waste is None:
@@ -358,6 +377,7 @@ def get_size_without_waste(node, dim):
     return getattr(node, dim) - getattr(waste, dim)
 
 
+#cdef int  get_size_without_wastes(node, char* dim):
 def get_size_without_wastes(node, dim):
     wastes = find_all_wastes(node)
     sum_waste_dims = sum(getattr(waste, dim) for waste in wastes)
@@ -429,12 +449,12 @@ def node_to_square(node):
     """
     axis = ['X', 'Y']
     axis_dim = {'X': 'WIDTH', 'Y': 'HEIGHT'}
-    return [{a: getattr(node, a) for a in axis},
-     {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
-    # return {
-    #     'DL': {a: getattr(node, a) for a in axis},
-    #     'UR': {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}
-    # }
+#    return [{a: getattr(node, a) for a in axis},
+#     {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}]
+    return {
+     'DL': {a: getattr(node, a) for a in axis},
+     'UR': {a: getattr(node, a) + getattr(node, axis_dim[a]) for a in axis}
+    }
 
 
 def node_to_plate(node):
@@ -481,6 +501,7 @@ def duplicate_waste_into_children(node):
         'node {} needs to be a waste!'.format(node.name)
     axis_i, dim_i = get_orientation_from_cut(node, inv=True)
     child1 = duplicate_node_as_child(node, node_mod=200)
+#    print(dim_i)
     setattr(child1, dim_i, 0)
     child2 = duplicate_node_as_child(node, node_mod=400)
     child2.TYPE = -1
@@ -767,11 +788,11 @@ def defects_in_node(node):
     return defects_in_node
 
 
-def is_waste(node):
+cpdef bint is_waste(object node):
     return node.TYPE in [-1, -3]
 
 
-def is_last_sibling(node):
+cdef bint is_last_sibling(object node):
     return get_last_sibling(node) == node
 
 
@@ -923,9 +944,10 @@ def check_node_order(node1, node2):
     :param node2:
     :return: True if node2 comes before node2
     """
-    ancestor = node1.get_common_ancestor(node2)
     n1ancestors = set([node1] + node1.get_ancestors())
     n2ancestors = set([node2] + node2.get_ancestors())
+    common_ancestors = n1ancestors & n2ancestors
+    ancestor = max(common_ancestors, key=lambda x: x.CUT)
     for n in ancestor.children:
         if n in n1ancestors:
             return True

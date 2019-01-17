@@ -461,6 +461,7 @@ class Solution(inst.Instance):
                 break
         return sol
 
+
 if __name__ == "__main__":
     input_data = di.get_model_data('A0', path=pm.PATHS['checker_data'])
     solution_data = di.get_model_solution('A0')
