@@ -90,6 +90,7 @@ def solve_heuristic(options):
         self.graph_solution(output_path, name="plate", dpi=50)
     # print(self.check_sequence(solution=self.best_solution))
     self.export_solution(path=output_path, name=filename, prefix=prefix)
+    return self
 
 
 def solve(options):
@@ -116,12 +117,12 @@ def solve(options):
 
     try:
         if options['solver'] == 'HEUR':
-            solve_heuristic(options)
+            return solve_heuristic(options)
         else:
-            solve_case_iter(options)
+            return solve_case_iter(options)
     except:
         log.exception("error while executing solve")
-
+        return None
 
 if __name__ == "__main__":
     import pprint as pp

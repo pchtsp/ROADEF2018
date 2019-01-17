@@ -976,7 +976,7 @@ class ImproveHeuristic(sol.Solution):
                     self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
                 if level == 1 and rn.random() > 0.2:
-                        fsc['cuts'] = self.search_waste_cuts(1, params=params)
+                    fsc['cuts'] = self.search_waste_cuts(1, params=params)
                 if rn.random() > 0.5:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
@@ -1008,6 +1008,7 @@ class ImproveHeuristic(sol.Solution):
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)
             b_accepted = self.accepted
             b_improved = self.improved
+            # TODO: this condition should depend on improvements of current solution
             if new_imp_ratio < 60:
                 temp *= (1 - coolingRate)
                 iter += 1
@@ -1051,9 +1052,9 @@ class ImproveHeuristic(sol.Solution):
             )
             if count % 100 == 0:
                 log.debug(fail_success_acum_cat)
-            # self.improved = 0
-            # self.accepted = 0
-            # self.evaluated = 0
+                # self.improved = 0
+                # self.accepted = 0
+                # self.evaluated = 0
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
@@ -1070,9 +1071,7 @@ if __name__ == "__main__":
     # 4. do the swaps.
 
     # TODO: add more random movements.
-    # TODO: dynamic weights.
     # TODO: implement the multilevel swap
-    # TODO: profiling
     # TODO: make tree recreation work with defects.
     # TODO: switch defects with wastes (small ones? or small nodes)
     # TODO: search_waste_cuts for other levels.
