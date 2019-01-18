@@ -1,0 +1,59 @@
+## Template for parameter description file for Iterated Race.
+##
+## The format is one parameter per line. Each line contains:
+##
+## 1: Name of the parameter. An unquoted alphanumeric string,
+##    example: ants
+
+## 2: Switch to pass the parameter. A quoted (possibly empty) string, 
+##    if the value and the switch must be separated, add a space at
+##    the end of the string. Example : "--version1 --ants "
+
+## 3: Type. An unquoted single letter, among 
+##     i: Integer, c: categorical, o: ordinal, r: real.
+
+## 4: For c and o: All possible values, that is, a variable number of
+##    quoted or unquoted strings separated by commas within
+##    parenthesis. Empty strings and strings containing commas or
+##    spaces must be quoted.
+##    For i,r: a pair of unquoted numbers representing minimum and
+##    maximum values. 
+
+## 5: A conditional parameter can be defined according to the values of
+##    one or several other parameters.  This is done by adding a
+##    character '|' followed by an R expression involving the names of
+##    other parameters. This expression must return TRUE if the 
+##    condition is satisfied, FALSE otherwise.
+
+# 1:            2:                   3: 4:      5:
+g__timeLimit  "--g__timeLimit="   c   (600)
+h__main_iter     "--h__main_iter="   i   (1, 100)
+h__max_iter     "--h__max_iter="   i   (1, 1000)
+h__max_candidates     "--h__max_candidates="   i   (1, 50)
+h__temperature          "--h__temperature="          i,log  (1, 100000)
+h__cooling_rate          "--h__cooling_rate="          r,log  (0.00005, 1.0)
+h__cuts_prob          "--h__cuts_prob="          r  (0.0, 1.0)
+h__clean_cuts_prob          "--h__clean_cuts_prob="          r  (0.0, 1.0)
+h__try_rotation     "--h__try_rotation="   i   (0, 1)
+rem__iterations_initial          "--rem__iterations_initial="          i  (10, 1000)
+rem__iterations_remake          "--rem__iterations_remake="          i  (10, 100)
+rem__max_no_improve          "--rem__max_no_improve="          i  (1, 100)
+rem__prob_accept_worse_def          "--rem__prob_accept_worse_def="          r  (0, 0.5)
+rem__prob_accept_worse          "--rem__prob_accept_worse="          r  (0, 0.5)
+#h__weights__space        "--h__weights__space="        i,log  (1, 100000)
+#h__weights__seq        "--h__weights__seq="        i,log  (1, 100000)
+#h__weights__defects        "--h__weights__defects="        i,log  (1, 100000)
+#rem__rotation
+#rem__num_trees
+#rem__probability
+#h__rotation_probs            "--"                 c  ("x1" ,"x2", "x3")
+#h__level_probs            "--paramreal="       r  (1.5, 4.5)
+
+
+
+#h__temperature          "--param1 "          i  (1, 10) | mode %in% c("x1", "x2")
+#h__cooling_rate          "--param2 "          i  (1, 10) | mode %in% c("x1", "x3") && real > 2.5 && real <= 3.5
+#h__rotation_probs            "--"                 c  ("x1" ,"x2", "x3")
+#h__level_probs            "--paramreal="       r  (1.5, 4.5)
+#h__weights__space        "--mutation="        o  ("none", "very low", "low", "medium", "high", "very high", "all")
+#unused         "-u "                c  (1, 2, 10, 20)

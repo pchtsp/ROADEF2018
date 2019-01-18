@@ -1,0 +1,24 @@
+## This is an example of specifying instances with a file.
+
+# Each line is an instance relative to trainInstancesDir
+# (see scenario.txt.tmpl) and an optional sequence of instance-specific
+# parameters that will be passed to target-runnerx when invoked on that
+# instance.
+
+# Empty lines and comments are ignored.
+
+dataset_B/B1
+dataset_B/B2
+dataset_B/B3
+dataset_B/B4
+dataset_B/B5
+dataset_B/B6
+dataset_B/B7
+dataset_B/B8
+dataset_B/B9
+dataset_B/B10
+dataset_B/B11
+dataset_B/B12
+dataset_B/B13
+dataset_B/B14
+dataset_B/B15
