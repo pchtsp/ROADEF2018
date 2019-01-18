@@ -31,14 +31,14 @@ OPTIONS = {
     , 'input_path': PATHS['experiments']
     , 'output_path': PATHS['experiments']
     , 'output_file_name': None
-    , 'case_name': 'A1'
+    , 'case_name': 'A15'
     , 'max_plates': 10
     , 'max_width': 6000//4
     , 'max_items': 15
     , 'max_iters': 200000
     , 'ratio_plate_size': 2
     , 'num_processors': 24
-    , 'multiprocess': False
+    , 'multiprocess': True
     , 'seed': 42
     , 'warm_start': False
     # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
@@ -47,19 +47,24 @@ OPTIONS = {
                       'max_candidates': 5, 'extra_jumbos': 0,
                       'cooling_rate': 0.00005,
                       'change_first': False, 'tolerance': None,
-                      'try_rotation': True,
+                      'try_rotation': 1,
                       'rotation_probs': [0.70, 0.30, 0, 0],
                       'rotation_tries': 2,
                       'level_probs': [0.3, 0.3, 0.3, 0.1],
-                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000}
+                      'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000},
+                      'cuts_prob': 0.5,
+                      'clean_cuts_prob': 0.8
                       }
     , 'heur_remake': {
         'iterations_initial': 100,
         'iterations_remake': 100,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.20, 0.20, 0.20, 0.20, 0.20],
-        'options': ['best', 'partial', 'restart', ],
+        'options': ['best', 'partial', 'restart'],
         'probability': [0.2, 0.7, 0.1],
+        'max_no_improve': 10,
+        'prob_accept_worse': 0.05,
+        'prob_accept_worse_def': 0.2
     }
     , 'heur_optim': {
         # 'try_rotation': True,

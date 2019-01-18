@@ -15,3 +15,8 @@ python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pc
  python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20181210 --time-limit 3600 --data-set B > log.txt &
 
 python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20181212 --time-limit 3600 --data-set A --heur-remake "{\"iterations_initial\": 1000, \"iterations_remake\": 100, \"num_trees\": [0.20, 0.20, 0.20, 0.20, 0.20]}" --heur-params  "{\"rotation_probs\": [0.5, 0.5, 0, 0]}" > log.txt & 
+
+nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20190117 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > log.txt &
+
+cd R/ROADEF-R/tuning
+/home/pchtsp/R/x86_64-pc-linux-gnu-library/3.4/irace/bin/irace

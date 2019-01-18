@@ -281,7 +281,7 @@ class Solution(inst.Instance):
 
     def check_nodes_inside_jumbo(self):
         w, h = self.get_param('widthPlates'), self.get_param('heightPlates')
-        plate_square = [{'X': 0, 'Y': 0}, {'X': w, 'Y': h}]
+        plate_square = {'DL': {'X': 0, 'Y': 0}, 'UR': {'X': w, 'Y': h}}
         bad_position = []
         for tree in self.trees:
             for node in tree.iter_leaves():

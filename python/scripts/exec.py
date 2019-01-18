@@ -114,6 +114,7 @@ def solve(options):
     _log = log.getLogger()
     _log.handlers = [fileh]
     _log.setLevel(level)
+    # log.info(options)
 
     try:
         if options['solver'] == 'HEUR':
@@ -186,7 +187,7 @@ if __name__ == "__main__":
     cases = args.case
     data_set = args.data_set
 
-    num_cases = {'A': 21, 'B': 15}
+    num_cases = {'A': 21, 'B': 16}
 
     if args.all_cases:
         cases = ['{}{}'.format(data_set, case) for case in range(1, num_cases[data_set])]

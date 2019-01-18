@@ -772,6 +772,8 @@ class ImproveHeuristic(sol.Solution):
         remake_opts = options['heur_remake']
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
         tree_options = range(1, len(probs)+1)
+        prob_accept_worse = remake_opts.get('prob_accept_worse', 0.05)
+        prob_accept_worse_def = remake_opts.get('prob_accept_worse_def', 0.2)
         # nodes_cand = self.get_good_nodes_to_move()
         trees_prob = geom.get_probs_trees(len(self.trees))
         # trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
@@ -789,13 +791,14 @@ class ImproveHeuristic(sol.Solution):
         # if the candidate is worse, we do not even bother.
         if self.calculate_objective(candidate, discard_empty_trees=True) > \
                 (self.calculate_objective(incumbent, discard_empty_trees=True) - tolerance) \
-                and rn.random() < 0.95:
+                and rn.random() > prob_accept_worse:
             # if len(self.check_defects()) != start_def:
             #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
         # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)) and rn.random() < 0.8:
+        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)) \
+                and rn.random() > prob_accept_worse_def:
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
@@ -924,7 +927,11 @@ class ImproveHeuristic(sol.Solution):
 
         params = options['heur_params']
         p_remake = options['heur_remake']
-        weights = params['weights']
+        # weights = params['weights']
+        cuts_prob = params.get('cuts_prob', 0.5)
+        clean_cuts_prob = params.get('clean_cuts_prob', 0.8)
+        previous_objective = 99999999
+        max_no_improve = p_remake.get('max_no_improve', 10)
 
         if not options.get('warm_start', False):
             self.trees = \
@@ -964,22 +971,22 @@ class ImproveHeuristic(sol.Solution):
                 level = np.random.choice(a=levels, p=params['level_probs'])
                 # fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 params['try_rotation'] = level >= 2 and try_rotation
-                if not changed_flag and self.best_objective < weights['defects']//2:
-                    params = {**options['heur_params'], **options['heur_optim']}
-                    try_rotation = params['try_rotation']
-                    weights = params['weights']
-                    # temp = params['temperature']
-                    changed_flag = True
-                    log.info('activate optimisation')
+                # if not changed_flag and self.best_objective < weights['defects']//2:
+                #     params = {**options['heur_params'], **options['heur_optim']}
+                #     try_rotation = params['try_rotation']
+                #     weights = params['weights']
+                #     # temp = params['temperature']
+                #     changed_flag = True
+                #     log.info('activate optimisation')
                 log.debug('DO: collapse left')
                 fsc['collapse'] = self.collapse_to_left(level, params=params, max_wastes=max_wastes)
                 log.debug('DO: merge_wastes')
-                if rn.random() > 0.5:
+                if rn.random() < clean_cuts_prob:
                     self.merge_wastes_seq()
                 fsc['cuts'] = 0, 0
-                if level == 1 and rn.random() > 0.2:
+                if level == 1 and rn.random() < cuts_prob:
                     fsc['cuts'] = self.search_waste_cuts(1, params=params)
-                if rn.random() > 0.5:
+                if rn.random() < cuts_prob:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
@@ -1010,11 +1017,12 @@ class ImproveHeuristic(sol.Solution):
             new_imp_ratio = (self.improved - b_improved) * 100 / (self.accepted - b_accepted + 1)
             b_accepted = self.accepted
             b_improved = self.improved
-            # TODO: this condition should depend on improvements of current solution
-            if new_imp_ratio < 60:
-                temp *= (1 - coolingRate)
-                iter += 1
-            if iter > 10:
+            improve = previous_objective > self.last_objective
+            previous_objective = self.last_objective
+            temp *= (1 - coolingRate)
+            iter += not improve
+            if iter > max_no_improve:
+                iter = 0
                 remake_prob = p_remake.get('probability', [1])
                 remake_ops = p_remake.get('options', ['partial'])
                 opt = np.random.choice(a=remake_ops, size=1, p=remake_prob)
@@ -1029,13 +1037,11 @@ class ImproveHeuristic(sol.Solution):
                     self.trees = self.get_initial_solution(options=options,
                                                            num_iterations=p_remake['iterations_initial'])
 
-                iter = 0
             clock = time.time() - now
             if temp < 1 or clock > end:
                 break
             seq = self.check_sequence(type_node_dict=self.type_node_dict)
             defects = self.check_defects()
-            # wastes = self.check_waste_size()
 
             # fails, successes = tuple(map(sum, zip(*fail_success_acum)))
             log.info("TEMP={}, seq={}, def={}, current={}, best={}, time={}, evald={}, accptd={}, imprd={}, ratio_imp={}".format(
@@ -1058,9 +1064,7 @@ class ImproveHeuristic(sol.Solution):
         self.trees = self.best_solution
         self.clean_empty_cuts_2()
         self.merge_wastes_seq()
-        # print(self.check_all())
         self.trees = self.clean_last_trees(self.trees)
-        # print(self.check_all())
         pass
 
 

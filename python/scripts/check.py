@@ -23,11 +23,11 @@ def get_all_cases(exp_path):
 def get_experiments_paths(path, filter_exps=True):
     # cases = get_all_cases()
     if filter_exps:
-        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)', f)}
+        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(test)|(template)|(README)', f)}
     else:
-        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)', f)}
+        experiments = {f: path + f + '/' for f in os.listdir(path) if not re.match('^(old)|(README)', f)}
 
-    cases = {f: os.listdir(path + f + '/') for f in os.listdir(path) if not re.match('^(old)', f)}
+    cases = {f: os.listdir(path + f + '/') for f in os.listdir(path) if not re.match('^(old)|(README)', f)}
     result = {exp: {c: path + c + '/' for c in cases[exp]} for exp, path in experiments.items()}
     return sd.SuperDict.from_dict(result)
 
@@ -95,7 +95,7 @@ def benchmarking(value='dif_jumbo', experiments_filter=None):
     exp_paths = get_experiments_paths(pm.PATHS['results'])
     if experiments_filter is not None:
         experiments_filter.append('heuristic1800')
-        exp_paths = {k: v.filter(experiments_filter) for k, v in exp_paths.items()}
+        exp_paths = exp_paths.filter(experiments_filter)
 
     solutions = get_solutions(exp_paths)
 
@@ -124,7 +124,7 @@ def benchmarking(value='dif_jumbo', experiments_filter=None):
 
     table_items = pd.DataFrame.from_dict(items_area, orient='index').reset_index().\
         rename(columns={0: 'items', 'index': 'case'})
-    renames = {'index': 'case', 'variable': 'experiment'}
+    renames = {'index': 'experiment', 'variable': 'case'}
     table_obj = pd.DataFrame.from_dict(objectives, orient='index').reset_index().\
         melt(id_vars='index', value_name='obj').rename(columns=renames)
     table_feas = pd.DataFrame.from_dict(feasibility, orient='index').reset_index().\
@@ -236,10 +236,10 @@ def check_experiment(experiment, case=None):
 if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
-    graph(experiment='hp_20181210')
+    # graph(experiment='hp_20181210')
     benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20181126', 'hp_20180718_venv_pypy',
                                             'hp_20180911_venv', 'prise_20180917_venv',
-                                                  'prise_20180926_venv'])
+                                                  'prise_20180926_venv', 'hp_20190117', 'hp_20190116'])
     experiment = 'hp_20181209'
     experiment = 'test'
     # exp_paths = get_experiments_paths(pm.PATHS['results'])
@@ -248,8 +248,8 @@ if __name__ == "__main__":
     # summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)
     rrr2 = check_experiment(experiment, 'A2')
-    A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/A15' + '/', case_name='A15')
-    A2sol.graph_solution()
+    # A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/A15' + '/', case_name='A15')
+    # A2sol.graph_solution()
     # rrr = get_objectives()
     # dominant_experiments()
     pass
