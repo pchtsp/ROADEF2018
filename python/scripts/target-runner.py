@@ -129,11 +129,10 @@ result = exec.solve(options)
 # if return_code != 0:
 #     target_runner_error("command returned code " + str(return_code))
 
-cost = 99999999
+cost = 10000000
 if result is not None:
     errors = result.count_errors()
-    if not errors:
-        cost = result.calculate_objective()
+    cost = result.calculate_objective() + errors*10000000
 print(cost)
 
 # os.remove(out_file)
