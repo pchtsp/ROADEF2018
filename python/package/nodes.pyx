@@ -269,7 +269,7 @@ def get_code_node(node):
 
 #TODO: stop passing strings all around
 #cpdef char* get_dim_of_node(node, bint inv=False):
-cpdef get_dim_of_node(node, bint inv=False):
+cpdef object get_dim_of_node(node, bint inv=False):
     cdef bint result
     result = node.CUT % 2
     if inv:
@@ -299,7 +299,7 @@ def get_orientation_from_cut(node, bint inv=False):
 
 
 #cpdef char* get_axis_of_dim(char* dim):
-cpdef get_axis_of_dim(dim):
+cpdef object get_axis_of_dim(dim):
 #    print(dim)
     cdef dict r
     r = {

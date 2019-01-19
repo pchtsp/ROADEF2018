@@ -5,6 +5,7 @@ import logging as log
 # import pyximport; pyximport.install()
 cimport package.geometry as geom
 import numpy as np
+import random as rn
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib
@@ -183,22 +184,26 @@ cdef object check_swap_size_rotation(object node1, object node2, int min_waste, 
         log.debug('nodes are siblings, we do not check for space')
         return []
     cdef dict nodes
-    cdef int rotation_tries
-    cdef float rotation_probs[4]
+#    cdef int rotation_tries
+#    cdef float rotation_probs[4]
     cdef bint try_rotation
-    rotation_tries = params['rotation_tries']
+#    rotation_tries = params['rotation_tries']
     try_rotation = params['try_rotation']
-    rotation_probs = params['rotation_probs']
-
+#    rotation_probs = params['rotation_probs']
 #    cdef int rotations[4][1]
 #    cdef int rotation[1]
     rotations = [[]]
     nodes = {1: node1, 2: node2}
 
     if try_rotation:
-        rotations_av = [[], [1], [2], [1, 2]]
+#        rotations_av = [[], [1], [2], [1, 2]]
 #        print(rotation_probs)
-        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
+#        rotations = np.random.choice(a=rotations_av, p=rotation_probs, size=rotation_tries, replace=False)
+        if insert:
+            rotations = [[], [1]]
+        else:
+            rotations = [[], [1], [2]]
+        rn.shuffle(rotations)
     for rotation in rotations:
         if check_swap_size(nodes, min_waste=min_waste, insert=insert, rotate=rotation):
             return rotation
