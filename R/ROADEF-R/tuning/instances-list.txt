@@ -7,23 +7,23 @@
 
 # Empty lines and comments are ignored.
 
-dataset_A/A1
+#dataset_A/A1
 dataset_A/A2
-dataset_A/A3
-dataset_A/A4
-dataset_A/A5
-dataset_A/A6
-dataset_A/A7
+#dataset_A/A3
+#dataset_A/A4
+#dataset_A/A5
+#dataset_A/A6
+#dataset_A/A7
 dataset_A/A8
-dataset_A/A9
-dataset_A/A10
+#dataset_A/A9
+#dataset_A/A10
 dataset_A/A11
-dataset_A/A12
-dataset_A/A13
-dataset_A/A14
+#dataset_A/A12
+#dataset_A/A13
+#dataset_A/A14
 dataset_A/A15
-dataset_A/A16
-dataset_A/A17
-dataset_A/A18
-dataset_A/A19
-dataset_A/A20
+#dataset_A/A16
+#dataset_A/A17
+#dataset_A/A18
+#dataset_A/A19
+#dataset_A/A20

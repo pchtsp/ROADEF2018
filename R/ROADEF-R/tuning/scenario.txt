@@ -34,7 +34,7 @@ trainInstancesFile = "instances-list.txt"
 
 ## File that contains a set of initial configurations. If empty or NULL,
 ## all initial configurations are randomly generated.
-# configurationsFile = ""
+configurationsFile = "configurations.txt"
 
 ## File that contains a list of logical expressions that cannot be TRUE
 ## for any evaluated configuration. If empty or NULL, do not use forbidden
@@ -63,7 +63,7 @@ targetRunner = "./../../../python/scripts/target-runner.py"
 ## Maximum number of runs (invocations of targetRunner) that will be
 ## performed. It determines the maximum budget of experiments for the
 ## tuning.
-maxExperiments = 1000
+maxExperiments = 200
 
 ## Maximum total execution time in seconds for the executions of
 ## targetRunner. targetRunner must return two values: cost and time.
@@ -160,7 +160,7 @@ debugLevel = 4
 
 ## File containing a list of test instances and optionally additional
 ## parameters for them.
-testInstancesFile = "instances-list-test.txt"
+# testInstancesFile = "instances-list-test.txt"
 
 ## Number of elite configurations returned by irace that will be tested if
 ## test instances are provided.

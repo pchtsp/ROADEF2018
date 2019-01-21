@@ -11,5 +11,5 @@
 ## parameter conditions (NA should be used for those parameters that
 ## are not enabled for a given configuration) and, if given, the
 ## constraints that describe forbidden configurations.
-param1 param2 mode   real mutation
-#5        NA    "x2"   2.0   "low"
+h__main_iter    h__max_iter h__max_candidates   h__temperature  h__cooling_rate h__cuts_prob    h__clean_cuts_prob  h__try_rotation rem__iterations_initial rem__iterations_remake  rem__max_no_improve rem__prob_accept_worse_def  rem__prob_accept_worse  
+5       500     5   100     0.00005     0.5 0.8 1   100     10  10  0.02    0.05
