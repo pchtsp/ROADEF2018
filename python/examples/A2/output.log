@@ -1,0 +1,1105 @@
+2018-11-28 22:30:50,464 DEBUG:DO: reduce nodes level 1
+2018-11-28 22:30:50,520 DEBUG:DO: collapse left
+2018-11-28 22:30:50,779 DEBUG:waste 206 with position 1 has been selected for changing by -1652
+2018-11-28 22:30:51,144 DEBUG:waste 206 with position 1 has been selected for changing by -1203
+2018-11-28 22:30:51,412 DEBUG:waste 195 with position 1 has been selected for changing by -469
+2018-11-28 22:30:51,507 DEBUG:waste 206 with position 1 has been selected for changing by -469
+2018-11-28 22:30:51,641 DEBUG:waste 203 with position 1 has been selected for changing by -469
+2018-11-28 22:30:51,696 DEBUG:========================================
+2018-11-28 22:30:51,697 DEBUG:Started Insert nodes=(128/2, 206/5) gain=0
+2018-11-28 22:30:51,707 DEBUG:We extract node 128 from its parent: 126
+2018-11-28 22:30:51,715 DEBUG:deleted waste inside node 128 with ID=130
+2018-11-28 22:30:51,719 DEBUG:We collapse node 128 into its one children: 129
+2018-11-28 22:30:51,731 DEBUG:We insert node 129 into destination 204 in position 1
+2018-11-28 22:30:51,746 DEBUG:created in node ID=129, TYPE=54 a child with ID=52351, TYPE=54
+2018-11-28 22:30:51,752 DEBUG:created waste of size 3039 inside node 129 with ID=47448
+2018-11-28 22:30:51,782 DEBUG:waste 131 in node 126 is being changed by 456 to 614
+2018-11-28 22:30:51,798 DEBUG:waste 206 in node 204 is being changed by -469 to 2141
+2018-11-28 22:30:52,894 DEBUG:Finished Insert nodes=(128/2, 206/5) gain=0, new=440000, best=440000, last=99999999
+2018-11-28 22:30:53,183 DEBUG:waste 121 with position 3 has been selected for changing by -175
+2018-11-28 22:30:53,425 DEBUG:waste 192 with position 3 has been selected for changing by -175
+2018-11-28 22:30:53,461 DEBUG:========================================
+2018-11-28 22:30:53,470 DEBUG:Started Insert nodes=(66/0, 121/1) gain=0
+2018-11-28 22:30:53,481 DEBUG:We extract node 66 from its parent: 65
+2018-11-28 22:30:53,508 DEBUG:We insert node 66 into destination 109 in position 3
+2018-11-28 22:30:53,523 DEBUG:created in node ID=66, TYPE=1 a child with ID=14372, TYPE=1
+2018-11-28 22:30:53,526 DEBUG:created waste of size 1174 inside node 66 with ID=20034
+2018-11-28 22:30:53,547 DEBUG:waste 67 in node 65 is being changed by 2122 to 3296
+2018-11-28 22:30:53,551 DEBUG:We collapse node 65 into its one children: 67
+2018-11-28 22:30:53,570 DEBUG:waste 121 in node 109 is being changed by -175 to 228
+2018-11-28 22:30:54,771 DEBUG:Finished Insert nodes=(66/1, 121/1) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:30:55,495 DEBUG:waste 206 with position 2 has been selected for changing by -332
+2018-11-28 22:30:55,845 DEBUG:waste 192 with position 3 has been selected for changing by -332
+2018-11-28 22:30:55,904 DEBUG:========================================
+2018-11-28 22:30:55,910 DEBUG:Started Insert nodes=(3/0, 192/4) gain=0
+2018-11-28 22:30:55,922 DEBUG:We extract node 3 from its parent: 1
+2018-11-28 22:30:55,925 DEBUG:deleted waste inside node 3 with ID=5
+2018-11-28 22:30:55,929 DEBUG:We collapse node 3 into its one children: 4
+2018-11-28 22:30:55,937 DEBUG:We insert node 4 into destination 186 in position 3
+2018-11-28 22:30:55,946 DEBUG:created in node ID=4, TYPE=47 a child with ID=61349, TYPE=47
+2018-11-28 22:30:55,950 DEBUG:created waste of size 3026 inside node 4 with ID=69353
+2018-11-28 22:30:55,967 DEBUG:waste 20 in node 1 is being changed by 332 to 414
+2018-11-28 22:30:55,991 DEBUG:waste 192 in node 186 is being changed by -332 to 455
+2018-11-28 22:30:57,551 DEBUG:Finished Insert nodes=(3/0, 192/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:30:58,149 DEBUG:waste 206 with position 2 has been selected for changing by -426
+2018-11-28 22:30:58,187 DEBUG:========================================
+2018-11-28 22:30:58,188 DEBUG:Started Insert nodes=(117/1, 206/5) gain=0
+2018-11-28 22:30:58,195 DEBUG:We extract node 117 from its parent: 112
+2018-11-28 22:30:58,198 DEBUG:deleted waste inside node 117 with ID=119
+2018-11-28 22:30:58,201 DEBUG:We collapse node 117 into its one children: 118
+2018-11-28 22:30:58,208 DEBUG:We insert node 118 into destination 204 in position 2
+2018-11-28 22:30:58,217 DEBUG:created in node ID=118, TYPE=39 a child with ID=1505, TYPE=39
+2018-11-28 22:30:58,220 DEBUG:created waste of size 2749 inside node 118 with ID=89167
+2018-11-28 22:30:58,248 DEBUG:waste 120 in node 112 is being changed by 746 to 884
+2018-11-28 22:30:58,264 DEBUG:waste 206 in node 204 is being changed by -426 to 1715
+2018-11-28 22:30:59,683 DEBUG:Finished Insert nodes=(117/1, 206/5) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:00,028 DEBUG:waste 203 with position 1 has been selected for changing by -747
+2018-11-28 22:31:00,279 DEBUG:waste 206 with position 3 has been selected for changing by -928
+2018-11-28 22:31:00,483 DEBUG:waste 195 with position 1 has been selected for changing by -928
+2018-11-28 22:31:00,508 DEBUG:========================================
+2018-11-28 22:31:00,511 DEBUG:Started Insert (rot=[1]) nodes=(34/0, 206/5) gain=0
+2018-11-28 22:31:00,519 DEBUG:We extract node 34 from its parent: 32
+2018-11-28 22:31:00,524 DEBUG:deleted waste inside node 34 with ID=36
+2018-11-28 22:31:00,527 DEBUG:We collapse node 34 into its one children: 35
+2018-11-28 22:31:00,529 DEBUG:Node 35 is being rotated
+2018-11-28 22:31:00,538 DEBUG:We insert node 35 into destination 204 in position 3
+2018-11-28 22:31:00,567 DEBUG:created in node ID=35, TYPE=40 a child with ID=94647, TYPE=40
+2018-11-28 22:31:00,577 DEBUG:created waste of size 2748 inside node 35 with ID=94330
+2018-11-28 22:31:00,638 DEBUG:waste 37 in node 32 is being changed by 928 to 1063
+2018-11-28 22:31:00,660 DEBUG:waste 206 in node 204 is being changed by -928 to 787
+2018-11-28 22:31:02,153 DEBUG:Finished Insert (rot=[1]) nodes=(34/0, 206/5) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:02,308 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:02,417 DEBUG:========================================
+2018-11-28 22:31:02,419 DEBUG:Started Swap nodes=(41/0, 68/0) gain=0
+2018-11-28 22:31:02,426 DEBUG:We extract node 41 from its parent: 39
+2018-11-28 22:31:02,431 DEBUG:deleted waste inside node 41 with ID=49
+2018-11-28 22:31:02,444 DEBUG:We insert node 41 into destination 39 in position 5
+2018-11-28 22:31:02,479 DEBUG:created waste of size 170 inside node 41 with ID=23417
+2018-11-28 22:31:02,497 DEBUG:We extract node 68 from its parent: 39
+2018-11-28 22:31:02,520 DEBUG:We insert node 68 into destination 39 in position 1
+2018-11-28 22:31:03,774 DEBUG:Finished Swap nodes=(41/0, 68/0) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:03,952 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:04,668 DEBUG:waste 198 with position 1 has been selected for changing by -419
+2018-11-28 22:31:04,713 DEBUG:========================================
+2018-11-28 22:31:04,716 DEBUG:Started Insert (rot=[1]) nodes=(28/0, 198/4) gain=0
+2018-11-28 22:31:04,723 DEBUG:We extract node 28 from its parent: 23
+2018-11-28 22:31:04,727 DEBUG:deleted waste inside node 28 with ID=30
+2018-11-28 22:31:04,733 DEBUG:We collapse node 28 into its one children: 29
+2018-11-28 22:31:04,736 DEBUG:Node 29 is being rotated
+2018-11-28 22:31:04,747 DEBUG:We insert node 29 into destination 196 in position 1
+2018-11-28 22:31:04,758 DEBUG:created in node ID=29, TYPE=45 a child with ID=49010, TYPE=45
+2018-11-28 22:31:04,763 DEBUG:created waste of size 671 inside node 29 with ID=99944
+2018-11-28 22:31:04,785 DEBUG:waste 31 in node 23 is being changed by 419 to 549
+2018-11-28 22:31:04,815 DEBUG:waste 198 in node 196 is being changed by -419 to 802
+2018-11-28 22:31:06,510 DEBUG:Finished Insert (rot=[1]) nodes=(28/0, 198/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:06,958 DEBUG:waste 198 with position 2 has been selected for changing by -137
+2018-11-28 22:31:07,021 DEBUG:waste 121 with position 4 has been selected for changing by -137
+2018-11-28 22:31:07,402 DEBUG:waste 192 with position 4 has been selected for changing by -137
+2018-11-28 22:31:07,795 DEBUG:waste 203 with position 1 has been selected for changing by -137
+2018-11-28 22:31:07,864 DEBUG:========================================
+2018-11-28 22:31:07,868 DEBUG:Started Insert (rot=[1]) nodes=(7/0, 121/1) gain=0
+2018-11-28 22:31:07,877 DEBUG:We extract node 7 from its parent: 6
+2018-11-28 22:31:07,879 DEBUG:Node 7 is being rotated
+2018-11-28 22:31:07,886 DEBUG:We insert node 7 into destination 109 in position 4
+2018-11-28 22:31:07,899 DEBUG:created in node ID=7, TYPE=3 a child with ID=40307, TYPE=3
+2018-11-28 22:31:07,902 DEBUG:created waste of size 2252 inside node 7 with ID=31386
+2018-11-28 22:31:07,928 DEBUG:waste 14 in node 6 is being changed by 137 to 169
+2018-11-28 22:31:07,993 DEBUG:waste 121 in node 109 is being changed by -137 to 91
+2018-11-28 22:31:09,624 DEBUG:Finished Insert (rot=[1]) nodes=(7/1, 121/1) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:09,900 DEBUG:waste 195 with position 1 has been selected for changing by -456
+2018-11-28 22:31:10,053 DEBUG:waste 198 with position 2 has been selected for changing by -469
+2018-11-28 22:31:10,076 DEBUG:========================================
+2018-11-28 22:31:10,078 DEBUG:Started Insert nodes=(145/2, 195/4) gain=0
+2018-11-28 22:31:10,084 DEBUG:We extract node 145 from its parent: 142
+2018-11-28 22:31:10,090 DEBUG:We insert node 145 into destination 193 in position 1
+2018-11-28 22:31:10,096 DEBUG:created in node ID=145, TYPE=65 a child with ID=9072, TYPE=65
+2018-11-28 22:31:10,099 DEBUG:created waste of size 896 inside node 145 with ID=99694
+2018-11-28 22:31:10,118 DEBUG:waste 154 in node 142 is being changed by 456 to 552
+2018-11-28 22:31:10,145 DEBUG:waste 195 in node 193 is being changed by -456 to 601
+2018-11-28 22:31:11,575 DEBUG:Finished Insert nodes=(145/4, 195/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:11,791 DEBUG:waste 195 with position 2 has been selected for changing by -168
+2018-11-28 22:31:11,863 DEBUG:waste 68 with position 1 has been selected for changing by -72
+2018-11-28 22:31:11,865 DEBUG:waste 67 with position 4 has been selected for changing by -96
+2018-11-28 22:31:12,136 DEBUG:waste 206 with position 4 has been selected for changing by -168
+2018-11-28 22:31:12,155 DEBUG:========================================
+2018-11-28 22:31:12,159 DEBUG:Started Insert nodes=(61/0, 68/0) gain=0
+2018-11-28 22:31:12,168 DEBUG:We extract node 61 from its parent: 59
+2018-11-28 22:31:12,171 DEBUG:deleted waste inside node 61 with ID=63
+2018-11-28 22:31:12,174 DEBUG:We collapse node 61 into its one children: 62
+2018-11-28 22:31:12,186 DEBUG:We insert node 62 into destination 39 in position 1
+2018-11-28 22:31:12,210 DEBUG:created in node ID=62, TYPE=0 a child with ID=93448, TYPE=0
+2018-11-28 22:31:12,212 DEBUG:created waste of size 1974 inside node 62 with ID=40858
+2018-11-28 22:31:12,227 DEBUG:waste 64 in node 59 is being changed by 1322 to 1900
+2018-11-28 22:31:12,242 DEBUG:waste 68 in node 39 is being changed by -72 to 0
+2018-11-28 22:31:12,251 DEBUG:waste 68 is being removed from node 39
+2018-11-28 22:31:12,257 DEBUG:waste 67 in node 39 is being changed by -96 to 79
+2018-11-28 22:31:13,227 DEBUG:Finished Insert nodes=(61/0, 68/0) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:13,378 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:13,433 DEBUG:========================================
+2018-11-28 22:31:13,435 DEBUG:Started Swap nodes=(191/4, 192/4) gain=0
+2018-11-28 22:31:13,442 DEBUG:We extract node 191 from its parent: 186
+2018-11-28 22:31:13,449 DEBUG:We insert node 191 into destination 186 in position 4
+2018-11-28 22:31:13,460 DEBUG:We extract node 192 from its parent: 186
+2018-11-28 22:31:13,466 DEBUG:We insert node 192 into destination 186 in position 2
+2018-11-28 22:31:14,759 DEBUG:Finished Swap nodes=(191/4, 192/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:14,942 DEBUG:waste 203 with position 1 has been selected for changing by -469
+2018-11-28 22:31:15,182 DEBUG:waste 206 with position 4 has been selected for changing by -469
+2018-11-28 22:31:15,248 DEBUG:========================================
+2018-11-28 22:31:15,251 DEBUG:Started Insert (rot=[1]) nodes=(143/2, 206/5) gain=0
+2018-11-28 22:31:15,264 DEBUG:We extract node 143 from its parent: 142
+2018-11-28 22:31:15,269 DEBUG:Node 143 is being rotated
+2018-11-28 22:31:15,274 DEBUG:We insert node 143 into destination 204 in position 4
+2018-11-28 22:31:15,284 DEBUG:created in node ID=143, TYPE=58 a child with ID=2758, TYPE=58
+2018-11-28 22:31:15,302 DEBUG:created waste of size 3039 inside node 143 with ID=77111
+2018-11-28 22:31:15,322 DEBUG:waste 154 in node 142 is being changed by 456 to 1008
+2018-11-28 22:31:15,347 DEBUG:waste 206 in node 204 is being changed by -469 to 318
+2018-11-28 22:31:16,709 DEBUG:Finished Insert (rot=[1]) nodes=(143/5, 206/5) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:17,062 DEBUG:waste 206 with position 5 has been selected for changing by -228
+2018-11-28 22:31:17,112 DEBUG:========================================
+2018-11-28 22:31:17,118 DEBUG:Started Insert nodes=(60/0, 206/5) gain=0
+2018-11-28 22:31:17,128 DEBUG:We extract node 60 from its parent: 59
+2018-11-28 22:31:17,136 DEBUG:We insert node 60 into destination 204 in position 5
+2018-11-28 22:31:17,157 DEBUG:created in node ID=60, TYPE=35 a child with ID=7717, TYPE=35
+2018-11-28 22:31:17,161 DEBUG:created waste of size 2099 inside node 60 with ID=30008
+2018-11-28 22:31:17,185 DEBUG:waste 64 in node 59 is being changed by 1396 to 3296
+2018-11-28 22:31:17,188 DEBUG:We collapse node 59 into its one children: 64
+2018-11-28 22:31:17,228 DEBUG:waste 206 in node 204 is being changed by -228 to 90
+2018-11-28 22:31:18,649 DEBUG:Finished Insert nodes=(60/5, 206/5) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:19,113 DEBUG:waste 198 with position 2 has been selected for changing by -456
+2018-11-28 22:31:19,192 DEBUG:========================================
+2018-11-28 22:31:19,195 DEBUG:Started Insert nodes=(98/1, 198/4) gain=0
+2018-11-28 22:31:19,220 DEBUG:We extract node 98 from its parent: 92
+2018-11-28 22:31:19,226 DEBUG:deleted waste inside node 98 with ID=101
+2018-11-28 22:31:19,237 DEBUG:We insert node 98 into destination 196 in position 2
+2018-11-28 22:31:19,248 DEBUG:created waste of size 139 inside node 98 with ID=43310
+2018-11-28 22:31:19,271 DEBUG:waste 108 in node 92 is being changed by 456 to 625
+2018-11-28 22:31:19,290 DEBUG:waste 198 in node 196 is being changed by -456 to 346
+2018-11-28 22:31:20,656 DEBUG:Finished Insert nodes=(98/4, 198/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:20,972 DEBUG:waste 108 with position 3 has been selected for changing by -456
+2018-11-28 22:31:21,156 DEBUG:waste 203 with position 1 has been selected for changing by -456
+2018-11-28 22:31:21,212 DEBUG:========================================
+2018-11-28 22:31:21,214 DEBUG:Started Insert nodes=(144/2, 108/1) gain=0
+2018-11-28 22:31:21,222 DEBUG:We extract node 144 from its parent: 142
+2018-11-28 22:31:21,231 DEBUG:We insert node 144 into destination 92 in position 3
+2018-11-28 22:31:21,244 DEBUG:created in node ID=144, TYPE=64 a child with ID=28081, TYPE=64
+2018-11-28 22:31:21,247 DEBUG:created waste of size 825 inside node 144 with ID=70679
+2018-11-28 22:31:21,269 DEBUG:waste 154 in node 142 is being changed by 456 to 1464
+2018-11-28 22:31:21,280 DEBUG:waste 108 in node 92 is being changed by -456 to 169
+2018-11-28 22:31:22,730 DEBUG:Finished Insert nodes=(144/1, 108/1) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:22,858 DEBUG:waste 195 with position 2 has been selected for changing by -485
+2018-11-28 22:31:22,930 DEBUG:========================================
+2018-11-28 22:31:22,932 DEBUG:Started Insert nodes=(164/3, 195/4) gain=0
+2018-11-28 22:31:22,938 DEBUG:We extract node 164 from its parent: 159
+2018-11-28 22:31:22,941 DEBUG:deleted waste inside node 164 with ID=166
+2018-11-28 22:31:22,942 DEBUG:We collapse node 164 into its one children: 165
+2018-11-28 22:31:22,953 DEBUG:We insert node 165 into destination 193 in position 2
+2018-11-28 22:31:22,959 DEBUG:created in node ID=165, TYPE=56 a child with ID=74848, TYPE=56
+2018-11-28 22:31:22,961 DEBUG:created waste of size 731 inside node 165 with ID=75526
+2018-11-28 22:31:22,970 DEBUG:waste 167 in node 159 is being changed by 634 to 709
+2018-11-28 22:31:22,986 DEBUG:waste 195 in node 193 is being changed by -485 to 116
+2018-11-28 22:31:24,394 DEBUG:Finished Insert nodes=(164/3, 195/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:24,554 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:24,649 DEBUG:========================================
+2018-11-28 22:31:24,652 DEBUG:Started Swap nodes=(187/4, 192/4) gain=0
+2018-11-28 22:31:24,660 DEBUG:We extract node 187 from its parent: 186
+2018-11-28 22:31:24,671 DEBUG:We insert node 187 into destination 186 in position 2
+2018-11-28 22:31:24,682 DEBUG:We extract node 192 from its parent: 186
+2018-11-28 22:31:24,687 DEBUG:We insert node 192 into destination 186 in position 0
+2018-11-28 22:31:26,141 DEBUG:Finished Swap nodes=(187/4, 192/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:27,103 DEBUG:waste 192 with position 0 has been selected for changing by -423
+2018-11-28 22:31:27,123 DEBUG:========================================
+2018-11-28 22:31:27,126 DEBUG:Started Insert (rot=[1]) nodes=(114/1, 192/4) gain=0
+2018-11-28 22:31:27,134 DEBUG:We extract node 114 from its parent: 112
+2018-11-28 22:31:27,139 DEBUG:deleted waste inside node 114 with ID=116
+2018-11-28 22:31:27,142 DEBUG:We collapse node 114 into its one children: 115
+2018-11-28 22:31:27,146 DEBUG:Node 115 is being rotated
+2018-11-28 22:31:27,167 DEBUG:We insert node 115 into destination 186 in position 0
+2018-11-28 22:31:27,184 DEBUG:created in node ID=115, TYPE=66 a child with ID=55520, TYPE=66
+2018-11-28 22:31:27,188 DEBUG:created waste of size 2462 inside node 115 with ID=53884
+2018-11-28 22:31:27,214 DEBUG:waste 120 in node 112 is being changed by 423 to 1307
+2018-11-28 22:31:27,243 DEBUG:waste 192 in node 186 is being changed by -423 to 32
+2018-11-28 22:31:29,520 DEBUG:Finished Insert (rot=[1]) nodes=(114/1, 192/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:29,816 DEBUG:waste 198 with position 3 has been selected for changing by -137
+2018-11-28 22:31:30,100 DEBUG:waste 91 with position 3 has been selected for changing by -137
+2018-11-28 22:31:30,112 DEBUG:========================================
+2018-11-28 22:31:30,125 DEBUG:Started Insert (rot=[1]) nodes=(11/0, 91/1) gain=0
+2018-11-28 22:31:30,138 DEBUG:We extract node 11 from its parent: 6
+2018-11-28 22:31:30,147 DEBUG:deleted waste inside node 11 with ID=13
+2018-11-28 22:31:30,150 DEBUG:We collapse node 11 into its one children: 12
+2018-11-28 22:31:30,154 DEBUG:Node 12 is being rotated
+2018-11-28 22:31:30,163 DEBUG:We insert node 12 into destination 77 in position 3
+2018-11-28 22:31:30,186 DEBUG:created in node ID=12, TYPE=4 a child with ID=52773, TYPE=4
+2018-11-28 22:31:30,192 DEBUG:created waste of size 417 inside node 12 with ID=95449
+2018-11-28 22:31:30,214 DEBUG:waste 14 in node 6 is being changed by 137 to 306
+2018-11-28 22:31:30,228 DEBUG:waste 91 in node 77 is being changed by -137 to 46
+2018-11-28 22:31:31,691 DEBUG:Finished Insert (rot=[1]) nodes=(11/0, 91/1) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:31,952 DEBUG:waste 203 with position 1 has been selected for changing by -1026
+2018-11-28 22:31:32,296 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:32,404 DEBUG:========================================
+2018-11-28 22:31:32,406 DEBUG:Started Swap nodes=(4/4, 192/4) gain=0
+2018-11-28 22:31:32,411 DEBUG:We extract node 4 from its parent: 186
+2018-11-28 22:31:32,415 DEBUG:deleted waste inside node 4 with ID=69353
+2018-11-28 22:31:32,417 DEBUG:We collapse node 4 into its one children: 61349
+2018-11-28 22:31:32,425 DEBUG:We insert node 61349 into destination 186 in position 1
+2018-11-28 22:31:32,433 DEBUG:created in node ID=61349, TYPE=47 a child with ID=58801, TYPE=47
+2018-11-28 22:31:32,452 DEBUG:created waste of size 3026 inside node 61349 with ID=18374
+2018-11-28 22:31:32,474 DEBUG:We extract node 192 from its parent: 186
+2018-11-28 22:31:32,488 DEBUG:We insert node 192 into destination 186 in position 4
+2018-11-28 22:31:34,089 DEBUG:Finished Swap nodes=(4/4, 192/4) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:34,911 DEBUG:waste 203 with position 1 has been selected for changing by -456
+2018-11-28 22:31:35,256 DEBUG:waste 154 with position 4 has been selected for changing by -456
+2018-11-28 22:31:35,293 DEBUG:========================================
+2018-11-28 22:31:35,295 DEBUG:Started Insert nodes=(46/0, 154/2) gain=0
+2018-11-28 22:31:35,309 DEBUG:We extract node 46 from its parent: 41
+2018-11-28 22:31:35,314 DEBUG:deleted waste inside node 46 with ID=48
+2018-11-28 22:31:35,316 DEBUG:We collapse node 46 into its one children: 47
+2018-11-28 22:31:35,327 DEBUG:We insert node 47 into destination 142 in position 4
+2018-11-28 22:31:35,346 DEBUG:waste 23417 in node 41 is being changed by 469 to 639
+2018-11-28 22:31:35,381 DEBUG:waste 154 in node 142 is being changed by -456 to 1008
+2018-11-28 22:31:38,113 DEBUG:Finished Insert nodes=(46/0, 154/2) gain=0, new=440000, best=440000, last=440000
+2018-11-28 22:31:42,876 DEBUG:waste 203 with position 1 has been selected for changing by -456
+2018-11-28 22:31:44,392 DEBUG:waste 203 with position 1 has been selected for changing by -1457
+2018-11-28 22:31:44,901 DEBUG:waste 203 with position 1 has been selected for changing by -456
+2018-11-28 22:31:46,837 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:47,226 DEBUG:========================================
+2018-11-28 22:31:47,227 DEBUG:Started Swap nodes=(149/2, 154/2) gain=40000
+2018-11-28 22:31:47,233 DEBUG:We extract node 149 from its parent: 142
+2018-11-28 22:31:47,235 DEBUG:deleted waste inside node 149 with ID=151
+2018-11-28 22:31:47,238 DEBUG:We collapse node 149 into its one children: 150
+2018-11-28 22:31:47,368 DEBUG:We insert node 150 into destination 142 in position 5
+2018-11-28 22:31:47,400 DEBUG:created in node ID=150, TYPE=44 a child with ID=28017, TYPE=44
+2018-11-28 22:31:47,403 DEBUG:created waste of size 50 inside node 150 with ID=52566
+2018-11-28 22:31:47,409 DEBUG:We extract node 154 from its parent: 142
+2018-11-28 22:31:47,416 DEBUG:We insert node 154 into destination 142 in position 1
+2018-11-28 22:31:50,183 DEBUG:Finished Swap nodes=(149/2, 154/2) gain=40000, new=400000, best=440000, last=440000
+2018-11-28 22:31:50,185 INFO:Best solution updated to 400000!
+2018-11-28 22:31:56,561 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:31:56,691 DEBUG:========================================
+2018-11-28 22:31:56,692 DEBUG:Started Swap nodes=(197/4, 198/4) gain=0
+2018-11-28 22:31:56,700 DEBUG:We extract node 197 from its parent: 196
+2018-11-28 22:31:56,713 DEBUG:We insert node 197 into destination 196 in position 3
+2018-11-28 22:31:56,739 DEBUG:We extract node 198 from its parent: 196
+2018-11-28 22:31:56,751 DEBUG:We insert node 198 into destination 196 in position 0
+2018-11-28 22:31:58,890 DEBUG:Finished Swap nodes=(197/4, 198/4) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:31:59,229 DEBUG:waste 198 with position 0 has been selected for changing by -150
+2018-11-28 22:31:59,594 DEBUG:waste 141 with position 2 has been selected for changing by -150
+2018-11-28 22:31:59,658 DEBUG:========================================
+2018-11-28 22:31:59,660 DEBUG:Started Insert (rot=[1]) nodes=(6/0, 198/4) gain=40000
+2018-11-28 22:31:59,668 DEBUG:We extract node 6 from its parent: 1
+2018-11-28 22:31:59,672 DEBUG:deleted waste inside node 6 with ID=14
+2018-11-28 22:31:59,674 DEBUG:We collapse node 6 into its one children: 8
+2018-11-28 22:31:59,684 DEBUG:Node 8 is being rotated
+2018-11-28 22:31:59,689 DEBUG:Node 9 is being rotated
+2018-11-28 22:31:59,699 DEBUG:Node 10 is being rotated
+2018-11-28 22:31:59,718 DEBUG:We insert node 8 into destination 196 in position 0
+2018-11-28 22:31:59,729 DEBUG:created waste of size 33 inside node 8 with ID=59639
+2018-11-28 22:31:59,817 DEBUG:waste 20 in node 1 is being changed by 1044 to 1458
+2018-11-28 22:31:59,834 DEBUG:waste 198 in node 196 is being changed by -150 to 196
+2018-11-28 22:32:01,005 DEBUG:Finished Insert (rot=[1]) nodes=(6/0, 198/4) gain=40000, new=400000, best=400000, last=400000
+2018-11-28 22:32:01,184 DEBUG:waste 20 with position 4 has been selected for changing by -1044
+2018-11-28 22:32:01,228 DEBUG:========================================
+2018-11-28 22:32:01,230 DEBUG:Started Insert (rot=[1]) nodes=(8/4, 20/0) gain=0
+2018-11-28 22:32:01,240 DEBUG:We extract node 8 from its parent: 196
+2018-11-28 22:32:01,243 DEBUG:deleted waste inside node 8 with ID=59639
+2018-11-28 22:32:01,244 DEBUG:Node 8 is being rotated
+2018-11-28 22:32:01,245 DEBUG:Node 9 is being rotated
+2018-11-28 22:32:01,247 DEBUG:Node 10 is being rotated
+2018-11-28 22:32:01,255 DEBUG:We insert node 8 into destination 1 in position 4
+2018-11-28 22:32:01,263 DEBUG:We collapse node 8 into its children: [9, 10]
+2018-11-28 22:32:01,272 DEBUG:created in node ID=9, TYPE=5 a child with ID=95749, TYPE=5
+2018-11-28 22:32:01,274 DEBUG:created waste of size 306 inside node 9 with ID=72846
+2018-11-28 22:32:01,287 DEBUG:waste 198 in node 196 is being changed by 150 to 346
+2018-11-28 22:32:01,300 DEBUG:waste 20 in node 1 is being changed by -1044 to 414
+2018-11-28 22:32:02,334 DEBUG:Finished Insert (rot=[1]) nodes=(8/0, 20/0) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:02,498 DEBUG:waste 203 with position 1 has been selected for changing by -510
+2018-11-28 22:32:02,944 DEBUG:waste 203 with position 1 has been selected for changing by -668
+2018-11-28 22:32:03,628 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:03,663 DEBUG:========================================
+2018-11-28 22:32:03,664 DEBUG:Started Swap nodes=(111/1, 121/1) gain=0
+2018-11-28 22:32:03,669 DEBUG:We extract node 111 from its parent: 109
+2018-11-28 22:32:03,674 DEBUG:We insert node 111 into destination 109 in position 5
+2018-11-28 22:32:03,681 DEBUG:We extract node 121 from its parent: 109
+2018-11-28 22:32:03,688 DEBUG:We insert node 121 into destination 109 in position 1
+2018-11-28 22:32:04,814 DEBUG:Finished Swap nodes=(111/1, 121/1) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:05,049 DEBUG:waste 154 with position 1 has been selected for changing by -456
+2018-11-28 22:32:05,123 DEBUG:========================================
+2018-11-28 22:32:05,124 DEBUG:Started Insert nodes=(179/3, 154/2) gain=0
+2018-11-28 22:32:05,128 DEBUG:We extract node 179 from its parent: 177
+2018-11-28 22:32:05,130 DEBUG:deleted waste inside node 179 with ID=181
+2018-11-28 22:32:05,132 DEBUG:We collapse node 179 into its one children: 180
+2018-11-28 22:32:05,138 DEBUG:We insert node 180 into destination 142 in position 1
+2018-11-28 22:32:05,151 DEBUG:waste 182 in node 177 is being changed by 469 to 806
+2018-11-28 22:32:05,160 DEBUG:waste 154 in node 142 is being changed by -456 to 552
+2018-11-28 22:32:05,961 DEBUG:Finished Insert nodes=(179/3, 154/2) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:06,362 DEBUG:waste 154 with position 2 has been selected for changing by -456
+2018-11-28 22:32:06,495 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:06,533 DEBUG:========================================
+2018-11-28 22:32:06,534 DEBUG:Started Swap nodes=(188/4, 192/4) gain=0
+2018-11-28 22:32:06,538 DEBUG:We extract node 188 from its parent: 186
+2018-11-28 22:32:06,540 DEBUG:deleted waste inside node 188 with ID=190
+2018-11-28 22:32:06,541 DEBUG:We collapse node 188 into its one children: 189
+2018-11-28 22:32:06,545 DEBUG:We insert node 189 into destination 186 in position 4
+2018-11-28 22:32:06,553 DEBUG:created in node ID=189, TYPE=24 a child with ID=8908, TYPE=24
+2018-11-28 22:32:06,555 DEBUG:created waste of size 65 inside node 189 with ID=88502
+2018-11-28 22:32:06,559 DEBUG:We extract node 192 from its parent: 186
+2018-11-28 22:32:06,566 DEBUG:We insert node 192 into destination 186 in position 2
+2018-11-28 22:32:07,803 DEBUG:Finished Swap nodes=(188/4, 192/4) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:07,901 DEBUG:waste 203 with position 1 has been selected for changing by -569
+2018-11-28 22:32:08,011 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:08,086 DEBUG:========================================
+2018-11-28 22:32:08,088 DEBUG:Started Swap nodes=(94/1, 108/1) gain=0
+2018-11-28 22:32:08,093 DEBUG:We extract node 94 from its parent: 92
+2018-11-28 22:32:08,099 DEBUG:deleted waste inside node 94 with ID=97
+2018-11-28 22:32:08,113 DEBUG:We insert node 94 into destination 92 in position 4
+2018-11-28 22:32:08,122 DEBUG:created waste of size 356 inside node 94 with ID=10746
+2018-11-28 22:32:08,125 DEBUG:We extract node 108 from its parent: 92
+2018-11-28 22:32:08,132 DEBUG:We insert node 108 into destination 92 in position 1
+2018-11-28 22:32:08,987 DEBUG:Finished Swap nodes=(94/1, 108/1) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:09,214 DEBUG:waste 203 with position 1 has been selected for changing by -469
+2018-11-28 22:32:09,513 DEBUG:waste 10 with position 5 has been selected for changing by -189
+2018-11-28 22:32:09,515 DEBUG:waste 20 with position 6 has been selected for changing by -280
+2018-11-28 22:32:09,535 DEBUG:========================================
+2018-11-28 22:32:09,536 DEBUG:Started Insert (rot=[1]) nodes=(152/2, 20/0) gain=0
+2018-11-28 22:32:09,540 DEBUG:We extract node 152 from its parent: 142
+2018-11-28 22:32:09,542 DEBUG:Node 152 is being rotated
+2018-11-28 22:32:09,545 DEBUG:We insert node 152 into destination 1 in position 6
+2018-11-28 22:32:09,557 DEBUG:waste 154 in node 142 is being changed by 456 to 1008
+2018-11-28 22:32:09,568 DEBUG:waste 10 in node 1 is being changed by -189 to 0
+2018-11-28 22:32:09,571 DEBUG:waste 10 is being removed from node 1
+2018-11-28 22:32:09,574 DEBUG:waste 20 in node 1 is being changed by -280 to 134
+2018-11-28 22:32:10,285 DEBUG:Finished Insert (rot=[1]) nodes=(152/0, 20/0) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:10,826 DEBUG:waste 203 with position 1 has been selected for changing by -332
+2018-11-28 22:32:10,835 DEBUG:========================================
+2018-11-28 22:32:10,836 DEBUG:Started Insert (rot=[1]) nodes=(16/0, 203/5) gain=0
+2018-11-28 22:32:10,840 DEBUG:We extract node 16 from its parent: 15
+2018-11-28 22:32:10,841 DEBUG:Node 16 is being rotated
+2018-11-28 22:32:10,846 DEBUG:We insert node 16 into destination 201 in position 1
+2018-11-28 22:32:10,850 DEBUG:created in node ID=16, TYPE=46 a child with ID=39322, TYPE=46
+2018-11-28 22:32:10,852 DEBUG:created waste of size 1362 inside node 16 with ID=59930
+2018-11-28 22:32:10,862 DEBUG:waste 17 in node 15 is being changed by 332 to 456
+2018-11-28 22:32:10,864 DEBUG:We collapse node 15 into its one children: 17
+2018-11-28 22:32:10,874 DEBUG:waste 203 in node 201 is being changed by -332 to 1197
+2018-11-28 22:32:11,692 DEBUG:Finished Insert (rot=[1]) nodes=(16/5, 203/5) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:11,857 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:11,887 DEBUG:========================================
+2018-11-28 22:32:11,888 DEBUG:Started Swap nodes=(112/1, 121/1) gain=0
+2018-11-28 22:32:11,892 DEBUG:We extract node 112 from its parent: 109
+2018-11-28 22:32:11,896 DEBUG:deleted waste inside node 112 with ID=120
+2018-11-28 22:32:11,897 DEBUG:We collapse node 112 into its one children: 113
+2018-11-28 22:32:11,902 DEBUG:We insert node 113 into destination 109 in position 1
+2018-11-28 22:32:11,910 DEBUG:created in node ID=113, TYPE=10 a child with ID=9509, TYPE=10
+2018-11-28 22:32:11,913 DEBUG:created waste of size 1307 inside node 113 with ID=1221
+2018-11-28 22:32:11,917 DEBUG:We extract node 121 from its parent: 109
+2018-11-28 22:32:11,921 DEBUG:We insert node 121 into destination 109 in position 2
+2018-11-28 22:32:12,815 DEBUG:Finished Swap nodes=(112/1, 121/1) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:13,228 DEBUG:waste 154 with position 2 has been selected for changing by -456
+2018-11-28 22:32:13,565 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:13,607 DEBUG:========================================
+2018-11-28 22:32:13,609 DEBUG:Started Swap nodes=(126/2, 132/2) gain=0
+2018-11-28 22:32:13,614 DEBUG:We extract node 126 from its parent: 124
+2018-11-28 22:32:13,617 DEBUG:deleted waste inside node 126 with ID=131
+2018-11-28 22:32:13,620 DEBUG:We collapse node 126 into its one children: 127
+2018-11-28 22:32:13,624 DEBUG:We insert node 127 into destination 124 in position 2
+2018-11-28 22:32:13,630 DEBUG:created in node ID=127, TYPE=34 a child with ID=27939, TYPE=34
+2018-11-28 22:32:13,631 DEBUG:created waste of size 614 inside node 127 with ID=66308
+2018-11-28 22:32:14,253 DEBUG:Finished Swap nodes=(126/2, 132/2) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:14,808 DEBUG:waste 203 with position 2 has been selected for changing by -555
+2018-11-28 22:32:14,815 DEBUG:========================================
+2018-11-28 22:32:14,817 DEBUG:Started Insert (rot=[1]) nodes=(24/0, 203/5) gain=0
+2018-11-28 22:32:14,825 DEBUG:We extract node 24 from its parent: 23
+2018-11-28 22:32:14,827 DEBUG:Node 24 is being rotated
+2018-11-28 22:32:14,830 DEBUG:We insert node 24 into destination 201 in position 2
+2018-11-28 22:32:14,834 DEBUG:created in node ID=24, TYPE=69 a child with ID=9017, TYPE=69
+2018-11-28 22:32:14,835 DEBUG:created waste of size 1139 inside node 24 with ID=32019
+2018-11-28 22:32:14,845 DEBUG:waste 31 in node 23 is being changed by 555 to 1104
+2018-11-28 22:32:14,856 DEBUG:waste 203 in node 201 is being changed by -555 to 642
+2018-11-28 22:32:15,933 DEBUG:Finished Insert (rot=[1]) nodes=(24/5, 203/5) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:16,025 DEBUG:waste 154 with position 2 has been selected for changing by -456
+2018-11-28 22:32:16,291 DEBUG:waste 203 with position 3 has been selected for changing by -406
+2018-11-28 22:32:16,303 DEBUG:========================================
+2018-11-28 22:32:16,306 DEBUG:Started Insert nodes=(150/2, 203/5) gain=0
+2018-11-28 22:32:16,311 DEBUG:We extract node 150 from its parent: 142
+2018-11-28 22:32:16,314 DEBUG:deleted waste inside node 150 with ID=52566
+2018-11-28 22:32:16,316 DEBUG:We collapse node 150 into its one children: 28017
+2018-11-28 22:32:16,319 DEBUG:We insert node 28017 into destination 201 in position 3
+2018-11-28 22:32:16,324 DEBUG:created in node ID=28017, TYPE=44 a child with ID=85718, TYPE=44
+2018-11-28 22:32:16,327 DEBUG:created waste of size 1288 inside node 28017 with ID=69330
+2018-11-28 22:32:16,340 DEBUG:waste 154 in node 142 is being changed by 406 to 1414
+2018-11-28 22:32:16,357 DEBUG:waste 203 in node 201 is being changed by -406 to 236
+2018-11-28 22:32:17,142 DEBUG:Finished Insert nodes=(150/2, 203/5) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:17,244 DEBUG:DO: merge_wastes
+2018-11-28 22:32:17,360 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:17,402 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:17,427 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:17,461 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:17,491 DEBUG:========================================
+2018-11-28 22:32:17,493 DEBUG:Started Swap nodes=(64/0, 40/0) gain=0
+2018-11-28 22:32:17,498 DEBUG:We extract node 64 from its parent: 39
+2018-11-28 22:32:17,507 DEBUG:We insert node 64 into destination 39 in position 0
+2018-11-28 22:32:17,545 DEBUG:We extract node 40 from its parent: 39
+2018-11-28 22:32:17,570 DEBUG:We insert node 40 into destination 39 in position 3
+2018-11-28 22:32:18,444 DEBUG:Finished Swap nodes=(64/0, 40/0) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:18,464 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:18,505 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:18,529 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:18,558 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:18,583 DEBUG:========================================
+2018-11-28 22:32:18,584 DEBUG:Started Swap nodes=(154/2, 180/2) gain=0
+2018-11-28 22:32:18,587 DEBUG:We extract node 154 from its parent: 142
+2018-11-28 22:32:18,591 DEBUG:We insert node 154 into destination 142 in position 1
+2018-11-28 22:32:18,595 DEBUG:We extract node 180 from its parent: 142
+2018-11-28 22:32:18,598 DEBUG:We insert node 180 into destination 142 in position 2
+2018-11-28 22:32:19,154 DEBUG:Finished Swap nodes=(154/2, 180/2) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:19,155 DEBUG:DO: change_level_by_seq
+2018-11-28 22:32:19,156 DEBUG:DO: change_level_by_defects
+2018-11-28 22:32:19,378 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:19,398 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:19,418 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:19,441 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:19,465 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:19,496 DEBUG:========================================
+2018-11-28 22:32:19,498 DEBUG:Started Swap nodes=(110/1, 121/1) gain=0
+2018-11-28 22:32:19,512 DEBUG:We extract node 110 from its parent: 109
+2018-11-28 22:32:19,519 DEBUG:We insert node 110 into destination 109 in position 2
+2018-11-28 22:32:19,529 DEBUG:We extract node 121 from its parent: 109
+2018-11-28 22:32:19,537 DEBUG:We insert node 121 into destination 109 in position 0
+2018-11-28 22:32:20,199 DEBUG:Finished Swap nodes=(110/1, 121/1) gain=0, new=400000, best=400000, last=400000
+2018-11-28 22:32:20,293 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:20,315 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:20,339 DEBUG:========================================
+2018-11-28 22:32:20,340 DEBUG:Started Swap nodes=(125/2, 127/2) gain=40000
+2018-11-28 22:32:20,345 DEBUG:We extract node 125 from its parent: 124
+2018-11-28 22:32:20,348 DEBUG:We insert node 125 into destination 124 in position 2
+2018-11-28 22:32:20,358 DEBUG:We extract node 127 from its parent: 124
+2018-11-28 22:32:20,361 DEBUG:deleted waste inside node 127 with ID=66308
+2018-11-28 22:32:20,362 DEBUG:We collapse node 127 into its one children: 27939
+2018-11-28 22:32:20,366 DEBUG:We insert node 27939 into destination 124 in position 0
+2018-11-28 22:32:20,370 DEBUG:created in node ID=27939, TYPE=34 a child with ID=34336, TYPE=34
+2018-11-28 22:32:20,373 DEBUG:created waste of size 614 inside node 27939 with ID=21179
+2018-11-28 22:32:20,960 DEBUG:Finished Swap nodes=(125/2, 127/2) gain=40000, new=360000, best=400000, last=400000
+2018-11-28 22:32:20,962 INFO:Best solution updated to 360000!
+2018-11-28 22:32:22,151 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:22,175 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:22,194 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:22,211 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:22,229 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:22,249 DEBUG:========================================
+2018-11-28 22:32:22,250 DEBUG:Started Swap nodes=(187/4, 192/4) gain=40000
+2018-11-28 22:32:22,253 DEBUG:We extract node 187 from its parent: 186
+2018-11-28 22:32:22,258 DEBUG:We insert node 187 into destination 186 in position 2
+2018-11-28 22:32:22,264 DEBUG:We extract node 192 from its parent: 186
+2018-11-28 22:32:22,268 DEBUG:We insert node 192 into destination 186 in position 3
+2018-11-28 22:32:22,899 DEBUG:Finished Swap nodes=(187/4, 192/4) gain=40000, new=320000, best=360000, last=360000
+2018-11-28 22:32:22,900 INFO:Best solution updated to 320000!
+2018-11-28 22:32:23,626 DEBUG:DO: change_level_by_all
+2018-11-28 22:32:23,745 DEBUG:waste 38 with position 3 has been selected for changing by -6
+2018-11-28 22:32:23,753 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:23,794 DEBUG:========================================
+2018-11-28 22:32:23,795 DEBUG:Started Swap (rot=[1]) nodes=(93/1, 32/0) gain=0
+2018-11-28 22:32:23,801 DEBUG:We extract node 93 from its parent: 92
+2018-11-28 22:32:23,804 DEBUG:Node 93 is being rotated
+2018-11-28 22:32:23,806 DEBUG:We insert node 93 into destination 21 in position 2
+2018-11-28 22:32:23,814 DEBUG:We extract node 32 from its parent: 21
+2018-11-28 22:32:23,817 DEBUG:deleted waste inside node 32 with ID=37
+2018-11-28 22:32:23,819 DEBUG:We collapse node 32 into its one children: 33
+2018-11-28 22:32:23,824 DEBUG:We insert node 33 into destination 92 in position 0
+2018-11-28 22:32:23,831 DEBUG:created in node ID=33, TYPE=21 a child with ID=70576, TYPE=21
+2018-11-28 22:32:23,833 DEBUG:created waste of size 784 inside node 33 with ID=90028
+2018-11-28 22:32:23,844 DEBUG:waste 108 in node 92 is being changed by 285 to 454
+2018-11-28 22:32:23,859 DEBUG:waste 38 in node 21 is being changed by -6 to 54
+2018-11-28 22:32:24,411 DEBUG:Finished Swap (rot=[1]) nodes=(93/0, 32/0) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:24,511 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:24,538 DEBUG:========================================
+2018-11-28 22:32:24,539 DEBUG:Started Swap nodes=(66/1, 110/1) gain=0
+2018-11-28 22:32:24,542 DEBUG:We extract node 66 from its parent: 109
+2018-11-28 22:32:24,544 DEBUG:deleted waste inside node 66 with ID=20034
+2018-11-28 22:32:24,545 DEBUG:We collapse node 66 into its one children: 14372
+2018-11-28 22:32:24,550 DEBUG:We insert node 14372 into destination 109 in position 2
+2018-11-28 22:32:24,553 DEBUG:created in node ID=14372, TYPE=1 a child with ID=87901, TYPE=1
+2018-11-28 22:32:24,555 DEBUG:created waste of size 1174 inside node 14372 with ID=25826
+2018-11-28 22:32:24,558 DEBUG:We extract node 110 from its parent: 109
+2018-11-28 22:32:24,561 DEBUG:We insert node 110 into destination 109 in position 3
+2018-11-28 22:32:25,188 DEBUG:Finished Swap nodes=(66/1, 110/1) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:25,289 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:25,290 DEBUG:waste 154 with position 1 has been selected for changing by -197.0
+2018-11-28 22:32:25,291 DEBUG:waste 20375 with position 4 has been selected for changing by -115.0
+2018-11-28 22:32:25,374 DEBUG:waste 20 with position 6 has been selected for changing by -134
+2018-11-28 22:32:25,375 DEBUG:waste 17 with position 1 has been selected for changing by -198
+2018-11-28 22:32:25,389 DEBUG:========================================
+2018-11-28 22:32:25,391 DEBUG:Started Insert nodes=(61349/4, 19/0) gain=0
+2018-11-28 22:32:25,395 DEBUG:We extract node 61349 from its parent: 186
+2018-11-28 22:32:25,397 DEBUG:deleted waste inside node 61349 with ID=18374
+2018-11-28 22:32:25,398 DEBUG:We collapse node 61349 into its one children: 58801
+2018-11-28 22:32:25,401 DEBUG:We insert node 58801 into destination 1 in position 3
+2018-11-28 22:32:25,405 DEBUG:created in node ID=58801, TYPE=47 a child with ID=43280, TYPE=47
+2018-11-28 22:32:25,407 DEBUG:created waste of size 111 inside node 58801 with ID=81679
+2018-11-28 22:32:25,417 DEBUG:waste 192 in node 186 is being changed by 332 to 364
+2018-11-28 22:32:25,424 DEBUG:waste 20 in node 1 is being changed by -134 to 0
+2018-11-28 22:32:25,425 DEBUG:waste 20 is being removed from node 1
+2018-11-28 22:32:25,428 DEBUG:waste 17 in node 1 is being changed by -198 to 147
+2018-11-28 22:32:26,078 DEBUG:Finished Insert nodes=(61349/4, 19/0) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:26,596 DEBUG:waste 132 with position 1 has been selected for changing by -137
+2018-11-28 22:32:26,665 DEBUG:waste 203 with position 4 has been selected for changing by -137
+2018-11-28 22:32:26,717 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:26,718 DEBUG:waste 154 with position 1 has been selected for changing by -197.0
+2018-11-28 22:32:26,718 DEBUG:waste 20375 with position 4 has been selected for changing by -827.0
+2018-11-28 22:32:26,773 DEBUG:waste 108 with position 1 has been selected for changing by -137
+2018-11-28 22:32:26,795 DEBUG:========================================
+2018-11-28 22:32:26,795 DEBUG:Started Insert nodes=(7/1, 144/1) gain=0
+2018-11-28 22:32:26,798 DEBUG:We extract node 7 from its parent: 109
+2018-11-28 22:32:26,800 DEBUG:deleted waste inside node 7 with ID=31386
+2018-11-28 22:32:26,801 DEBUG:We collapse node 7 into its one children: 40307
+2018-11-28 22:32:26,805 DEBUG:We insert node 40307 into destination 92 in position 3
+2018-11-28 22:32:26,810 DEBUG:created in node ID=40307, TYPE=3 a child with ID=38753, TYPE=3
+2018-11-28 22:32:26,811 DEBUG:created waste of size 250 inside node 40307 with ID=72668
+2018-11-28 22:32:26,820 DEBUG:waste 121 in node 109 is being changed by 137 to 228
+2018-11-28 22:32:26,830 DEBUG:waste 108 in node 92 is being changed by -137 to 317
+2018-11-28 22:32:27,445 DEBUG:Finished Insert nodes=(7/1, 144/1) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:27,585 DEBUG:waste 154 with position 1 has been selected for changing by -197.0
+2018-11-28 22:32:27,586 DEBUG:waste 20375 with position 4 has been selected for changing by -189.0
+2018-11-28 22:32:27,704 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:27,721 DEBUG:========================================
+2018-11-28 22:32:27,722 DEBUG:Started Swap nodes=(165/4, 195/4) gain=0
+2018-11-28 22:32:27,724 DEBUG:We extract node 165 from its parent: 193
+2018-11-28 22:32:27,726 DEBUG:deleted waste inside node 165 with ID=75526
+2018-11-28 22:32:27,727 DEBUG:We collapse node 165 into its one children: 74848
+2018-11-28 22:32:27,729 DEBUG:We insert node 74848 into destination 193 in position 3
+2018-11-28 22:32:27,733 DEBUG:created in node ID=74848, TYPE=56 a child with ID=22811, TYPE=56
+2018-11-28 22:32:27,734 DEBUG:created waste of size 731 inside node 74848 with ID=80677
+2018-11-28 22:32:28,494 DEBUG:Finished Swap nodes=(165/4, 195/4) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:28,671 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:28,695 DEBUG:========================================
+2018-11-28 22:32:28,696 DEBUG:Started Swap nodes=(121/1, 111/1) gain=0
+2018-11-28 22:32:28,699 DEBUG:We extract node 121 from its parent: 109
+2018-11-28 22:32:28,703 DEBUG:We insert node 121 into destination 109 in position 4
+2018-11-28 22:32:28,707 DEBUG:We extract node 111 from its parent: 109
+2018-11-28 22:32:28,712 DEBUG:We insert node 111 into destination 109 in position 0
+2018-11-28 22:32:29,422 DEBUG:Finished Swap nodes=(121/1, 111/1) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:29,647 DEBUG:waste 203 with position 4 has been selected for changing by -50
+2018-11-28 22:32:29,665 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:29,697 DEBUG:========================================
+2018-11-28 22:32:29,698 DEBUG:Started Swap nodes=(143/5, 35/5) gain=0
+2018-11-28 22:32:29,701 DEBUG:We extract node 143 from its parent: 204
+2018-11-28 22:32:29,703 DEBUG:deleted waste inside node 143 with ID=77111
+2018-11-28 22:32:29,706 DEBUG:We collapse node 143 into its one children: 2758
+2018-11-28 22:32:29,710 DEBUG:We insert node 2758 into destination 204 in position 3
+2018-11-28 22:32:29,715 DEBUG:created in node ID=2758, TYPE=58 a child with ID=42238, TYPE=58
+2018-11-28 22:32:29,716 DEBUG:created waste of size 3039 inside node 2758 with ID=60947
+2018-11-28 22:32:29,720 DEBUG:We extract node 35 from its parent: 204
+2018-11-28 22:32:29,723 DEBUG:deleted waste inside node 35 with ID=94330
+2018-11-28 22:32:29,724 DEBUG:We collapse node 35 into its one children: 94647
+2018-11-28 22:32:29,731 DEBUG:We insert node 94647 into destination 204 in position 4
+2018-11-28 22:32:29,737 DEBUG:created in node ID=94647, TYPE=40 a child with ID=57906, TYPE=40
+2018-11-28 22:32:29,739 DEBUG:created waste of size 2748 inside node 94647 with ID=57955
+2018-11-28 22:32:30,755 DEBUG:Finished Swap nodes=(143/5, 35/5) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:31,055 DEBUG:waste 141 with position 2 has been selected for changing by -228
+2018-11-28 22:32:31,082 DEBUG:========================================
+2018-11-28 22:32:31,083 DEBUG:Started Insert nodes=(60/5, 134/2) gain=0
+2018-11-28 22:32:31,086 DEBUG:We extract node 60 from its parent: 204
+2018-11-28 22:32:31,088 DEBUG:deleted waste inside node 60 with ID=30008
+2018-11-28 22:32:31,089 DEBUG:We collapse node 60 into its one children: 7717
+2018-11-28 22:32:31,093 DEBUG:We insert node 7717 into destination 133 in position 0
+2018-11-28 22:32:31,098 DEBUG:created in node ID=7717, TYPE=35 a child with ID=96464, TYPE=35
+2018-11-28 22:32:31,099 DEBUG:created waste of size 1965 inside node 7717 with ID=22242
+2018-11-28 22:32:31,116 DEBUG:waste 206 in node 204 is being changed by 228 to 318
+2018-11-28 22:32:31,130 DEBUG:waste 141 in node 133 is being changed by -228 to 186
+2018-11-28 22:32:31,936 DEBUG:Finished Insert nodes=(60/5, 134/2) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:32,730 DEBUG:waste 203 with position 4 has been selected for changing by -50
+2018-11-28 22:32:32,818 DEBUG:waste 108 with position 1 has been selected for changing by -13
+2018-11-28 22:32:32,926 DEBUG:waste 206 with position 5 has been selected for changing by -30
+2018-11-28 22:32:32,960 DEBUG:========================================
+2018-11-28 22:32:32,962 DEBUG:Started Swap nodes=(94/1, 129/5) gain=0
+2018-11-28 22:32:32,964 DEBUG:We extract node 94 from its parent: 92
+2018-11-28 22:32:32,967 DEBUG:deleted waste inside node 94 with ID=10746
+2018-11-28 22:32:32,976 DEBUG:We insert node 94 into destination 204 in position 1
+2018-11-28 22:32:32,984 DEBUG:created waste of size 2557 inside node 94 with ID=19314
+2018-11-28 22:32:32,990 DEBUG:We extract node 129 from its parent: 204
+2018-11-28 22:32:32,993 DEBUG:deleted waste inside node 129 with ID=47448
+2018-11-28 22:32:32,994 DEBUG:We collapse node 129 into its one children: 52351
+2018-11-28 22:32:32,997 DEBUG:We insert node 52351 into destination 92 in position 5
+2018-11-28 22:32:33,003 DEBUG:created in node ID=52351, TYPE=54 a child with ID=3202, TYPE=54
+2018-11-28 22:32:33,006 DEBUG:created waste of size 838 inside node 52351 with ID=6058
+2018-11-28 22:32:33,017 DEBUG:waste 108 in node 92 is being changed by -13 to 304
+2018-11-28 22:32:33,032 DEBUG:waste 206 in node 204 is being changed by 13 to 331
+2018-11-28 22:32:33,951 DEBUG:Finished Swap nodes=(94/5, 129/5) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:34,124 DEBUG:waste 203 with position 4 has been selected for changing by -63
+2018-11-28 22:32:34,214 DEBUG:waste 203 with position 4 has been selected for changing by -104
+2018-11-28 22:32:34,233 DEBUG:========================================
+2018-11-28 22:32:34,234 DEBUG:Started Swap nodes=(28017/5, 18/0) gain=0
+2018-11-28 22:32:34,237 DEBUG:We extract node 28017 from its parent: 201
+2018-11-28 22:32:34,238 DEBUG:deleted waste inside node 28017 with ID=69330
+2018-11-28 22:32:34,239 DEBUG:We collapse node 28017 into its one children: 85718
+2018-11-28 22:32:34,243 DEBUG:We insert node 85718 into destination 1 in position 2
+2018-11-28 22:32:34,247 DEBUG:created in node ID=85718, TYPE=44 a child with ID=9546, TYPE=44
+2018-11-28 22:32:34,249 DEBUG:created waste of size 37 inside node 85718 with ID=59693
+2018-11-28 22:32:34,253 DEBUG:We extract node 18 from its parent: 1
+2018-11-28 22:32:34,257 DEBUG:We insert node 18 into destination 201 in position 3
+2018-11-28 22:32:34,261 DEBUG:created in node ID=18, TYPE=57 a child with ID=54322, TYPE=57
+2018-11-28 22:32:34,262 DEBUG:created waste of size 1251 inside node 18 with ID=82545
+2018-11-28 22:32:34,269 DEBUG:waste 203 in node 201 is being changed by -63 to 173
+2018-11-28 22:32:34,278 DEBUG:waste 17 in node 1 is being changed by 63 to 210
+2018-11-28 22:32:34,885 DEBUG:Finished Swap nodes=(28017/5, 18/5) gain=0, new=320000, best=320000, last=320000
+2018-11-28 22:32:35,481 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:35,561 DEBUG:waste 192 with position 2 has been selected for changing by -46
+2018-11-28 22:32:35,646 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:35,675 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:35,718 DEBUG:========================================
+2018-11-28 22:32:35,719 DEBUG:Started Swap nodes=(91/1, 79/1) gain=40000
+2018-11-28 22:32:35,721 DEBUG:We extract node 91 from its parent: 77
+2018-11-28 22:32:35,728 DEBUG:We insert node 91 into destination 77 in position 1
+2018-11-28 22:32:35,745 DEBUG:We extract node 79 from its parent: 77
+2018-11-28 22:32:35,747 DEBUG:deleted waste inside node 79 with ID=84
+2018-11-28 22:32:35,754 DEBUG:We insert node 79 into destination 77 in position 4
+2018-11-28 22:32:35,773 DEBUG:created waste of size 262 inside node 79 with ID=13971
+2018-11-28 22:32:36,688 DEBUG:Finished Swap nodes=(91/1, 79/1) gain=40000, new=280000, best=320000, last=320000
+2018-11-28 22:32:36,688 INFO:Best solution updated to 280000!
+2018-11-28 22:32:37,850 DEBUG:waste 198 with position 0 has been selected for changing by -149
+2018-11-28 22:32:38,065 DEBUG:========================================
+2018-11-28 22:32:38,066 DEBUG:Started Swap nodes=(23/0, 29/4) gain=0
+2018-11-28 22:32:38,072 DEBUG:We extract node 23 from its parent: 21
+2018-11-28 22:32:38,075 DEBUG:deleted waste inside node 23 with ID=31
+2018-11-28 22:32:38,077 DEBUG:We collapse node 23 into its one children: 25
+2018-11-28 22:32:38,098 DEBUG:We insert node 25 into destination 196 in position 1
+2018-11-28 22:32:38,113 DEBUG:We collapse node 25 into its children: [26, 27]
+2018-11-28 22:32:38,120 DEBUG:created in node ID=26, TYPE=61 a child with ID=15907, TYPE=61
+2018-11-28 22:32:38,122 DEBUG:created waste of size 608 inside node 26 with ID=59830
+2018-11-28 22:32:38,127 DEBUG:We extract node 29 from its parent: 196
+2018-11-28 22:32:38,129 DEBUG:deleted waste inside node 29 with ID=99944
+2018-11-28 22:32:38,130 DEBUG:We collapse node 29 into its one children: 49010
+2018-11-28 22:32:38,133 DEBUG:We insert node 49010 into destination 21 in position 1
+2018-11-28 22:32:38,138 DEBUG:created in node ID=49010, TYPE=45 a child with ID=17478, TYPE=45
+2018-11-28 22:32:38,140 DEBUG:created waste of size 1167 inside node 49010 with ID=60902
+2018-11-28 22:32:38,147 DEBUG:waste 38 in node 21 is being changed by 149 to 203
+2018-11-28 22:32:38,155 DEBUG:waste 198 in node 196 is being changed by -149 to 197
+2018-11-28 22:32:38,726 DEBUG:Finished Swap nodes=(23/0, 29/4) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:38,949 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:39,063 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:39,213 DEBUG:waste 38 with position 3 has been selected for changing by -7
+2018-11-28 22:32:39,240 DEBUG:========================================
+2018-11-28 22:32:39,241 DEBUG:Started Swap nodes=(118/5, 94647/5) gain=0
+2018-11-28 22:32:39,244 DEBUG:We extract node 118 from its parent: 204
+2018-11-28 22:32:39,245 DEBUG:deleted waste inside node 118 with ID=89167
+2018-11-28 22:32:39,248 DEBUG:We collapse node 118 into its one children: 1505
+2018-11-28 22:32:39,252 DEBUG:We insert node 1505 into destination 204 in position 4
+2018-11-28 22:32:39,258 DEBUG:created in node ID=1505, TYPE=39 a child with ID=66163, TYPE=39
+2018-11-28 22:32:39,260 DEBUG:created waste of size 2749 inside node 1505 with ID=55934
+2018-11-28 22:32:39,263 DEBUG:We extract node 94647 from its parent: 204
+2018-11-28 22:32:39,264 DEBUG:deleted waste inside node 94647 with ID=57955
+2018-11-28 22:32:39,266 DEBUG:We collapse node 94647 into its one children: 57906
+2018-11-28 22:32:39,269 DEBUG:We insert node 57906 into destination 204 in position 2
+2018-11-28 22:32:39,274 DEBUG:created in node ID=57906, TYPE=40 a child with ID=71811, TYPE=40
+2018-11-28 22:32:39,276 DEBUG:created waste of size 2748 inside node 57906 with ID=58447
+2018-11-28 22:32:40,020 DEBUG:Finished Swap nodes=(118/5, 94647/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:40,885 DEBUG:waste 38 with position 3 has been selected for changing by -168
+2018-11-28 22:32:40,921 DEBUG:========================================
+2018-11-28 22:32:40,921 DEBUG:Started Insert nodes=(62/0, 49010/0) gain=0
+2018-11-28 22:32:40,927 DEBUG:We extract node 62 from its parent: 39
+2018-11-28 22:32:40,929 DEBUG:deleted waste inside node 62 with ID=40858
+2018-11-28 22:32:40,931 DEBUG:We collapse node 62 into its one children: 93448
+2018-11-28 22:32:40,935 DEBUG:We insert node 93448 into destination 21 in position 1
+2018-11-28 22:32:40,939 DEBUG:created in node ID=93448, TYPE=0 a child with ID=68328, TYPE=0
+2018-11-28 22:32:40,940 DEBUG:created waste of size 251 inside node 93448 with ID=63518
+2018-11-28 22:32:40,947 DEBUG:waste 67 in node 39 is being changed by 168 to 247
+2018-11-28 22:32:40,955 DEBUG:waste 38 in node 21 is being changed by -168 to 35
+2018-11-28 22:32:41,817 DEBUG:Finished Insert nodes=(62/0, 49010/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:41,909 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:41,957 DEBUG:waste 86952 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:41,958 DEBUG:waste 64 with position 0 has been selected for changing by -29.0
+2018-11-28 22:32:41,959 DEBUG:waste 39241 with position 4 has been selected for changing by -179.0
+2018-11-28 22:32:41,960 DEBUG:waste 67 with position 5 has been selected for changing by -173.0
+2018-11-28 22:32:41,983 DEBUG:========================================
+2018-11-28 22:32:41,984 DEBUG:Started Swap nodes=(40/0, 86952/0) gain=0
+2018-11-28 22:32:41,988 DEBUG:We extract node 40 from its parent: 39
+2018-11-28 22:32:41,992 DEBUG:We insert node 40 into destination 39 in position 3
+2018-11-28 22:32:42,858 DEBUG:Finished Swap nodes=(40/0, 86952/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:43,019 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:43,520 DEBUG:========================================
+2018-11-28 22:32:43,521 DEBUG:Started Swap nodes=(18/5, 152/0) gain=0
+2018-11-28 22:32:43,525 DEBUG:We extract node 18 from its parent: 201
+2018-11-28 22:32:43,528 DEBUG:deleted waste inside node 18 with ID=82545
+2018-11-28 22:32:43,530 DEBUG:We collapse node 18 into its one children: 54322
+2018-11-28 22:32:43,535 DEBUG:We insert node 54322 into destination 1 in position 6
+2018-11-28 22:32:43,539 DEBUG:We extract node 152 from its parent: 1
+2018-11-28 22:32:43,545 DEBUG:We insert node 152 into destination 201 in position 3
+2018-11-28 22:32:43,553 DEBUG:created in node ID=152, TYPE=59 a child with ID=18137, TYPE=59
+2018-11-28 22:32:43,556 DEBUG:created waste of size 1251 inside node 152 with ID=19770
+2018-11-28 22:32:44,271 DEBUG:Finished Swap nodes=(18/5, 152/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:44,698 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:44,989 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:45,230 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:45,303 DEBUG:waste 206 with position 5 has been selected for changing by -255
+2018-11-28 22:32:45,316 DEBUG:========================================
+2018-11-28 22:32:45,317 DEBUG:Started Swap nodes=(177/3, 183/3) gain=0
+2018-11-28 22:32:45,319 DEBUG:We extract node 177 from its parent: 175
+2018-11-28 22:32:45,321 DEBUG:deleted waste inside node 177 with ID=182
+2018-11-28 22:32:45,322 DEBUG:We collapse node 177 into its one children: 178
+2018-11-28 22:32:45,324 DEBUG:We insert node 178 into destination 175 in position 2
+2018-11-28 22:32:45,327 DEBUG:created in node ID=178, TYPE=8 a child with ID=76557, TYPE=8
+2018-11-28 22:32:45,328 DEBUG:created waste of size 806 inside node 178 with ID=91164
+2018-11-28 22:32:45,865 DEBUG:Finished Swap nodes=(177/3, 183/3) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:46,239 DEBUG:waste 192 with position 2 has been selected for changing by -33
+2018-11-28 22:32:46,273 DEBUG:========================================
+2018-11-28 22:32:46,274 DEBUG:Started Swap nodes=(115/4, 26/4) gain=0
+2018-11-28 22:32:46,278 DEBUG:We extract node 115 from its parent: 186
+2018-11-28 22:32:46,279 DEBUG:deleted waste inside node 115 with ID=53884
+2018-11-28 22:32:46,280 DEBUG:We collapse node 115 into its one children: 55520
+2018-11-28 22:32:46,285 DEBUG:We insert node 55520 into destination 196 in position 1
+2018-11-28 22:32:46,288 DEBUG:created in node ID=55520, TYPE=66 a child with ID=75457, TYPE=66
+2018-11-28 22:32:46,289 DEBUG:created waste of size 168 inside node 55520 with ID=49858
+2018-11-28 22:32:46,292 DEBUG:We extract node 26 from its parent: 196
+2018-11-28 22:32:46,294 DEBUG:deleted waste inside node 26 with ID=59830
+2018-11-28 22:32:46,296 DEBUG:We collapse node 26 into its one children: 15907
+2018-11-28 22:32:46,301 DEBUG:We insert node 15907 into destination 186 in position 0
+2018-11-28 22:32:46,305 DEBUG:created in node ID=15907, TYPE=61 a child with ID=62519, TYPE=61
+2018-11-28 22:32:46,306 DEBUG:created waste of size 2902 inside node 15907 with ID=773
+2018-11-28 22:32:46,312 DEBUG:waste 192 in node 186 is being changed by -33 to 331
+2018-11-28 22:32:46,319 DEBUG:waste 27 in node 196 is being changed by 33 to 145
+2018-11-28 22:32:46,905 DEBUG:Finished Swap nodes=(115/4, 26/4) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:47,166 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:47,201 DEBUG:========================================
+2018-11-28 22:32:47,202 DEBUG:Started Swap nodes=(64/0, 41/0) gain=0
+2018-11-28 22:32:47,207 DEBUG:We extract node 64 from its parent: 39
+2018-11-28 22:32:47,210 DEBUG:We insert node 64 into destination 39 in position 6
+2018-11-28 22:32:47,217 DEBUG:We extract node 41 from its parent: 39
+2018-11-28 22:32:47,220 DEBUG:deleted waste inside node 41 with ID=23417
+2018-11-28 22:32:47,225 DEBUG:We insert node 41 into destination 39 in position 0
+2018-11-28 22:32:47,231 DEBUG:created waste of size 639 inside node 41 with ID=51117
+2018-11-28 22:32:47,984 DEBUG:Finished Swap nodes=(64/0, 41/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:48,532 DEBUG:waste 203 with position 4 has been selected for changing by -1
+2018-11-28 22:32:48,830 DEBUG:waste 206 with position 5 has been selected for changing by -201
+2018-11-28 22:32:48,850 DEBUG:========================================
+2018-11-28 22:32:48,851 DEBUG:Started Swap nodes=(158/3, 1505/5) gain=0
+2018-11-28 22:32:48,858 DEBUG:We extract node 158 from its parent: 157
+2018-11-28 22:32:48,863 DEBUG:We insert node 158 into destination 204 in position 4
+2018-11-28 22:32:48,868 DEBUG:created in node ID=158, TYPE=38 a child with ID=57126, TYPE=38
+2018-11-28 22:32:48,870 DEBUG:created waste of size 162 inside node 158 with ID=63655
+2018-11-28 22:32:48,872 DEBUG:We extract node 1505 from its parent: 204
+2018-11-28 22:32:48,873 DEBUG:deleted waste inside node 1505 with ID=55934
+2018-11-28 22:32:48,875 DEBUG:We collapse node 1505 into its one children: 66163
+2018-11-28 22:32:48,879 DEBUG:We insert node 66163 into destination 157 in position 0
+2018-11-28 22:32:48,885 DEBUG:created in node ID=66163, TYPE=39 a child with ID=3805, TYPE=39
+2018-11-28 22:32:48,887 DEBUG:created waste of size 2587 inside node 66163 with ID=50969
+2018-11-28 22:32:48,903 DEBUG:waste 174 in node 157 is being changed by 201 to 251
+2018-11-28 22:32:48,910 DEBUG:waste 206 in node 204 is being changed by -201 to 130
+2018-11-28 22:32:49,608 DEBUG:Finished Swap nodes=(158/5, 1505/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:49,756 DEBUG:waste 27 with position 2 has been selected for changing by -100
+2018-11-28 22:32:49,770 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:49,827 DEBUG:waste 27 with position 2 has been selected for changing by -29
+2018-11-28 22:32:49,860 DEBUG:========================================
+2018-11-28 22:32:49,862 DEBUG:Started Swap nodes=(98/4, 198/4) gain=0
+2018-11-28 22:32:49,866 DEBUG:We extract node 98 from its parent: 196
+2018-11-28 22:32:49,868 DEBUG:deleted waste inside node 98 with ID=43310
+2018-11-28 22:32:49,874 DEBUG:We insert node 98 into destination 196 in position 0
+2018-11-28 22:32:49,881 DEBUG:created waste of size 139 inside node 98 with ID=61262
+2018-11-28 22:32:49,885 DEBUG:We extract node 198 from its parent: 196
+2018-11-28 22:32:49,890 DEBUG:We insert node 198 into destination 196 in position 3
+2018-11-28 22:32:50,471 DEBUG:Finished Swap nodes=(98/4, 198/4) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:50,776 DEBUG:waste 39241 with position 4 has been selected for changing by -179.0
+2018-11-28 22:32:50,777 DEBUG:waste 64 with position 6 has been selected for changing by -29.0
+2018-11-28 22:32:50,778 DEBUG:waste 67 with position 5 has been selected for changing by -227
+2018-11-28 22:32:50,780 DEBUG:waste 86952 with position 2 has been selected for changing by -0.0
+2018-11-28 22:32:50,782 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:50,832 DEBUG:========================================
+2018-11-28 22:32:50,833 DEBUG:Started Swap nodes=(50/0, 86952/0) gain=0
+2018-11-28 22:32:50,837 DEBUG:We extract node 50 from its parent: 39
+2018-11-28 22:32:50,840 DEBUG:deleted waste inside node 50 with ID=58
+2018-11-28 22:32:50,847 DEBUG:We insert node 50 into destination 39 in position 2
+2018-11-28 22:32:50,854 DEBUG:created waste of size 141 inside node 50 with ID=56180
+2018-11-28 22:32:51,462 DEBUG:Finished Swap nodes=(50/0, 86952/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:51,635 DEBUG:waste 27 with position 2 has been selected for changing by -46
+2018-11-28 22:32:51,652 DEBUG:========================================
+2018-11-28 22:32:51,654 DEBUG:Started Swap (rot=[1]) nodes=(144/1, 55520/4) gain=0
+2018-11-28 22:32:51,657 DEBUG:We extract node 144 from its parent: 92
+2018-11-28 22:32:51,659 DEBUG:deleted waste inside node 144 with ID=70679
+2018-11-28 22:32:51,660 DEBUG:We collapse node 144 into its one children: 28081
+2018-11-28 22:32:51,661 DEBUG:Node 28081 is being rotated
+2018-11-28 22:32:51,672 DEBUG:We insert node 28081 into destination 196 in position 1
+2018-11-28 22:32:51,677 DEBUG:created in node ID=28081, TYPE=64 a child with ID=6591, TYPE=64
+2018-11-28 22:32:51,679 DEBUG:created waste of size 621 inside node 28081 with ID=34100
+2018-11-28 22:32:51,681 DEBUG:We extract node 55520 from its parent: 196
+2018-11-28 22:32:51,683 DEBUG:deleted waste inside node 55520 with ID=49858
+2018-11-28 22:32:51,684 DEBUG:We collapse node 55520 into its one children: 75457
+2018-11-28 22:32:51,688 DEBUG:We insert node 75457 into destination 92 in position 4
+2018-11-28 22:32:51,693 DEBUG:created in node ID=75457, TYPE=66 a child with ID=49690, TYPE=66
+2018-11-28 22:32:51,694 DEBUG:created waste of size 385 inside node 75457 with ID=42907
+2018-11-28 22:32:51,703 DEBUG:waste 108 in node 92 is being changed by 33 to 337
+2018-11-28 22:32:51,714 DEBUG:waste 27 in node 196 is being changed by -46 to 99
+2018-11-28 22:32:52,336 DEBUG:Finished Swap (rot=[1]) nodes=(144/1, 55520/4) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:52,409 DEBUG:waste 108 with position 1 has been selected for changing by -137
+2018-11-28 22:32:52,543 DEBUG:waste 203 with position 4 has been selected for changing by -137
+2018-11-28 22:32:52,620 DEBUG:waste 27 with position 2 has been selected for changing by -99
+2018-11-28 22:32:52,621 DEBUG:waste 198 with position 3 has been selected for changing by -38
+2018-11-28 22:32:52,666 DEBUG:waste 132 with position 1 has been selected for changing by -137
+2018-11-28 22:32:52,678 DEBUG:========================================
+2018-11-28 22:32:52,679 DEBUG:Started Insert nodes=(12/1, 27/4) gain=0
+2018-11-28 22:32:52,683 DEBUG:We extract node 12 from its parent: 77
+2018-11-28 22:32:52,684 DEBUG:deleted waste inside node 12 with ID=95449
+2018-11-28 22:32:52,685 DEBUG:We collapse node 12 into its one children: 52773
+2018-11-28 22:32:52,691 DEBUG:We insert node 52773 into destination 196 in position 2
+2018-11-28 22:32:52,697 DEBUG:created in node ID=52773, TYPE=4 a child with ID=2541, TYPE=4
+2018-11-28 22:32:52,699 DEBUG:created waste of size 206 inside node 52773 with ID=98177
+2018-11-28 22:32:52,705 DEBUG:waste 91 in node 77 is being changed by 137 to 183
+2018-11-28 22:32:52,714 DEBUG:waste 27 in node 196 is being changed by -99 to 0
+2018-11-28 22:32:52,716 DEBUG:waste 27 is being removed from node 196
+2018-11-28 22:32:52,720 DEBUG:waste 198 in node 196 is being changed by -38 to 159
+2018-11-28 22:32:53,340 DEBUG:Finished Insert nodes=(12/1, 27/4) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:53,764 DEBUG:waste 198 with position 3 has been selected for changing by -99
+2018-11-28 22:32:53,814 DEBUG:waste 206 with position 5 has been selected for changing by -99
+2018-11-28 22:32:53,838 DEBUG:========================================
+2018-11-28 22:32:53,839 DEBUG:Started Swap (rot=[1]) nodes=(24/5, 2758/5) gain=0
+2018-11-28 22:32:53,842 DEBUG:We extract node 24 from its parent: 201
+2018-11-28 22:32:53,844 DEBUG:deleted waste inside node 24 with ID=32019
+2018-11-28 22:32:53,845 DEBUG:We collapse node 24 into its one children: 9017
+2018-11-28 22:32:53,847 DEBUG:Node 9017 is being rotated
+2018-11-28 22:32:53,850 DEBUG:We insert node 9017 into destination 204 in position 3
+2018-11-28 22:32:53,858 DEBUG:created in node ID=9017, TYPE=69 a child with ID=32412, TYPE=69
+2018-11-28 22:32:53,860 DEBUG:created waste of size 2940 inside node 9017 with ID=26131
+2018-11-28 22:32:53,866 DEBUG:We extract node 2758 from its parent: 204
+2018-11-28 22:32:53,868 DEBUG:deleted waste inside node 2758 with ID=60947
+2018-11-28 22:32:53,870 DEBUG:We collapse node 2758 into its one children: 42238
+2018-11-28 22:32:53,874 DEBUG:We insert node 42238 into destination 201 in position 2
+2018-11-28 22:32:53,883 DEBUG:created in node ID=42238, TYPE=58 a child with ID=2672, TYPE=58
+2018-11-28 22:32:53,884 DEBUG:created waste of size 1251 inside node 42238 with ID=81440
+2018-11-28 22:32:53,894 DEBUG:waste 203 in node 201 is being changed by 86 to 259
+2018-11-28 22:32:53,905 DEBUG:waste 206 in node 204 is being changed by -99 to 31
+2018-11-28 22:32:54,474 DEBUG:Finished Swap (rot=[1]) nodes=(24/5, 2758/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:54,758 DEBUG:waste 198 with position 3 has been selected for changing by -13
+2018-11-28 22:32:54,952 DEBUG:waste 203 with position 4 has been selected for changing by -87
+2018-11-28 22:32:54,979 DEBUG:========================================
+2018-11-28 22:32:54,980 DEBUG:Started Swap (rot=[1]) nodes=(152/5, 102/1) gain=0
+2018-11-28 22:32:54,983 DEBUG:We extract node 152 from its parent: 201
+2018-11-28 22:32:54,984 DEBUG:deleted waste inside node 152 with ID=19770
+2018-11-28 22:32:54,986 DEBUG:We collapse node 152 into its one children: 18137
+2018-11-28 22:32:54,988 DEBUG:Node 18137 is being rotated
+2018-11-28 22:32:54,997 DEBUG:We insert node 18137 into destination 92 in position 2
+2018-11-28 22:32:55,003 DEBUG:created in node ID=18137, TYPE=59 a child with ID=48352, TYPE=59
+2018-11-28 22:32:55,004 DEBUG:created waste of size 825 inside node 18137 with ID=21993
+2018-11-28 22:32:55,008 DEBUG:We extract node 102 from its parent: 92
+2018-11-28 22:32:55,009 DEBUG:deleted waste inside node 102 with ID=107
+2018-11-28 22:32:55,013 DEBUG:We insert node 102 into destination 201 in position 3
+2018-11-28 22:32:55,023 DEBUG:created waste of size 710 inside node 102 with ID=79416
+2018-11-28 22:32:55,032 DEBUG:waste 203 in node 201 is being changed by -87 to 172
+2018-11-28 22:32:55,041 DEBUG:waste 108 in node 92 is being changed by 100 to 437
+2018-11-28 22:32:55,662 DEBUG:Finished Swap (rot=[1]) nodes=(152/5, 102/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:56,032 DEBUG:waste 154 with position 1 has been selected for changing by -197.0
+2018-11-28 22:32:56,033 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:56,034 DEBUG:waste 20375 with position 4 has been selected for changing by -115.0
+2018-11-28 22:32:56,099 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:56,100 DEBUG:waste 154 with position 1 has been selected for changing by -197.0
+2018-11-28 22:32:56,102 DEBUG:waste 20375 with position 4 has been selected for changing by -115.0
+2018-11-28 22:32:56,160 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:56,273 DEBUG:waste 203 with position 4 has been selected for changing by -124
+2018-11-28 22:32:56,349 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:56,355 DEBUG:waste 20375 with position 4 has been selected for changing by -128.0
+2018-11-28 22:32:56,434 DEBUG:waste 141 with position 3 has been selected for changing by -104
+2018-11-28 22:32:56,469 DEBUG:========================================
+2018-11-28 22:32:56,471 DEBUG:Started Swap nodes=(16/5, 202/5) gain=0
+2018-11-28 22:32:56,476 DEBUG:We extract node 16 from its parent: 201
+2018-11-28 22:32:56,478 DEBUG:deleted waste inside node 16 with ID=59930
+2018-11-28 22:32:56,479 DEBUG:We collapse node 16 into its one children: 39322
+2018-11-28 22:32:56,483 DEBUG:We insert node 39322 into destination 201 in position 0
+2018-11-28 22:32:56,488 DEBUG:created in node ID=39322, TYPE=46 a child with ID=45509, TYPE=46
+2018-11-28 22:32:56,490 DEBUG:created waste of size 1362 inside node 39322 with ID=69828
+2018-11-28 22:32:56,493 DEBUG:We extract node 202 from its parent: 201
+2018-11-28 22:32:56,497 DEBUG:We insert node 202 into destination 201 in position 1
+2018-11-28 22:32:57,261 DEBUG:Finished Swap nodes=(16/5, 202/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:57,365 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:32:57,387 DEBUG:========================================
+2018-11-28 22:32:57,388 DEBUG:Started Swap nodes=(180/2, 154/2) gain=0
+2018-11-28 22:32:57,393 DEBUG:We extract node 180 from its parent: 142
+2018-11-28 22:32:57,400 DEBUG:We insert node 180 into destination 142 in position 1
+2018-11-28 22:32:57,405 DEBUG:We extract node 154 from its parent: 142
+2018-11-28 22:32:57,410 DEBUG:We insert node 154 into destination 142 in position 2
+2018-11-28 22:32:58,041 DEBUG:Finished Swap nodes=(180/2, 154/2) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:58,194 DEBUG:waste 108 with position 1 has been selected for changing by -150
+2018-11-28 22:32:58,295 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:58,297 DEBUG:waste 20375 with position 4 has been selected for changing by -835.0
+2018-11-28 22:32:58,393 DEBUG:waste 121 with position 4 has been selected for changing by -150
+2018-11-28 22:32:58,442 DEBUG:========================================
+2018-11-28 22:32:58,443 DEBUG:Started Insert (rot=[1]) nodes=(9/0, 111/1) gain=0
+2018-11-28 22:32:58,446 DEBUG:We extract node 9 from its parent: 1
+2018-11-28 22:32:58,449 DEBUG:deleted waste inside node 9 with ID=72846
+2018-11-28 22:32:58,451 DEBUG:We collapse node 9 into its one children: 95749
+2018-11-28 22:32:58,454 DEBUG:Node 95749 is being rotated
+2018-11-28 22:32:58,460 DEBUG:We insert node 95749 into destination 109 in position 0
+2018-11-28 22:32:58,466 DEBUG:created in node ID=95749, TYPE=5 a child with ID=35401, TYPE=5
+2018-11-28 22:32:58,468 DEBUG:created waste of size 2441 inside node 95749 with ID=80729
+2018-11-28 22:32:58,478 DEBUG:waste 17 in node 1 is being changed by 855 to 1065
+2018-11-28 22:32:58,499 DEBUG:waste 121 in node 109 is being changed by -150 to 78
+2018-11-28 22:32:59,288 DEBUG:Finished Insert (rot=[1]) nodes=(9/0, 111/1) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:32:59,521 DEBUG:DO: empty cuts 2
+2018-11-28 22:32:59,541 DEBUG:DO: interlevel cuts
+2018-11-28 22:32:59,811 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:32:59,813 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:32:59,814 DEBUG:waste 20375 with position 4 has been selected for changing by -239.0
+2018-11-28 22:32:59,936 DEBUG:waste 17 with position 1 has been selected for changing by -469
+2018-11-28 22:32:59,949 DEBUG:========================================
+2018-11-28 22:32:59,951 DEBUG:Started Insert (rot=[1]) nodes=(96/5, 19/0) gain=0
+2018-11-28 22:32:59,956 DEBUG:We extract node 96 from its parent: 94
+2018-11-28 22:32:59,958 DEBUG:Node 96 is being rotated
+2018-11-28 22:32:59,961 DEBUG:We insert node 96 into destination 1 in position 4
+2018-11-28 22:32:59,974 DEBUG:waste 19314 in node 94 is being changed by 469 to 3026
+2018-11-28 22:32:59,983 DEBUG:waste 17 in node 1 is being changed by -469 to 596
+2018-11-28 22:33:01,123 DEBUG:Finished Insert (rot=[1]) nodes=(96/0, 19/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:01,476 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:33:01,479 DEBUG:waste 20375 with position 4 has been selected for changing by -259.0
+2018-11-28 22:33:01,909 DEBUG:waste 141 with position 3 has been selected for changing by -137
+2018-11-28 22:33:02,001 DEBUG:waste 132 with position 1 has been selected for changing by -137
+2018-11-28 22:33:02,025 DEBUG:========================================
+2018-11-28 22:33:02,027 DEBUG:Started Insert nodes=(2541/4, 125/2) gain=0
+2018-11-28 22:33:02,030 DEBUG:We extract node 2541 from its parent: 52773
+2018-11-28 22:33:02,036 DEBUG:We insert node 2541 into destination 124 in position 2
+2018-11-28 22:33:02,042 DEBUG:created in node ID=2541, TYPE=4 a child with ID=92125, TYPE=4
+2018-11-28 22:33:02,045 DEBUG:created waste of size 1139 inside node 2541 with ID=59474
+2018-11-28 22:33:02,059 DEBUG:waste 98177 in node 52773 is being changed by 871 to 1077
+2018-11-28 22:33:02,061 DEBUG:We collapse node 52773 into its one children: 98177
+2018-11-28 22:33:02,071 DEBUG:waste 132 in node 124 is being changed by -137 to 191
+2018-11-28 22:33:02,728 DEBUG:Finished Insert nodes=(2541/2, 125/2) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:02,898 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:33:02,899 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:33:02,900 DEBUG:waste 20375 with position 4 has been selected for changing by -239.0
+2018-11-28 22:33:02,968 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:33:02,969 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:33:02,970 DEBUG:waste 20375 with position 4 has been selected for changing by -239.0
+2018-11-28 22:33:03,165 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:33:03,169 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:33:03,172 DEBUG:waste 20375 with position 4 has been selected for changing by -239.0
+2018-11-28 22:33:03,242 DEBUG:waste 35698 with position 3 has been selected for changing by -20.0
+2018-11-28 22:33:03,243 DEBUG:waste 154 with position 2 has been selected for changing by -197.0
+2018-11-28 22:33:03,244 DEBUG:waste 20375 with position 4 has been selected for changing by -239.0
+2018-11-28 22:33:03,269 DEBUG:========================================
+2018-11-28 22:33:03,270 DEBUG:Started Insert (rot=[1]) nodes=(2672/5, 146/2) gain=0
+2018-11-28 22:33:03,272 DEBUG:We extract node 2672 from its parent: 42238
+2018-11-28 22:33:03,276 DEBUG:Node 2672 is being rotated
+2018-11-28 22:33:03,279 DEBUG:We insert node 2672 into destination 142 in position 0
+2018-11-28 22:33:03,290 DEBUG:waste 81440 in node 42238 is being changed by 456 to 1707
+2018-11-28 22:33:03,292 DEBUG:We collapse node 42238 into its one children: 81440
+2018-11-28 22:33:03,301 DEBUG:waste 35698 in node 142 is being changed by -20.0 to 0.0
+2018-11-28 22:33:03,304 DEBUG:waste 35698 is being removed from node 142
+2018-11-28 22:33:03,308 DEBUG:waste 154 in node 142 is being changed by -197.0 to 0.0
+2018-11-28 22:33:03,309 DEBUG:waste 154 is being removed from node 142
+2018-11-28 22:33:03,312 DEBUG:waste 20375 in node 142 is being changed by -239.0 to 958.0
+2018-11-28 22:33:03,907 DEBUG:Finished Insert (rot=[1]) nodes=(2672/2, 146/2) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:04,103 DEBUG:waste 17 with position 1 has been selected for changing by -469
+2018-11-28 22:33:04,141 DEBUG:========================================
+2018-11-28 22:33:04,142 DEBUG:Started Insert (rot=[1]) nodes=(95/5, 54322/0) gain=0
+2018-11-28 22:33:04,144 DEBUG:We extract node 95 from its parent: 94
+2018-11-28 22:33:04,147 DEBUG:Node 95 is being rotated
+2018-11-28 22:33:04,151 DEBUG:We insert node 95 into destination 1 in position 6
+2018-11-28 22:33:04,160 DEBUG:waste 19314 in node 94 is being changed by 469 to 3495
+2018-11-28 22:33:04,162 DEBUG:We collapse node 94 into its one children: 19314
+2018-11-28 22:33:04,171 DEBUG:waste 17 in node 1 is being changed by -469 to 127
+2018-11-28 22:33:04,744 DEBUG:Finished Insert (rot=[1]) nodes=(95/0, 54322/0) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:04,903 DEBUG:waste 203 with position 4 has been selected for changing by -172
+2018-11-28 22:33:04,904 DEBUG:waste 81440 with position 2 has been selected for changing by -297
+2018-11-28 22:33:05,013 DEBUG:waste 203 with position 4 has been selected for changing by -172
+2018-11-28 22:33:05,014 DEBUG:waste 81440 with position 2 has been selected for changing by -297
+2018-11-28 22:33:05,077 DEBUG:waste 203 with position 4 has been selected for changing by -172
+2018-11-28 22:33:05,078 DEBUG:waste 81440 with position 2 has been selected for changing by -284
+2018-11-28 22:33:05,103 DEBUG:========================================
+2018-11-28 22:33:05,107 DEBUG:Started Insert (rot=[1]) nodes=(100/4, 102/5) gain=0
+2018-11-28 22:33:05,111 DEBUG:We extract node 100 from its parent: 98
+2018-11-28 22:33:05,113 DEBUG:Node 100 is being rotated
+2018-11-28 22:33:05,117 DEBUG:We insert node 100 into destination 201 in position 3
+2018-11-28 22:33:05,121 DEBUG:created in node ID=100, TYPE=49 a child with ID=1855, TYPE=49
+2018-11-28 22:33:05,122 DEBUG:created waste of size 1251 inside node 100 with ID=92802
+2018-11-28 22:33:05,133 DEBUG:waste 61262 in node 98 is being changed by 469 to 608
+2018-11-28 22:33:05,144 DEBUG:waste 203 in node 201 is being changed by -172 to 0
+2018-11-28 22:33:05,145 DEBUG:waste 203 is being removed from node 201
+2018-11-28 22:33:05,149 DEBUG:waste 81440 in node 201 is being changed by -297 to 172
+2018-11-28 22:33:05,715 DEBUG:Finished Insert (rot=[1]) nodes=(100/5, 102/5) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:05,859 DEBUG:waste 64 with position 6 has been selected for changing by -29.0
+2018-11-28 22:33:05,860 DEBUG:waste 39241 with position 4 has been selected for changing by -179.0
+2018-11-28 22:33:05,862 DEBUG:waste 67 with position 5 has been selected for changing by -220.0
+2018-11-28 22:33:06,326 DEBUG:waste 20375 with position 3 has been selected for changing by -456
+2018-11-28 22:33:06,350 DEBUG:========================================
+2018-11-28 22:33:06,351 DEBUG:Started Insert nodes=(9072/4, 146/2) gain=0
+2018-11-28 22:33:06,354 DEBUG:We extract node 9072 from its parent: 145
+2018-11-28 22:33:06,358 DEBUG:We insert node 9072 into destination 142 in position 1
+2018-11-28 22:33:06,373 DEBUG:waste 99694 in node 145 is being changed by 469 to 1365
+2018-11-28 22:33:06,375 DEBUG:We collapse node 145 into its one children: 99694
+2018-11-28 22:33:06,384 DEBUG:waste 20375 in node 142 is being changed by -456 to 502.0
+2018-11-28 22:33:07,193 DEBUG:Finished Insert nodes=(9072/2, 146/2) gain=0, new=280000, best=280000, last=280000
+2018-11-28 22:33:07,618 DEBUG:waste 184 with position 2 has been selected for changing by -469
+2018-11-28 22:33:07,654 DEBUG:========================================
+2018-11-28 22:33:07,655 DEBUG:Started Insert (rot=[1]) nodes=(6591/4, 157/3) gain=0
+2018-11-28 22:33:07,660 DEBUG:We extract node 6591 from its parent: 28081
+2018-11-28 22:33:07,664 DEBUG:Node 6591 is being rotated
+2018-11-28 22:33:07,670 DEBUG:We insert node 6591 into destination 156 in position 0
+2018-11-28 22:33:07,676 DEBUG:created in node ID=6591, TYPE=64 a child with ID=77140, TYPE=64
+2018-11-28 22:33:07,677 DEBUG:created waste of size 2754 inside node 6591 with ID=56208
+2018-11-28 22:33:07,684 DEBUG:waste 34100 in node 28081 is being changed by 456 to 1077
+2018-11-28 22:33:07,685 DEBUG:We collapse node 28081 into its one children: 34100
+2018-11-28 22:33:07,698 DEBUG:waste 184 in node 156 is being changed by -469 to 209
+2018-11-28 22:33:08,322 DEBUG:Finished Insert (rot=[1]) nodes=(6591/3, 157/3) gain=0, new=240000, best=280000, last=280000
+2018-11-28 22:33:08,323 INFO:Best solution updated to 240000!
+2018-11-28 22:33:09,035 DEBUG:waste 207 with position 2 has been selected for changing by -469
+2018-11-28 22:33:09,078 DEBUG:waste 207 with position 2 has been selected for changing by -456
+2018-11-28 22:33:09,089 DEBUG:========================================
+2018-11-28 22:33:09,090 DEBUG:Started Insert nodes=(1855/5, 207/5) gain=0
+2018-11-28 22:33:09,092 DEBUG:We extract node 1855 from its parent: 100
+2018-11-28 22:33:09,096 DEBUG:We insert node 1855 into destination 200 in position 2
+2018-11-28 22:33:09,113 DEBUG:created in node ID=1855, TYPE=49 a child with ID=27236, TYPE=49
+2018-11-28 22:33:09,114 DEBUG:created waste of size 2741 inside node 1855 with ID=81988
+2018-11-28 22:33:09,121 DEBUG:waste 92802 in node 100 is being changed by 456 to 1707
+2018-11-28 22:33:09,122 DEBUG:We collapse node 100 into its one children: 92802
+2018-11-28 22:33:09,139 DEBUG:waste 207 in node 200 is being changed by -456 to 342
+2018-11-28 22:33:09,671 DEBUG:Finished Insert nodes=(1855/5, 207/5) gain=0, new=240000, best=240000, last=240000
+2018-11-28 22:33:10,682 DEBUG:DO: reduce nodes level 1
+2018-11-28 22:33:10,695 DEBUG:node and children 92 are being reduced by 250
+2018-11-28 22:33:10,697 DEBUG:We collapse node 40307 into its one children: 38753
+2018-11-28 22:33:10,719 DEBUG:node and children 157 are being reduced by 370
+2018-11-28 22:33:10,735 DEBUG:DO: collapse left
+2018-11-28 22:33:10,818 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:33:10,890 DEBUG:========================================
+2018-11-28 22:33:10,891 DEBUG:Started Swap nodes=(92/1, 122/1) gain=0
+2018-11-28 22:33:10,898 DEBUG:We extract node 92 from its parent: 76
+2018-11-28 22:33:10,909 DEBUG:We insert node 92 into destination 76 in position 4
+2018-11-28 22:33:10,935 DEBUG:We extract node 122 from its parent: 76
+2018-11-28 22:33:10,943 DEBUG:We insert node 122 into destination 76 in position 1
+2018-11-28 22:33:11,705 DEBUG:Finished Swap nodes=(92/1, 122/1) gain=0, new=240000, best=240000, last=240000
+2018-11-28 22:33:11,790 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:33:11,870 DEBUG:waste 155 with position 3 has been selected for changing by -138
+2018-11-28 22:33:11,959 DEBUG:waste 207 with position 3 has been selected for changing by -138
+2018-11-28 22:33:12,057 DEBUG:waste 199 with position 3 has been selected for changing by -138
+2018-11-28 22:33:12,136 DEBUG:waste 184 with position 4 has been selected for changing by -138
+2018-11-28 22:33:12,162 DEBUG:waste 122 with position 1 has been selected for changing by -122
+2018-11-28 22:33:12,163 DEBUG:waste 27660 with position 2 has been selected for changing by -16
+2018-11-28 22:33:12,172 DEBUG:========================================
+2018-11-28 22:33:12,173 DEBUG:Started Insert nodes=(73/0, 184/3) gain=0
+2018-11-28 22:33:12,176 DEBUG:We extract node 73 from its parent: 72
+2018-11-28 22:33:12,179 DEBUG:We insert node 73 into destination 156 in position 4
+2018-11-28 22:33:12,186 DEBUG:created in node ID=73, TYPE=2 a child with ID=15195, TYPE=2
+2018-11-28 22:33:12,187 DEBUG:created waste of size 1213 inside node 73 with ID=52977
+2018-11-28 22:33:12,194 DEBUG:waste 74 in node 72 is being changed by 1997 to 3210
+2018-11-28 22:33:12,196 DEBUG:We collapse node 72 into its one children: 74
+2018-11-28 22:33:12,211 DEBUG:waste 184 in node 156 is being changed by -138 to 71
+2018-11-28 22:33:12,737 DEBUG:Finished Insert nodes=(73/3, 184/3) gain=0, new=240000, best=240000, last=240000
+2018-11-28 22:33:13,019 DEBUG:nodes are siblings, we do not check for space
+2018-11-28 22:33:13,061 DEBUG:========================================
+2018-11-28 22:33:13,062 DEBUG:Started Swap nodes=(6591/3, 184/3) gain=0
+2018-11-28 22:33:13,069 DEBUG:We extract node 6591 from its parent: 156
+2018-11-28 22:33:13,072 DEBUG:deleted waste inside node 6591 with ID=56208
+2018-11-28 22:33:13,073 DEBUG:We collapse node 6591 into its one children: 77140
+2018-11-28 22:33:13,076 DEBUG:We insert node 77140 into destination 156 in position 5
+2018-11-28 22:33:13,084 DEBUG:created in node ID=77140, TYPE=64 a child with ID=151, TYPE=64
+2018-11-28 22:33:13,086 DEBUG:created waste of size 2754 inside node 77140 with ID=86201
+2018-11-28 22:33:13,089 DEBUG:We extract node 184 from its parent: 156
+2018-11-28 22:33:13,097 DEBUG:We insert node 184 into destination 156 in position 0
+2018-11-28 22:43:54,384 INFO:Could not load matplotlib icon: can't use "pyimage1" as iconphoto: not a photo image
+2018-11-28 22:43:55,029 DEBUG:findfont: Matching :family=sans-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=50.0 to DejaVu Sans ('C:\\Users\\pchtsp\\Documents\\projects\\ROADEF2018\\python\\venv\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000
+2018-11-28 22:43:55,143 DEBUG:findfont: Matching :family=sans-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=30.0 to DejaVu Sans ('C:\\Users\\pchtsp\\Documents\\projects\\ROADEF2018\\python\\venv\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000
+2018-11-28 22:43:56,580 INFO:Could not load matplotlib icon: can't use "pyimage10" as iconphoto: not a photo image
+2018-11-28 22:43:58,561 INFO:Could not load matplotlib icon: can't use "pyimage19" as iconphoto: not a photo image
+2018-11-28 22:44:00,649 INFO:Could not load matplotlib icon: can't use "pyimage28" as iconphoto: not a photo image
+2018-11-28 22:44:03,131 INFO:Could not load matplotlib icon: can't use "pyimage37" as iconphoto: not a photo image
+2018-11-28 22:44:04,743 INFO:Could not load matplotlib icon: can't use "pyimage46" as iconphoto: not a photo image
+2018-11-28 23:15:00,550 DEBUG:We extract node 77140 from its parent: 156
+2018-11-28 23:15:00,551 DEBUG:deleted waste inside node 77140 with ID=86201
+2018-11-28 23:15:00,553 DEBUG:We collapse node 77140 into its one children: 151
+2018-11-28 23:15:00,554 DEBUG:We insert node 151 into destination 156 in position 0
+2018-11-28 23:15:00,556 DEBUG:created in node ID=151, TYPE=64 a child with ID=71119, TYPE=64
+2018-11-28 23:15:00,556 DEBUG:created waste of size 2754 inside node 151 with ID=60553
+2018-11-28 23:15:00,557 DEBUG:We extract node 184 from its parent: 156
+2018-11-28 23:15:00,557 DEBUG:We insert node 184 into destination 156 in position 5
+2018-11-28 23:15:10,331 INFO:Could not load matplotlib icon: can't use "pyimage55" as iconphoto: not a photo image
