@@ -28,9 +28,6 @@ import scripts.exec as exec
 import package.tuplist as tl
 import package.params as params
 
-# FIXME: group together everything that needs to be edited by the user and put
-# in functions everything that does NOT to be edited.
-
 ## This example is for the ACOTSP software. Compare it with
 ## examples/acotsp/target-runner
 # exe = "~/bin/executable"
@@ -67,8 +64,6 @@ instance = sys.argv[4]
 cand_params = dict(map(lambda x: x.lstrip('-').split('='),sys.argv[5:]))
 f_key = dict(h='heur_params', rem='heur_remake')
 
-# cand_params = dict(h__main_iter=1, h__cooling_rate=4, rem__rotation=6, h__weights__space=5)
-
 options_tup = tl.TupList()
 for key, value in cand_params.items():
     tup = key.split('__')
@@ -93,48 +88,11 @@ options['input_path'] = location + '/'
 options['output_path'] = './'
 options['output_file_name'] = 'solution.csv'
 
-# Build the command, run it and save the output to a file,
-# to parse the result from it.
-# 
-# Stdout and stderr files have to be opened before the call().
-#
-# Exit with error if something went wrong in the execution.
-# exe = os.path.expanduser(exe)
-# command = [exe] + fixed_params.split() + ["-i"] + [instance] + ["--seed"] + [seed] + cand_params
-
-# Define the stdout and stderr files.
-# out_file = "c" + str(candidate_id) + "-" + str(instance_id) + str(seed) + ".stdout"
-# err_file = "c" + str(candidate_id) + "-" + str(instance_id) + str(seed) + ".stderr"
-
-# def target_runner_error(msg):
-#     now = datetime.datetime.now()
-#     print(str(now) + " error: " + msg)
-#     sys.exit(1)
-#
-# def check_executable(fpath):
-#     fpath = os.path.expanduser(fpath)
-#     if not os.path.isfile(fpath):
-#         target_runner_error(str(fpath) + " not found")
-#     if not os.access(fpath, os.X_OK):
-#         target_runner_error(str(fpath) + " is not executable")
-#
-# check_executable (exe)
-
-# outf = open(out_file, "w")
-# errf = open(err_file, "w")
 result = exec.solve(options)
-# outf.close()
-# errf.close()
 
-# if return_code != 0:
-#     target_runner_error("command returned code " + str(return_code))
-
-cost = 10000000
+cost = 1000000000
 if result is not None:
-    errors = result.count_errors()
-    cost = result.calculate_objective() + errors*10000000
+    cost = result.evaluate_solution(options['heur_params']['weights'])
 print(cost)
 
-# os.remove(out_file)
-# os.remove(err_file)
 sys.exit(0)
