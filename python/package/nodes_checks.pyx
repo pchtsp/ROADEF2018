@@ -178,7 +178,7 @@ cdef bint check_swap_size(dict nodes, int min_waste, bint insert=False, rotate=N
     return result
 
 
-cdef object check_swap_size_rotation(object node1, object node2, int min_waste, dict params, bint insert=False):
+cpdef object check_swap_size_rotation(object node1, object node2, int min_waste, dict params, bint insert=False):
     # TODO: here we could return if needed reduction of parent to fit
     if node1.up == node2.up:
         log.debug('nodes are siblings, we do not check for space')
