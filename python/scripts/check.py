@@ -237,10 +237,8 @@ if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
     # graph(experiment='hp_20181210')
-    benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20181126', 'hp_20180718_venv_pypy',
-                                            'hp_20180911_venv', 'prise_20180917_venv',
-                                                  'prise_20180926_venv', 'hp_20190117', 'hp_20190116'])
-    experiment = 'hp_20181209'
+    benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20190117', 'hp_20190116'])
+    experiment = 'hp_20190117'
     experiment = 'test'
     # exp_paths = get_experiments_paths(pm.PATHS['results'])
     # experiment = 'len_20180718_venv_py'
@@ -248,7 +246,11 @@ if __name__ == "__main__":
     # summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
     # rrr = execute_checker(experiment, path_checker=path_checker)
     rrr2 = check_experiment(experiment, 'A2')
-    # A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/A15' + '/', case_name='A15')
+    case = 'A2'
+    A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/' + case + '/', case_name=case)
+    A2sol.check_all()
+    A2sol.calculate_objective()
+    A2sol.graph_solution()
     # A2sol.graph_solution()
     # rrr = get_objectives()
     # dominant_experiments()

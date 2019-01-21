@@ -17,7 +17,7 @@ def calculate_paths_results(results):
     }
 
 base = '/home'
-# base = 'C:/Users'
+base = 'C:/Users'
 root = base + '/pchtsp/Documents/projects/ROADEF2018/'
 results = base + '/pchtsp/Dropbox/ROADEF2018/'
 

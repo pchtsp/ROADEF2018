@@ -1,0 +1,281 @@
+2018-11-18 14:19:23,284 INFO:Best solution updated to 560000!
+2018-11-18 14:19:23,384 INFO:Best solution updated to 520000!
+2018-11-18 14:19:27,107 INFO:Best solution updated to 480000!
+2018-11-18 14:19:36,453 INFO:Best solution updated to 440000!
+2018-11-18 14:19:36,549 INFO:Best solution updated to 400000!
+2018-11-18 14:19:40,081 INFO:Best solution updated to 360000!
+2018-11-18 14:19:42,596 INFO:TEMP=2985, seq=1, def=8, wastes=0, best=360000, time=93, evald=724, accptd=148, imprd=35, ratio_imp=23
+2018-11-18 14:19:43,866 INFO:Best solution updated to 320000!
+2018-11-18 14:19:44,477 INFO:Best solution updated to 320000!
+2018-11-18 14:19:52,599 INFO:Best solution updated to 320000!
+2018-11-18 14:19:52,789 INFO:Best solution updated to 320000!
+2018-11-18 14:19:53,326 INFO:Best solution updated to 320000!
+2018-11-18 14:19:53,563 INFO:TEMP=2970, seq=1, def=7, wastes=0, best=320000, time=104, evald=1473, accptd=251, imprd=61, ratio_imp=25
+2018-11-18 14:19:57,099 INFO:Best solution updated to 280000!
+2018-11-18 14:20:06,190 INFO:Best solution updated to 280000!
+2018-11-18 14:20:08,319 INFO:TEMP=2955, seq=1, def=6, wastes=0, best=280000, time=118, evald=2356, accptd=360, imprd=98, ratio_imp=34
+2018-11-18 14:20:14,237 INFO:Best solution updated to 280000!
+2018-11-18 14:20:14,614 INFO:Best solution updated to 280000!
+2018-11-18 14:20:26,056 INFO:TEMP=2940, seq=1, def=8, wastes=0, best=280000, time=136, evald=3301, accptd=484, imprd=144, ratio_imp=37
+2018-11-18 14:20:47,181 INFO:TEMP=2926, seq=1, def=6, wastes=0, best=280000, time=157, evald=4105, accptd=607, imprd=197, ratio_imp=43
+2018-11-18 14:20:55,388 INFO:TEMP=2911, seq=1, def=6, wastes=0, best=280000, time=165, evald=4813, accptd=730, imprd=252, ratio_imp=44
+2018-11-18 14:21:14,689 INFO:TEMP=2897, seq=1, def=7, wastes=0, best=280000, time=185, evald=5764, accptd=874, imprd=310, ratio_imp=40
+2018-11-18 14:21:18,960 INFO:Best solution updated to 240000!
+2018-11-18 14:21:25,441 INFO:Best solution updated to 240000!
+2018-11-18 14:21:28,228 INFO:Best solution updated to 240000!
+2018-11-18 14:21:29,149 INFO:Best solution updated to 240000!
+2018-11-18 14:21:29,274 INFO:Best solution updated to 200000!
+2018-11-18 14:21:32,439 INFO:TEMP=2882, seq=1, def=4, wastes=0, best=200000, time=203, evald=6503, accptd=975, imprd=355, ratio_imp=44
+2018-11-18 14:21:34,547 INFO:Best solution updated to 200000!
+2018-11-18 14:21:44,038 INFO:TEMP=2868, seq=0, def=6, wastes=0, best=200000, time=214, evald=7258, accptd=1075, imprd=399, ratio_imp=44
+2018-11-18 14:21:58,279 INFO:Best solution updated to 160000!
+2018-11-18 14:22:00,294 INFO:TEMP=2853, seq=0, def=4, wastes=0, best=160000, time=230, evald=7988, accptd=1243, imprd=471, ratio_imp=43
+2018-11-18 14:22:07,895 INFO:Best solution updated to 160000!
+2018-11-18 14:22:08,405 INFO:Best solution updated to 160000!
+2018-11-18 14:22:11,636 INFO:Best solution updated to 120000!
+2018-11-18 14:22:26,690 INFO:TEMP=2839, seq=0, def=3, wastes=0, best=120000, time=257, evald=8593, accptd=1349, imprd=515, ratio_imp=41
+2018-11-18 14:22:26,793 INFO:Best solution updated to 120000!
+2018-11-18 14:22:34,297 INFO:TEMP=2825, seq=0, def=3, wastes=0, best=120000, time=264, evald=9243, accptd=1425, imprd=555, ratio_imp=52
+2018-11-18 14:22:38,120 INFO:Best solution updated to 120000!
+2018-11-18 14:22:49,347 INFO:TEMP=2811, seq=0, def=3, wastes=0, best=120000, time=279, evald=9958, accptd=1540, imprd=604, ratio_imp=42
+2018-11-18 14:23:06,592 INFO:TEMP=2797, seq=0, def=3, wastes=0, best=120000, time=297, evald=10782, accptd=1660, imprd=647, ratio_imp=36
+2018-11-18 14:23:09,955 INFO:Best solution updated to 80000!
+2018-11-18 14:23:10,128 INFO:Best solution updated to 80000!
+2018-11-18 14:23:21,638 INFO:TEMP=2783, seq=0, def=2, wastes=0, best=80000, time=312, evald=11615, accptd=1789, imprd=700, ratio_imp=41
+2018-11-18 14:23:35,185 INFO:TEMP=2769, seq=1, def=2, wastes=0, best=80000, time=325, evald=12469, accptd=1924, imprd=768, ratio_imp=50
+2018-11-18 14:23:51,213 INFO:TEMP=2755, seq=0, def=3, wastes=0, best=80000, time=341, evald=13074, accptd=2058, imprd=826, ratio_imp=43
+2018-11-18 14:24:03,326 INFO:TEMP=2741, seq=0, def=2, wastes=0, best=80000, time=353, evald=13810, accptd=2146, imprd=869, ratio_imp=48
+2018-11-18 14:24:17,846 INFO:TEMP=2727, seq=0, def=4, wastes=0, best=80000, time=368, evald=14459, accptd=2276, imprd=932, ratio_imp=48
+2018-11-18 14:24:30,089 INFO:TEMP=2714, seq=0, def=3, wastes=0, best=80000, time=380, evald=15194, accptd=2386, imprd=989, ratio_imp=51
+2018-11-18 14:24:43,140 INFO:Best solution updated to 40000!
+2018-11-18 14:24:43,381 INFO:TEMP=2700, seq=0, def=1, wastes=0, best=40000, time=393, evald=15857, accptd=2499, imprd=1051, ratio_imp=54
+2018-11-18 14:24:44,332 INFO:Best solution updated to 0!
+2018-11-18 14:24:46,488 INFO:activate optimisation
+2018-11-18 14:24:46,565 INFO:Best solution updated to -4!
+2018-11-18 14:24:47,213 INFO:Best solution updated to -13!
+2018-11-18 14:24:49,634 INFO:Best solution updated to -13!
+2018-11-18 14:24:51,602 INFO:Best solution updated to -24!
+2018-11-18 14:25:56,586 INFO:TEMP=2687, seq=0, def=16, wastes=0, best=-24, time=467, evald=16519, accptd=2600, imprd=1102, ratio_imp=50
+2018-11-18 14:26:05,664 INFO:TEMP=2673, seq=1, def=7, wastes=0, best=-24, time=476, evald=17610, accptd=2763, imprd=1162, ratio_imp=37
+2018-11-18 14:26:19,212 INFO:TEMP=2660, seq=0, def=5, wastes=0, best=-24, time=489, evald=18421, accptd=2890, imprd=1195, ratio_imp=26
+2018-11-18 14:26:34,069 INFO:TEMP=2647, seq=0, def=5, wastes=0, best=-24, time=504, evald=19421, accptd=3021, imprd=1244, ratio_imp=37
+2018-11-18 14:26:50,986 INFO:TEMP=2633, seq=0, def=4, wastes=0, best=-24, time=521, evald=20381, accptd=3175, imprd=1298, ratio_imp=35
+2018-11-18 14:27:06,639 INFO:TEMP=2620, seq=0, def=3, wastes=0, best=-24, time=537, evald=21107, accptd=3294, imprd=1345, ratio_imp=39
+2018-11-18 14:27:26,291 INFO:TEMP=2607, seq=1, def=6, wastes=0, best=-24, time=556, evald=22073, accptd=3431, imprd=1402, ratio_imp=41
+2018-11-18 14:27:42,852 INFO:TEMP=2594, seq=0, def=4, wastes=0, best=-24, time=573, evald=22946, accptd=3544, imprd=1452, ratio_imp=44
+2018-11-18 14:27:55,392 INFO:TEMP=2581, seq=0, def=4, wastes=0, best=-24, time=585, evald=23850, accptd=3680, imprd=1510, ratio_imp=42
+2018-11-18 14:28:12,484 INFO:TEMP=2568, seq=0, def=3, wastes=0, best=-24, time=603, evald=24746, accptd=3812, imprd=1576, ratio_imp=50
+2018-11-18 14:28:23,350 INFO:TEMP=2555, seq=1, def=2, wastes=0, best=-24, time=613, evald=25605, accptd=3938, imprd=1634, ratio_imp=46
+2018-11-18 14:28:37,259 INFO:TEMP=2543, seq=0, def=0, wastes=0, best=-24, time=627, evald=26354, accptd=4043, imprd=1683, ratio_imp=46
+2018-11-18 14:28:46,611 INFO:TEMP=2530, seq=0, def=0, wastes=0, best=-24, time=637, evald=27058, accptd=4152, imprd=1738, ratio_imp=50
+2018-11-18 14:28:58,304 INFO:TEMP=2517, seq=0, def=1, wastes=0, best=-24, time=648, evald=27766, accptd=4268, imprd=1788, ratio_imp=43
+2018-11-18 14:29:14,143 INFO:TEMP=2505, seq=0, def=1, wastes=0, best=-24, time=664, evald=28446, accptd=4369, imprd=1830, ratio_imp=41
+2018-11-18 14:29:26,039 INFO:TEMP=2492, seq=0, def=1, wastes=0, best=-24, time=676, evald=29164, accptd=4496, imprd=1891, ratio_imp=48
+2018-11-18 14:29:38,369 INFO:TEMP=2480, seq=0, def=1, wastes=0, best=-24, time=688, evald=29924, accptd=4612, imprd=1945, ratio_imp=46
+2018-11-18 14:29:50,067 INFO:TEMP=2467, seq=0, def=1, wastes=0, best=-24, time=700, evald=30625, accptd=4728, imprd=2002, ratio_imp=49
+2018-11-18 14:30:04,511 INFO:TEMP=2455, seq=0, def=1, wastes=0, best=-24, time=715, evald=31439, accptd=4841, imprd=2059, ratio_imp=50
+2018-11-18 14:30:18,964 INFO:TEMP=2443, seq=0, def=1, wastes=0, best=-24, time=729, evald=32197, accptd=4953, imprd=2114, ratio_imp=49
+2018-11-18 14:30:32,596 INFO:TEMP=2430, seq=0, def=2, wastes=0, best=-24, time=743, evald=32870, accptd=5060, imprd=2170, ratio_imp=52
+2018-11-18 14:30:47,015 INFO:TEMP=2418, seq=0, def=2, wastes=0, best=-24, time=757, evald=33561, accptd=5206, imprd=2240, ratio_imp=48
+2018-11-18 14:31:00,437 INFO:TEMP=2406, seq=0, def=0, wastes=0, best=-24, time=771, evald=34140, accptd=5291, imprd=2285, ratio_imp=52
+2018-11-18 14:31:06,970 INFO:Best solution updated to -24!
+2018-11-18 14:31:16,798 INFO:TEMP=2394, seq=0, def=1, wastes=0, best=-24, time=787, evald=34802, accptd=5399, imprd=2340, ratio_imp=50
+2018-11-18 14:31:28,594 INFO:TEMP=2382, seq=0, def=1, wastes=0, best=-24, time=799, evald=35519, accptd=5511, imprd=2390, ratio_imp=44
+2018-11-18 14:31:42,641 INFO:TEMP=2370, seq=0, def=1, wastes=0, best=-24, time=813, evald=36158, accptd=5629, imprd=2442, ratio_imp=44
+2018-11-18 14:31:58,297 INFO:TEMP=2358, seq=0, def=1, wastes=0, best=-24, time=828, evald=36734, accptd=5716, imprd=2481, ratio_imp=44
+2018-11-18 14:32:10,314 INFO:TEMP=2347, seq=1, def=1, wastes=0, best=-24, time=840, evald=37448, accptd=5828, imprd=2525, ratio_imp=39
+2018-11-18 14:32:26,782 INFO:TEMP=2335, seq=1, def=1, wastes=0, best=-24, time=857, evald=38118, accptd=5947, imprd=2582, ratio_imp=48
+2018-11-18 14:32:43,201 INFO:TEMP=2323, seq=0, def=1, wastes=0, best=-24, time=873, evald=38839, accptd=6061, imprd=2635, ratio_imp=46
+2018-11-18 14:32:57,191 INFO:TEMP=2312, seq=0, def=1, wastes=0, best=-24, time=887, evald=39490, accptd=6168, imprd=2691, ratio_imp=52
+2018-11-18 14:33:09,499 INFO:TEMP=2300, seq=0, def=1, wastes=0, best=-24, time=900, evald=40305, accptd=6275, imprd=2746, ratio_imp=51
+2018-11-18 14:33:23,593 INFO:TEMP=2289, seq=0, def=1, wastes=0, best=-24, time=914, evald=41100, accptd=6390, imprd=2803, ratio_imp=49
+2018-11-18 14:33:38,193 INFO:TEMP=2277, seq=0, def=0, wastes=0, best=-24, time=928, evald=41996, accptd=6512, imprd=2872, ratio_imp=56
+2018-11-18 14:33:54,431 INFO:TEMP=2266, seq=0, def=0, wastes=0, best=-24, time=945, evald=42640, accptd=6623, imprd=2929, ratio_imp=51
+2018-11-18 14:34:06,369 INFO:TEMP=2254, seq=0, def=0, wastes=0, best=-24, time=956, evald=43384, accptd=6714, imprd=2972, ratio_imp=47
+2018-11-18 14:34:17,826 INFO:TEMP=2243, seq=0, def=0, wastes=0, best=-24, time=968, evald=43952, accptd=6799, imprd=3017, ratio_imp=52
+2018-11-18 14:34:34,172 INFO:TEMP=2232, seq=0, def=0, wastes=0, best=-24, time=984, evald=44561, accptd=6900, imprd=3057, ratio_imp=39
+2018-11-18 14:34:48,965 INFO:TEMP=2221, seq=1, def=0, wastes=0, best=-24, time=999, evald=45389, accptd=7024, imprd=3120, ratio_imp=50
+2018-11-18 14:35:05,336 INFO:TEMP=2210, seq=0, def=1, wastes=0, best=-24, time=1015, evald=46015, accptd=7168, imprd=3189, ratio_imp=48
+2018-11-18 14:35:16,705 INFO:TEMP=2199, seq=0, def=2, wastes=0, best=-24, time=1027, evald=46658, accptd=7273, imprd=3237, ratio_imp=45
+2018-11-18 14:35:33,429 INFO:TEMP=2188, seq=0, def=3, wastes=0, best=-24, time=1044, evald=47358, accptd=7417, imprd=3298, ratio_imp=42
+2018-11-18 14:35:47,355 INFO:TEMP=2177, seq=0, def=2, wastes=0, best=-24, time=1057, evald=48018, accptd=7549, imprd=3355, ratio_imp=43
+2018-11-18 14:36:01,409 INFO:TEMP=2166, seq=0, def=2, wastes=0, best=-24, time=1072, evald=48706, accptd=7681, imprd=3419, ratio_imp=48
+2018-11-18 14:37:17,594 INFO:TEMP=2155, seq=0, def=13, wastes=0, best=-24, time=1148, evald=49459, accptd=7801, imprd=3483, ratio_imp=53
+2018-11-18 14:37:35,942 INFO:TEMP=2144, seq=1, def=5, wastes=0, best=-24, time=1166, evald=50192, accptd=7924, imprd=3511, ratio_imp=23
+2018-11-18 14:37:48,310 INFO:TEMP=2133, seq=1, def=3, wastes=0, best=-24, time=1178, evald=51184, accptd=8052, imprd=3558, ratio_imp=36
+2018-11-18 14:38:01,525 INFO:TEMP=2123, seq=1, def=2, wastes=0, best=-24, time=1192, evald=52285, accptd=8215, imprd=3626, ratio_imp=41
+2018-11-18 14:38:17,330 INFO:TEMP=2112, seq=1, def=0, wastes=0, best=-24, time=1207, evald=53024, accptd=8312, imprd=3656, ratio_imp=31
+2018-11-18 14:38:34,310 INFO:TEMP=2102, seq=2, def=0, wastes=0, best=-24, time=1224, evald=54097, accptd=8444, imprd=3710, ratio_imp=41
+2018-11-18 14:38:51,663 INFO:TEMP=2091, seq=1, def=0, wastes=0, best=-24, time=1242, evald=55151, accptd=8593, imprd=3779, ratio_imp=46
+2018-11-18 14:38:59,109 INFO:TEMP=2081, seq=1, def=0, wastes=0, best=-24, time=1249, evald=55851, accptd=8702, imprd=3822, ratio_imp=39
+2018-11-18 14:39:11,905 INFO:TEMP=2070, seq=1, def=0, wastes=0, best=-24, time=1262, evald=56858, accptd=8856, imprd=3903, ratio_imp=52
+2018-11-18 14:39:22,330 INFO:TEMP=2060, seq=1, def=1, wastes=0, best=-24, time=1272, evald=57828, accptd=8968, imprd=3954, ratio_imp=45
+2018-11-18 14:39:38,506 INFO:TEMP=2050, seq=2, def=0, wastes=0, best=-24, time=1289, evald=58552, accptd=9058, imprd=3989, ratio_imp=38
+2018-11-18 14:39:50,334 INFO:TEMP=2039, seq=2, def=0, wastes=0, best=-24, time=1300, evald=59359, accptd=9160, imprd=4037, ratio_imp=47
+2018-11-18 14:40:10,442 INFO:TEMP=2029, seq=0, def=0, wastes=0, best=-24, time=1321, evald=59966, accptd=9258, imprd=4087, ratio_imp=51
+2018-11-18 14:40:19,754 INFO:TEMP=2019, seq=0, def=0, wastes=0, best=-24, time=1330, evald=60617, accptd=9348, imprd=4134, ratio_imp=52
+2018-11-18 14:40:33,011 INFO:TEMP=2009, seq=0, def=1, wastes=0, best=-24, time=1343, evald=61212, accptd=9453, imprd=4183, ratio_imp=46
+2018-11-18 14:40:46,817 INFO:TEMP=1999, seq=0, def=1, wastes=0, best=-24, time=1357, evald=61949, accptd=9565, imprd=4230, ratio_imp=42
+2018-11-18 14:41:00,529 INFO:TEMP=1989, seq=0, def=1, wastes=0, best=-24, time=1371, evald=62689, accptd=9655, imprd=4273, ratio_imp=47
+2018-11-18 14:41:07,745 INFO:TEMP=1979, seq=0, def=1, wastes=0, best=-24, time=1378, evald=63406, accptd=9763, imprd=4329, ratio_imp=51
+2018-11-18 14:41:19,960 INFO:TEMP=1969, seq=0, def=1, wastes=0, best=-24, time=1390, evald=64214, accptd=9889, imprd=4391, ratio_imp=49
+2018-11-18 14:41:38,455 INFO:TEMP=1959, seq=0, def=1, wastes=0, best=-24, time=1409, evald=65004, accptd=10024, imprd=4451, ratio_imp=44
+2018-11-18 14:41:46,177 INFO:TEMP=1949, seq=0, def=1, wastes=0, best=-24, time=1416, evald=65825, accptd=10134, imprd=4500, ratio_imp=44
+2018-11-18 14:42:03,016 INFO:TEMP=1940, seq=1, def=1, wastes=0, best=-24, time=1433, evald=66675, accptd=10270, imprd=4570, ratio_imp=51
+2018-11-18 14:42:19,919 INFO:TEMP=1930, seq=0, def=0, wastes=0, best=-24, time=1450, evald=67535, accptd=10398, imprd=4633, ratio_imp=49
+2018-11-18 14:42:27,319 INFO:TEMP=1920, seq=0, def=0, wastes=0, best=-24, time=1457, evald=68212, accptd=10481, imprd=4676, ratio_imp=51
+2018-11-18 14:42:40,920 INFO:TEMP=1911, seq=0, def=1, wastes=0, best=-24, time=1471, evald=68858, accptd=10603, imprd=4731, ratio_imp=45
+2018-11-18 14:42:56,368 INFO:TEMP=1901, seq=0, def=0, wastes=0, best=-24, time=1486, evald=69479, accptd=10705, imprd=4780, ratio_imp=48
+2018-11-18 14:43:09,049 INFO:TEMP=1892, seq=0, def=0, wastes=0, best=-24, time=1499, evald=70400, accptd=10794, imprd=4832, ratio_imp=58
+2018-11-18 14:43:23,129 INFO:TEMP=1882, seq=0, def=0, wastes=0, best=-24, time=1513, evald=71293, accptd=10883, imprd=4865, ratio_imp=37
+2018-11-18 14:43:34,631 INFO:TEMP=1873, seq=0, def=1, wastes=0, best=-24, time=1525, evald=72125, accptd=10988, imprd=4909, ratio_imp=42
+2018-11-18 14:43:47,930 INFO:TEMP=1863, seq=0, def=1, wastes=0, best=-24, time=1538, evald=72831, accptd=11092, imprd=4957, ratio_imp=46
+2018-11-18 14:44:03,757 INFO:TEMP=1854, seq=0, def=1, wastes=0, best=-24, time=1554, evald=73575, accptd=11209, imprd=5008, ratio_imp=43
+2018-11-18 14:44:13,275 INFO:TEMP=1845, seq=0, def=1, wastes=0, best=-24, time=1563, evald=74246, accptd=11326, imprd=5068, ratio_imp=51
+2018-11-18 14:44:24,875 INFO:TEMP=1836, seq=0, def=1, wastes=0, best=-24, time=1575, evald=74945, accptd=11443, imprd=5122, ratio_imp=46
+2018-11-18 14:44:41,519 INFO:TEMP=1826, seq=0, def=0, wastes=0, best=-24, time=1592, evald=75802, accptd=11603, imprd=5202, ratio_imp=50
+2018-11-18 14:44:55,345 INFO:TEMP=1817, seq=0, def=0, wastes=0, best=-24, time=1605, evald=76436, accptd=11698, imprd=5241, ratio_imp=41
+2018-11-18 14:45:07,565 INFO:TEMP=1808, seq=0, def=0, wastes=0, best=-24, time=1618, evald=77206, accptd=11818, imprd=5295, ratio_imp=45
+2018-11-18 14:45:23,460 INFO:TEMP=1799, seq=0, def=0, wastes=0, best=-24, time=1634, evald=77853, accptd=11920, imprd=5343, ratio_imp=47
+2018-11-18 14:45:31,497 INFO:TEMP=1790, seq=0, def=0, wastes=0, best=-24, time=1642, evald=78712, accptd=12026, imprd=5403, ratio_imp=56
+2018-11-18 14:45:44,240 INFO:TEMP=1781, seq=0, def=0, wastes=0, best=-24, time=1654, evald=79683, accptd=12140, imprd=5459, ratio_imp=49
+2018-11-18 14:45:58,683 INFO:TEMP=1772, seq=0, def=1, wastes=0, best=-24, time=1669, evald=80537, accptd=12264, imprd=5520, ratio_imp=49
+2018-11-18 14:46:12,755 INFO:TEMP=1763, seq=1, def=1, wastes=0, best=-24, time=1683, evald=81350, accptd=12382, imprd=5563, ratio_imp=36
+2018-11-18 14:46:31,214 INFO:TEMP=1755, seq=0, def=2, wastes=0, best=-24, time=1701, evald=82168, accptd=12510, imprd=5637, ratio_imp=57
+2018-11-18 14:46:45,135 INFO:TEMP=1746, seq=0, def=1, wastes=0, best=-24, time=1715, evald=83055, accptd=12607, imprd=5688, ratio_imp=52
+2018-11-18 14:46:59,755 INFO:TEMP=1737, seq=0, def=0, wastes=0, best=-24, time=1730, evald=84014, accptd=12718, imprd=5744, ratio_imp=50
+2018-11-18 14:47:15,811 INFO:TEMP=1728, seq=0, def=0, wastes=0, best=-24, time=1746, evald=84753, accptd=12822, imprd=5793, ratio_imp=47
+2018-11-18 14:47:29,866 INFO:TEMP=1720, seq=1, def=0, wastes=0, best=-24, time=1760, evald=85450, accptd=12945, imprd=5847, ratio_imp=44
+2018-11-18 14:47:48,662 INFO:TEMP=1711, seq=1, def=1, wastes=0, best=-24, time=1779, evald=86317, accptd=13088, imprd=5911, ratio_imp=44
+2018-11-18 14:48:01,237 INFO:TEMP=1703, seq=0, def=2, wastes=0, best=-24, time=1791, evald=87156, accptd=13221, imprd=5979, ratio_imp=51
+2018-11-18 14:48:13,736 INFO:TEMP=1694, seq=2, def=1, wastes=0, best=-24, time=1804, evald=88049, accptd=13363, imprd=6047, ratio_imp=48
+2018-11-18 14:48:21,398 INFO:TEMP=1686, seq=1, def=1, wastes=0, best=-24, time=1812, evald=88901, accptd=13466, imprd=6099, ratio_imp=50
+2018-11-18 14:48:37,542 INFO:TEMP=1677, seq=1, def=2, wastes=0, best=-24, time=1828, evald=89702, accptd=13577, imprd=6142, ratio_imp=38
+2018-11-18 14:48:51,541 INFO:TEMP=1669, seq=1, def=2, wastes=0, best=-24, time=1842, evald=90477, accptd=13697, imprd=6205, ratio_imp=52
+2018-11-18 14:49:03,006 INFO:TEMP=1661, seq=1, def=2, wastes=0, best=-24, time=1853, evald=91083, accptd=13788, imprd=6248, ratio_imp=47
+2018-11-18 14:49:12,799 INFO:TEMP=1652, seq=1, def=2, wastes=0, best=-24, time=1863, evald=91833, accptd=13898, imprd=6309, ratio_imp=55
+2018-11-18 14:49:26,183 INFO:TEMP=1644, seq=0, def=1, wastes=0, best=-24, time=1876, evald=92443, accptd=14012, imprd=6364, ratio_imp=48
+2018-11-18 14:49:38,710 INFO:TEMP=1636, seq=0, def=0, wastes=0, best=-24, time=1889, evald=93338, accptd=14136, imprd=6419, ratio_imp=44
+2018-11-18 14:49:52,328 INFO:TEMP=1628, seq=0, def=0, wastes=0, best=-24, time=1902, evald=93993, accptd=14244, imprd=6462, ratio_imp=39
+2018-11-18 14:50:04,194 INFO:TEMP=1619, seq=0, def=0, wastes=0, best=-24, time=1914, evald=94661, accptd=14355, imprd=6516, ratio_imp=48
+2018-11-18 14:50:18,532 INFO:TEMP=1611, seq=0, def=0, wastes=0, best=-24, time=1929, evald=95492, accptd=14469, imprd=6564, ratio_imp=42
+2018-11-18 14:50:30,527 INFO:TEMP=1603, seq=0, def=3, wastes=0, best=-24, time=1941, evald=96187, accptd=14587, imprd=6611, ratio_imp=39
+2018-11-18 14:50:42,682 INFO:TEMP=1595, seq=0, def=2, wastes=0, best=-24, time=1953, evald=96917, accptd=14731, imprd=6685, ratio_imp=51
+2018-11-18 14:50:59,152 INFO:TEMP=1587, seq=0, def=3, wastes=0, best=-24, time=1969, evald=97647, accptd=14877, imprd=6756, ratio_imp=48
+2018-11-18 14:51:11,748 INFO:TEMP=1579, seq=1, def=2, wastes=0, best=-24, time=1982, evald=98446, accptd=15001, imprd=6817, ratio_imp=49
+2018-11-18 14:51:26,625 INFO:TEMP=1571, seq=1, def=1, wastes=0, best=-24, time=1997, evald=99310, accptd=15153, imprd=6883, ratio_imp=43
+2018-11-18 14:51:41,067 INFO:TEMP=1564, seq=1, def=2, wastes=0, best=-24, time=2011, evald=100229, accptd=15265, imprd=6937, ratio_imp=48
+2018-11-18 14:51:53,856 INFO:TEMP=1556, seq=0, def=3, wastes=0, best=-24, time=2024, evald=101052, accptd=15422, imprd=7017, ratio_imp=51
+2018-11-18 14:52:05,684 INFO:TEMP=1548, seq=1, def=0, wastes=0, best=-24, time=2036, evald=101751, accptd=15516, imprd=7062, ratio_imp=47
+2018-11-18 14:52:21,539 INFO:TEMP=1540, seq=0, def=0, wastes=0, best=-24, time=2052, evald=102382, accptd=15608, imprd=7105, ratio_imp=46
+2018-11-18 14:52:35,230 INFO:TEMP=1533, seq=0, def=0, wastes=0, best=-24, time=2065, evald=103094, accptd=15710, imprd=7150, ratio_imp=44
+2018-11-18 14:52:44,635 INFO:TEMP=1525, seq=0, def=0, wastes=0, best=-24, time=2075, evald=103735, accptd=15813, imprd=7199, ratio_imp=47
+2018-11-18 14:52:53,831 INFO:TEMP=1517, seq=0, def=0, wastes=0, best=-24, time=2084, evald=104417, accptd=15928, imprd=7246, ratio_imp=41
+2018-11-18 14:53:07,412 INFO:TEMP=1510, seq=0, def=0, wastes=0, best=-24, time=2098, evald=105086, accptd=16016, imprd=7279, ratio_imp=37
+2018-11-18 14:53:18,737 INFO:TEMP=1502, seq=0, def=0, wastes=0, best=-24, time=2109, evald=105744, accptd=16112, imprd=7326, ratio_imp=48
+2018-11-18 14:53:25,881 INFO:TEMP=1495, seq=0, def=0, wastes=0, best=-24, time=2116, evald=106408, accptd=16202, imprd=7371, ratio_imp=49
+2018-11-18 14:53:37,194 INFO:TEMP=1487, seq=0, def=0, wastes=0, best=-24, time=2127, evald=107041, accptd=16315, imprd=7430, ratio_imp=52
+2018-11-18 14:53:53,555 INFO:TEMP=1480, seq=0, def=0, wastes=0, best=-24, time=2144, evald=107740, accptd=16452, imprd=7498, ratio_imp=49
+2018-11-18 14:54:07,560 INFO:TEMP=1472, seq=0, def=0, wastes=0, best=-24, time=2158, evald=108476, accptd=16555, imprd=7551, ratio_imp=51
+2018-11-18 14:54:19,420 INFO:TEMP=1465, seq=0, def=0, wastes=0, best=-24, time=2170, evald=109227, accptd=16658, imprd=7601, ratio_imp=48
+2018-11-18 14:54:38,094 INFO:TEMP=1458, seq=0, def=0, wastes=0, best=-24, time=2188, evald=109911, accptd=16783, imprd=7657, ratio_imp=44
+2018-11-18 14:54:52,047 INFO:TEMP=1450, seq=0, def=1, wastes=0, best=-24, time=2202, evald=110705, accptd=16872, imprd=7701, ratio_imp=49
+2018-11-18 14:55:10,231 INFO:TEMP=1443, seq=0, def=1, wastes=0, best=-24, time=2220, evald=111388, accptd=16999, imprd=7765, ratio_imp=50
+2018-11-18 14:55:23,885 INFO:TEMP=1436, seq=0, def=2, wastes=0, best=-24, time=2234, evald=112105, accptd=17084, imprd=7804, ratio_imp=45
+2018-11-18 14:55:44,289 INFO:TEMP=1429, seq=0, def=1, wastes=0, best=-24, time=2254, evald=112846, accptd=17215, imprd=7872, ratio_imp=52
+2018-11-18 14:55:58,399 INFO:TEMP=1422, seq=0, def=1, wastes=0, best=-24, time=2269, evald=113663, accptd=17307, imprd=7913, ratio_imp=44
+2018-11-18 14:56:14,731 INFO:TEMP=1414, seq=0, def=0, wastes=0, best=-24, time=2285, evald=114430, accptd=17453, imprd=7978, ratio_imp=44
+2018-11-18 14:56:26,920 INFO:TEMP=1407, seq=0, def=0, wastes=0, best=-24, time=2297, evald=115331, accptd=17577, imprd=8040, ratio_imp=50
+2018-11-18 14:56:40,611 INFO:TEMP=1400, seq=0, def=0, wastes=0, best=-24, time=2311, evald=116103, accptd=17670, imprd=8083, ratio_imp=46
+2018-11-18 14:56:52,686 INFO:TEMP=1393, seq=1, def=1, wastes=0, best=-24, time=2323, evald=116851, accptd=17799, imprd=8145, ratio_imp=48
+2018-11-18 14:57:09,448 INFO:TEMP=1386, seq=1, def=0, wastes=0, best=-24, time=2340, evald=117640, accptd=17947, imprd=8224, ratio_imp=53
+2018-11-18 14:57:21,084 INFO:TEMP=1379, seq=0, def=0, wastes=0, best=-24, time=2351, evald=118354, accptd=18059, imprd=8277, ratio_imp=47
+2018-11-18 14:57:32,514 INFO:TEMP=1373, seq=0, def=1, wastes=0, best=-24, time=2363, evald=119017, accptd=18125, imprd=8303, ratio_imp=39
+2018-11-18 14:57:44,158 INFO:TEMP=1366, seq=0, def=0, wastes=0, best=-24, time=2374, evald=119728, accptd=18235, imprd=8357, ratio_imp=49
+2018-11-18 14:57:56,078 INFO:TEMP=1359, seq=0, def=0, wastes=0, best=-24, time=2386, evald=120487, accptd=18327, imprd=8393, ratio_imp=39
+2018-11-18 14:58:07,869 INFO:TEMP=1352, seq=0, def=0, wastes=0, best=-24, time=2398, evald=121237, accptd=18421, imprd=8440, ratio_imp=49
+2018-11-18 14:58:21,678 INFO:TEMP=1345, seq=0, def=0, wastes=0, best=-24, time=2412, evald=121992, accptd=18541, imprd=8504, ratio_imp=53
+2018-11-18 14:58:33,301 INFO:TEMP=1339, seq=0, def=0, wastes=0, best=-24, time=2423, evald=122778, accptd=18638, imprd=8561, ratio_imp=58
+2018-11-18 14:58:45,242 INFO:TEMP=1332, seq=0, def=0, wastes=0, best=-24, time=2435, evald=123581, accptd=18744, imprd=8607, ratio_imp=43
+2018-11-18 14:58:56,872 INFO:TEMP=1325, seq=0, def=0, wastes=0, best=-24, time=2447, evald=124204, accptd=18826, imprd=8645, ratio_imp=46
+2018-11-18 14:59:12,866 INFO:TEMP=1319, seq=0, def=1, wastes=0, best=-24, time=2463, evald=124866, accptd=18943, imprd=8703, ratio_imp=49
+2018-11-18 14:59:29,338 INFO:TEMP=1312, seq=0, def=0, wastes=0, best=-24, time=2479, evald=125409, accptd=19045, imprd=8758, ratio_imp=53
+2018-11-18 14:59:38,533 INFO:Best solution updated to -25!
+2018-11-18 14:59:42,335 INFO:TEMP=1305, seq=0, def=0, wastes=0, best=-25, time=2492, evald=126007, accptd=19122, imprd=8797, ratio_imp=50
+2018-11-18 14:59:57,424 INFO:TEMP=1299, seq=0, def=1, wastes=0, best=-25, time=2508, evald=126597, accptd=19224, imprd=8842, ratio_imp=44
+2018-11-18 15:00:08,688 INFO:TEMP=1292, seq=0, def=3, wastes=0, best=-25, time=2519, evald=127318, accptd=19304, imprd=8879, ratio_imp=46
+2018-11-18 15:00:18,342 INFO:TEMP=1286, seq=0, def=2, wastes=0, best=-25, time=2528, evald=128054, accptd=19420, imprd=8927, ratio_imp=41
+2018-11-18 15:00:29,749 INFO:TEMP=1280, seq=0, def=3, wastes=0, best=-25, time=2540, evald=128783, accptd=19523, imprd=8975, ratio_imp=46
+2018-11-18 15:00:41,312 INFO:TEMP=1273, seq=0, def=3, wastes=0, best=-25, time=2551, evald=129577, accptd=19637, imprd=9034, ratio_imp=51
+2018-11-18 15:00:54,830 INFO:TEMP=1267, seq=0, def=3, wastes=0, best=-25, time=2565, evald=130308, accptd=19767, imprd=9097, ratio_imp=48
+2018-11-18 15:01:08,617 INFO:TEMP=1260, seq=0, def=3, wastes=0, best=-25, time=2579, evald=131051, accptd=19906, imprd=9169, ratio_imp=51
+2018-11-18 15:01:21,857 INFO:TEMP=1254, seq=0, def=3, wastes=0, best=-25, time=2592, evald=131712, accptd=20017, imprd=9212, ratio_imp=38
+2018-11-18 15:01:35,331 INFO:TEMP=1248, seq=0, def=2, wastes=0, best=-25, time=2605, evald=132459, accptd=20121, imprd=9268, ratio_imp=53
+2018-11-18 15:02:45,730 INFO:TEMP=1242, seq=0, def=17, wastes=0, best=-25, time=2676, evald=133202, accptd=20213, imprd=9314, ratio_imp=49
+2018-11-18 15:02:57,978 INFO:TEMP=1235, seq=0, def=10, wastes=0, best=-25, time=2688, evald=134288, accptd=20358, imprd=9349, ratio_imp=24
+2018-11-18 15:03:10,224 INFO:TEMP=1229, seq=0, def=8, wastes=0, best=-25, time=2700, evald=135240, accptd=20501, imprd=9417, ratio_imp=47
+2018-11-18 15:03:26,299 INFO:TEMP=1223, seq=0, def=6, wastes=0, best=-25, time=2716, evald=136230, accptd=20636, imprd=9466, ratio_imp=36
+2018-11-18 15:03:42,979 INFO:TEMP=1217, seq=1, def=5, wastes=0, best=-25, time=2733, evald=137204, accptd=20789, imprd=9523, ratio_imp=37
+2018-11-18 15:03:49,708 INFO:TEMP=1211, seq=0, def=5, wastes=0, best=-25, time=2740, evald=137877, accptd=20903, imprd=9581, ratio_imp=50
+2018-11-18 15:04:03,320 INFO:TEMP=1205, seq=0, def=5, wastes=0, best=-25, time=2753, evald=138525, accptd=21017, imprd=9628, ratio_imp=41
+2018-11-18 15:04:19,403 INFO:TEMP=1199, seq=0, def=5, wastes=0, best=-25, time=2770, evald=139275, accptd=21134, imprd=9681, ratio_imp=45
+2018-11-18 15:04:36,374 INFO:TEMP=1193, seq=0, def=4, wastes=0, best=-25, time=2786, evald=140110, accptd=21292, imprd=9750, ratio_imp=43
+2018-11-18 15:04:48,493 INFO:TEMP=1187, seq=0, def=4, wastes=0, best=-25, time=2799, evald=140917, accptd=21436, imprd=9815, ratio_imp=45
+2018-11-18 15:05:02,046 INFO:TEMP=1181, seq=0, def=5, wastes=0, best=-25, time=2812, evald=141484, accptd=21532, imprd=9851, ratio_imp=37
+2018-11-18 15:05:15,474 INFO:TEMP=1175, seq=0, def=0, wastes=0, best=-25, time=2826, evald=142103, accptd=21634, imprd=9901, ratio_imp=49
+2018-11-18 15:05:28,855 INFO:TEMP=1169, seq=0, def=0, wastes=0, best=-25, time=2839, evald=142791, accptd=21741, imprd=9953, ratio_imp=48
+2018-11-18 15:05:44,840 INFO:TEMP=1163, seq=0, def=0, wastes=0, best=-25, time=2855, evald=143505, accptd=21871, imprd=10008, ratio_imp=42
+2018-11-18 15:06:00,763 INFO:TEMP=1157, seq=0, def=0, wastes=0, best=-25, time=2871, evald=144159, accptd=22003, imprd=10065, ratio_imp=43
+2018-11-18 15:06:14,887 INFO:TEMP=1152, seq=0, def=1, wastes=0, best=-25, time=2885, evald=144927, accptd=22143, imprd=10137, ratio_imp=51
+2018-11-18 15:06:30,600 INFO:TEMP=1146, seq=0, def=0, wastes=0, best=-25, time=2901, evald=145580, accptd=22251, imprd=10196, ratio_imp=54
+2018-11-18 15:06:42,044 INFO:TEMP=1140, seq=0, def=0, wastes=0, best=-25, time=2912, evald=146250, accptd=22353, imprd=10239, ratio_imp=42
+2018-11-18 15:06:59,836 INFO:TEMP=1134, seq=0, def=1, wastes=0, best=-25, time=2930, evald=146947, accptd=22475, imprd=10291, ratio_imp=42
+2018-11-18 15:07:13,911 INFO:TEMP=1129, seq=0, def=0, wastes=0, best=-25, time=2944, evald=147734, accptd=22601, imprd=10358, ratio_imp=53
+2018-11-18 15:07:25,630 INFO:TEMP=1123, seq=0, def=0, wastes=0, best=-25, time=2956, evald=148439, accptd=22724, imprd=10418, ratio_imp=48
+2018-11-18 15:07:37,289 INFO:TEMP=1118, seq=0, def=1, wastes=0, best=-25, time=2967, evald=149107, accptd=22839, imprd=10479, ratio_imp=53
+2018-11-18 15:07:56,195 INFO:TEMP=1112, seq=0, def=0, wastes=0, best=-25, time=2986, evald=149849, accptd=22983, imprd=10544, ratio_imp=45
+2018-11-18 15:08:07,821 INFO:TEMP=1106, seq=0, def=0, wastes=0, best=-25, time=2998, evald=150499, accptd=23094, imprd=10592, ratio_imp=43
+2018-11-18 15:08:15,217 INFO:TEMP=1101, seq=1, def=0, wastes=0, best=-25, time=3005, evald=151219, accptd=23193, imprd=10634, ratio_imp=42
+2018-11-18 15:08:26,569 INFO:TEMP=1095, seq=0, def=0, wastes=0, best=-25, time=3017, evald=151879, accptd=23295, imprd=10688, ratio_imp=52
+2018-11-18 15:08:42,354 INFO:TEMP=1090, seq=0, def=0, wastes=0, best=-25, time=3032, evald=152453, accptd=23429, imprd=10743, ratio_imp=41
+2018-11-18 15:08:58,851 INFO:TEMP=1084, seq=0, def=1, wastes=0, best=-25, time=3049, evald=153202, accptd=23561, imprd=10794, ratio_imp=38
+2018-11-18 15:09:11,171 INFO:TEMP=1079, seq=0, def=1, wastes=0, best=-25, time=3061, evald=154080, accptd=23678, imprd=10848, ratio_imp=46
+2018-11-18 15:09:23,166 INFO:TEMP=1074, seq=0, def=1, wastes=0, best=-25, time=3073, evald=154869, accptd=23781, imprd=10903, ratio_imp=53
+2018-11-18 15:09:37,148 INFO:TEMP=1068, seq=1, def=1, wastes=0, best=-25, time=3087, evald=155673, accptd=23879, imprd=10946, ratio_imp=43
+2018-11-18 15:09:50,939 INFO:TEMP=1063, seq=1, def=2, wastes=0, best=-25, time=3101, evald=156367, accptd=23988, imprd=10998, ratio_imp=47
+2018-11-18 15:10:02,868 INFO:TEMP=1058, seq=1, def=3, wastes=0, best=-25, time=3113, evald=157168, accptd=24085, imprd=11052, ratio_imp=55
+2018-11-18 15:10:15,131 INFO:TEMP=1052, seq=1, def=0, wastes=0, best=-25, time=3125, evald=157972, accptd=24200, imprd=11102, ratio_imp=43
+2018-11-18 15:10:31,206 INFO:TEMP=1047, seq=0, def=0, wastes=0, best=-25, time=3141, evald=158681, accptd=24345, imprd=11173, ratio_imp=49
+2018-11-18 15:10:35,304 INFO:Best solution updated to -25!
+2018-11-18 15:10:45,531 INFO:TEMP=1042, seq=0, def=1, wastes=0, best=-25, time=3156, evald=159501, accptd=24475, imprd=11238, ratio_imp=50
+2018-11-18 15:10:57,286 INFO:TEMP=1037, seq=0, def=1, wastes=0, best=-25, time=3167, evald=160176, accptd=24587, imprd=11289, ratio_imp=45
+2018-11-18 15:11:13,449 INFO:TEMP=1031, seq=0, def=0, wastes=0, best=-25, time=3184, evald=160838, accptd=24709, imprd=11344, ratio_imp=45
+2018-11-18 15:11:27,530 INFO:TEMP=1026, seq=0, def=0, wastes=0, best=-25, time=3198, evald=161599, accptd=24838, imprd=11405, ratio_imp=47
+2018-11-18 15:11:39,225 INFO:TEMP=1021, seq=0, def=0, wastes=0, best=-25, time=3209, evald=162314, accptd=24934, imprd=11453, ratio_imp=49
+2018-11-18 15:11:55,859 INFO:TEMP=1016, seq=0, def=1, wastes=0, best=-25, time=3226, evald=163083, accptd=25061, imprd=11513, ratio_imp=47
+2018-11-18 15:12:10,278 INFO:TEMP=1011, seq=0, def=0, wastes=0, best=-25, time=3240, evald=163796, accptd=25177, imprd=11563, ratio_imp=43
+2018-11-18 15:12:24,193 INFO:TEMP=1006, seq=0, def=0, wastes=0, best=-25, time=3254, evald=164495, accptd=25279, imprd=11605, ratio_imp=41
+2018-11-18 15:12:36,312 INFO:TEMP=1001, seq=0, def=1, wastes=0, best=-25, time=3266, evald=165290, accptd=25389, imprd=11666, ratio_imp=55
+2018-11-18 15:12:49,373 INFO:TEMP=996, seq=0, def=0, wastes=0, best=-25, time=3279, evald=166147, accptd=25508, imprd=11721, ratio_imp=46
+2018-11-18 15:13:01,126 INFO:TEMP=991, seq=0, def=0, wastes=0, best=-25, time=3291, evald=166937, accptd=25611, imprd=11772, ratio_imp=49
+2018-11-18 15:13:14,439 INFO:TEMP=986, seq=0, def=1, wastes=0, best=-25, time=3305, evald=167649, accptd=25717, imprd=11825, ratio_imp=50
+2018-11-18 15:13:25,599 INFO:TEMP=981, seq=0, def=1, wastes=0, best=-25, time=3316, evald=168384, accptd=25811, imprd=11874, ratio_imp=52
+2018-11-18 15:13:39,019 INFO:TEMP=976, seq=0, def=1, wastes=0, best=-25, time=3329, evald=169120, accptd=25929, imprd=11927, ratio_imp=45
+2018-11-18 15:13:50,755 INFO:TEMP=971, seq=0, def=1, wastes=0, best=-25, time=3341, evald=169875, accptd=26020, imprd=11975, ratio_imp=52
+2018-11-18 15:14:00,390 INFO:TEMP=966, seq=0, def=1, wastes=0, best=-25, time=3350, evald=170689, accptd=26118, imprd=12026, ratio_imp=52
+2018-11-18 15:14:14,132 INFO:TEMP=962, seq=0, def=1, wastes=0, best=-25, time=3364, evald=171412, accptd=26233, imprd=12082, ratio_imp=48
+2018-11-18 15:14:27,428 INFO:TEMP=957, seq=0, def=1, wastes=0, best=-25, time=3378, evald=172111, accptd=26335, imprd=12130, ratio_imp=47
+2018-11-18 15:14:41,731 INFO:TEMP=952, seq=0, def=1, wastes=0, best=-25, time=3392, evald=173059, accptd=26474, imprd=12200, ratio_imp=50
+2018-11-18 15:14:56,744 INFO:TEMP=947, seq=0, def=2, wastes=0, best=-25, time=3407, evald=174113, accptd=26605, imprd=12264, ratio_imp=48
+2018-11-18 15:15:13,900 INFO:TEMP=942, seq=0, def=0, wastes=0, best=-25, time=3424, evald=175090, accptd=26745, imprd=12338, ratio_imp=52
+2018-11-18 15:15:26,982 INFO:TEMP=938, seq=0, def=1, wastes=0, best=-25, time=3437, evald=175866, accptd=26849, imprd=12385, ratio_imp=45
+2018-11-18 15:15:41,985 INFO:TEMP=933, seq=0, def=2, wastes=0, best=-25, time=3452, evald=176671, accptd=26952, imprd=12429, ratio_imp=42
+2018-11-18 15:15:56,114 INFO:TEMP=928, seq=0, def=0, wastes=0, best=-25, time=3466, evald=177549, accptd=27086, imprd=12498, ratio_imp=51
+2018-11-18 15:16:08,049 INFO:TEMP=924, seq=0, def=2, wastes=0, best=-25, time=3478, evald=178413, accptd=27203, imprd=12550, ratio_imp=44
+2018-11-18 15:16:21,451 INFO:TEMP=919, seq=0, def=1, wastes=0, best=-25, time=3492, evald=179162, accptd=27308, imprd=12605, ratio_imp=52
+2018-11-18 15:16:38,184 INFO:TEMP=915, seq=1, def=1, wastes=0, best=-25, time=3508, evald=180118, accptd=27466, imprd=12679, ratio_imp=47
+2018-11-18 15:16:54,994 INFO:TEMP=910, seq=0, def=2, wastes=0, best=-25, time=3525, evald=180969, accptd=27615, imprd=12762, ratio_imp=55
+2018-11-18 15:17:08,700 INFO:TEMP=905, seq=0, def=2, wastes=0, best=-25, time=3539, evald=181734, accptd=27720, imprd=12816, ratio_imp=51
+2018-11-18 15:17:25,057 INFO:TEMP=901, seq=0, def=2, wastes=0, best=-25, time=3555, evald=182576, accptd=27861, imprd=12889, ratio_imp=51
+2018-11-18 15:17:37,277 INFO:TEMP=896, seq=0, def=2, wastes=0, best=-25, time=3567, evald=183394, accptd=28005, imprd=12963, ratio_imp=51
+2018-11-18 15:17:53,729 INFO:TEMP=892, seq=0, def=0, wastes=0, best=-25, time=3584, evald=184254, accptd=28148, imprd=13022, ratio_imp=41
