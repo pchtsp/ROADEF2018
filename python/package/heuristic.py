@@ -766,7 +766,7 @@ class ImproveHeuristic(sol.Solution):
                 return change
         return change
 
-    def try_change_tree(self, options, num_iterations, tolerance=200):
+    def try_change_tree(self, options, num_iterations, tolerance=0):
         # start_def = len(self.check_defects())
         params = options['heur_params']
         remake_opts = options['heur_remake']
@@ -774,15 +774,25 @@ class ImproveHeuristic(sol.Solution):
         tree_options = range(1, len(probs)+1)
         prob_accept_worse = remake_opts.get('prob_accept_worse', 0.05)
         prob_accept_worse_def = remake_opts.get('prob_accept_worse_def', 0.2)
-        # nodes_cand = self.get_good_nodes_to_move()
         trees_prob = geom.get_probs_trees(len(self.trees))
-        # trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
-        # start = rn.choice(trees_cand)
-        start = self.get_random_tree(trees_prob)
-        size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - start)
-        num_trees = range(start, start + size)
-        incumbent = [self.trees[n] for n in num_trees]
-        candidate = self.get_initial_solution(options=options, num_trees=num_trees, num_iterations=num_iterations)
+        if rn.random() > remake_opts.get('prob_try_improve', 0.5):
+            # try to correct defects or sequences
+            nodes_cand = self.get_good_nodes_to_move()
+            trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
+            ref = rn.choice(trees_cand)
+        else:
+            # try to improve
+            ref = self.get_random_tree(trees_prob)
+        if rn.random() > remake_opts.get('prob_ref_is_last', 0.7):
+            # ref is the first tree
+            size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - ref)
+            range_trees = range(ref, ref + size)
+        else:
+            # ref is the last tree
+            size = min(np.random.choice(a=tree_options, p=probs), ref + 1)
+            range_trees = range(ref + 1 - size, ref + 1)
+        incumbent = [self.trees[n] for n in range_trees]
+        candidate = self.get_initial_solution(options=options, num_trees=range_trees, num_iterations=num_iterations)
         if candidate is None:
             # if len(self.check_defects()) != start_def:
             #     print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
@@ -797,12 +807,12 @@ class ImproveHeuristic(sol.Solution):
             return None
         # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)) \
+        if len(self.check_defects(candidate)) > len(self.check_defects(incumbent)) \
                 and rn.random() > prob_accept_worse_def:
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
             return None
-        for pos, plate_id in enumerate(num_trees):
+        for pos, plate_id in enumerate(range_trees):
             nd.change_feature(candidate[pos], 'PLATE_ID', plate_id)
             self.trees[plate_id] = candidate[pos]
         self.update_precedence_nodes(self.trees)
@@ -813,7 +823,7 @@ class ImproveHeuristic(sol.Solution):
         old = self.best_objective
         balance = old - new
         log.debug('I just remade tree {}: gain={}, new={}, best={}, last={}'.format(
-            num_trees, round(balance), round(new),
+            range_trees, round(balance), round(new),
             round(self.best_objective), round(self.last_objective)
         ))
         self.last_objective = new
@@ -1003,7 +1013,7 @@ class ImproveHeuristic(sol.Solution):
                 self.add_1cut()
                 log.debug('DO: interlevel cuts')
                 include_sisters = True
-                for level2 in range(1, 5):
+                for level2 in range(1, 4):
                     if not abs(level - level2) in [1, 2]:
                         continue
                     for insert in [True]:

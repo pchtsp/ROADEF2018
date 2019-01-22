@@ -17,7 +17,7 @@ def calculate_paths_results(results):
     }
 
 base = '/home'
-base = 'C:/Users'
+# base = 'C:/Users'
 root = base + '/pchtsp/Documents/projects/ROADEF2018/'
 results = base + '/pchtsp/Dropbox/ROADEF2018/'
 
@@ -41,11 +41,10 @@ OPTIONS = {
     , 'multiprocess': True
     , 'seed': 42
     , 'warm_start': False
-    # , 'heur_weights': {'space': 10, 'seq': 100000, 'defects': 1000}
-    , 'heur_params': {'main_iter': 5, 'max_iter': 500,
-                      'temperature': 100,
-                      'max_candidates': 5, 'extra_jumbos': 0,
-                      'cooling_rate': 0.00005,
+    , 'heur_params': {'main_iter': 5, 'max_iter': 1000,
+                      'temperature': 10000,
+                      'max_candidates': 100, 'extra_jumbos': 0,
+                      'cooling_rate': 0.0005,
                       'change_first': False, 'tolerance': None,
                       'try_rotation': 1,
                       'rotation_probs': [0.70, 0.30, 0, 0],
@@ -53,18 +52,20 @@ OPTIONS = {
                       'level_probs': [0.3, 0.3, 0.3, 0.1],
                       'weights': {'space': 0.00001, 'seq': 40000, 'defects': 40000, 'wastes': 40000},
                       'cuts_prob': 0.5,
-                      'clean_cuts_prob': 0.8
+                      'clean_cuts_prob': 0.5
                       }
     , 'heur_remake': {
-        'iterations_initial': 100,
-        'iterations_remake': 100,
+        'iterations_initial': 1000,
+        'iterations_remake': 20,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.20, 0.20, 0.20, 0.20, 0.20],
         'options': ['best', 'partial', 'restart'],
-        'probability': [0.2, 0.7, 0.1],
+        'probability': [0.05, 0.9, 0.05],
         'max_no_improve': 10,
-        'prob_accept_worse': 0.05,
-        'prob_accept_worse_def': 0.2
+        'prob_accept_worse': 0.1,
+        'prob_accept_worse_def': 0.2,
+        'prob_try_improve': 0.5,
+        'prob_ref_is_last': 0.2
     }
     , 'heur_optim': {
         # 'try_rotation': True,
