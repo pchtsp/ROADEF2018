@@ -766,7 +766,7 @@ class ImproveHeuristic(sol.Solution):
                 return change
         return change
 
-    def try_change_tree(self, options, num_iterations, tolerance=200):
+    def try_change_tree(self, options, num_iterations, tolerance=0):
         # start_def = len(self.check_defects())
         params = options['heur_params']
         remake_opts = options['heur_remake']
@@ -774,11 +774,13 @@ class ImproveHeuristic(sol.Solution):
         tree_options = range(1, len(probs)+1)
         prob_accept_worse = remake_opts.get('prob_accept_worse', 0.05)
         prob_accept_worse_def = remake_opts.get('prob_accept_worse_def', 0.2)
-        # nodes_cand = self.get_good_nodes_to_move()
         trees_prob = geom.get_probs_trees(len(self.trees))
-        # trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
-        # start = rn.choice(trees_cand)
-        start = self.get_random_tree(trees_prob)
+        if rn.random() > 0.5:
+            nodes_cand = self.get_good_nodes_to_move()
+            trees_cand = [n.PLATE_ID for n in nodes_cand] + [self.get_random_tree(trees_prob)]
+            start = rn.choice(trees_cand)
+        else:
+            start = self.get_random_tree(trees_prob)
         size = min(np.random.choice(a=tree_options, p=probs), len(self.trees) - start)
         num_trees = range(start, start + size)
         incumbent = [self.trees[n] for n in num_trees]
@@ -797,7 +799,7 @@ class ImproveHeuristic(sol.Solution):
             return None
         # With 20% prob we accept worse solutions even if there are more defects or bad waste cuts
         # This can later be improved if we try to make the solution feasible regarding defects.
-        if len(self.check_defects(incumbent)) < len(self.check_defects(incumbent)) \
+        if len(self.check_defects(candidate)) > len(self.check_defects(incumbent)) \
                 and rn.random() > prob_accept_worse_def:
             # if len(self.check_defects()) != start_def:
                 # print('no change, now i have: {} - {} defects'.format(start_def, len(self.check_defects())))
@@ -1003,7 +1005,7 @@ class ImproveHeuristic(sol.Solution):
                 self.add_1cut()
                 log.debug('DO: interlevel cuts')
                 include_sisters = True
-                for level2 in range(1, 5):
+                for level2 in range(1, 4):
                     if not abs(level - level2) in [1, 2]:
                         continue
                     for insert in [True]:
