@@ -18,5 +18,23 @@ python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pc
 
 nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20190117 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > log.txt &
 
+# tune
 cd R/ROADEF-R/tuning
 /home/pchtsp/R/x86_64-pc-linux-gnu-library/3.4/irace/bin/irace
+
+# compile:
+cd python
+source venv/bin/activate
+python setup.py build_ext --inplace
+
+# bundle:
+cd python
+source venv/bin/activate
+pyinstaller -y challengeSG.spec
+
+# zip it
+cd python
+7za a challenge.7z dist
+
+# move it
+scp pchtsp@port-peschiera:/home/pchtsp/Documents/projects/ROADEF2018/python/challenge_20190122.7z ./
