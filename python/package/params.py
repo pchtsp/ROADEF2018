@@ -63,7 +63,9 @@ OPTIONS = {
         'probability': [0.05, 0.9, 0.05],
         'max_no_improve': 10,
         'prob_accept_worse': 0.1,
-        'prob_accept_worse_def': 0.2
+        'prob_accept_worse_def': 0.2,
+        'prob_try_improve': 0.5,
+        'prob_ref_is_last': 0.2
     }
     , 'heur_optim': {
         # 'try_rotation': True,
