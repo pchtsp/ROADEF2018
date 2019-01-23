@@ -10,7 +10,7 @@
 
 % extensions
 
-\RequirePackage[latin1]{inputenc}
+\RequirePackage[utf8]{inputenc}
 \RequirePackage[T1]{fontenc}
 % \RequirePackage[francais]{babel}
 \RequirePackage[english]{babel}

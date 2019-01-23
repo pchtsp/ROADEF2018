@@ -27,4 +27,19 @@ cd R/ROADEF-R/tuning
 /home/pchtsp/R/x86_64-pc-linux-gnu-library/3.4/irace/bin/irace
 
 # compile:
-setup.py build_ext --inplace
+cd python
+source venv/bin/activate
+python setup.py build_ext --inplace
+
+# bundle:
+cd python
+source venv/bin/activate
+pyinstaller -y challengeSG.spec
+
+# zip it
+cd python
+7za a challenge.7z dist
+
+# move things
+scp pchtsp@port-peschiera:/home/pchtsp/Documents/projects/ROADEF2018/python/challenge_20190122.7z ./
+scp f.peschiera@serv-cluster1:/tmp/f.peschiera/roadef2018/clust_20190122 ./
