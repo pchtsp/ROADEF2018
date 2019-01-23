@@ -56,7 +56,7 @@ OPTIONS = {
                       }
     , 'heur_remake': {
         'iterations_initial': 1000,
-        'iterations_remake': 20,
+        'iterations_remake': 50,
         'rotation': [0.50, 0.50, 0, 0],
         'num_trees': [0.20, 0.20, 0.20, 0.20, 0.20],
         'options': ['best', 'partial', 'restart'],

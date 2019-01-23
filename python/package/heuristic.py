@@ -225,11 +225,10 @@ class ImproveHeuristic(sol.Solution):
                          ))
         self.last_objective = new
         if new < old:
-            # if not len(self.check_max_cut()):
-            #     if not len(self.check_waste_size()):
-            log.info('Best solution updated to {}!'.format(round(new)))
-            self.update_best_solution(self.trees)
-            self.best_objective = new
+            if not len(self.check_max_cut()):
+                log.info('Best solution updated to {}!'.format(round(new)))
+                self.update_best_solution(self.trees)
+                self.best_objective = new
             #     else:
             #         log.info('problems with wastes')
             # else:
@@ -577,8 +576,9 @@ class ImproveHeuristic(sol.Solution):
     def get_good_nodes_to_move(self):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
-        items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        candidates = rem + [d[0] for d in defects] + items
+        max_cuts = self.check_max_cut()
+        # items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
+        candidates = rem + [d[0] for d in defects] + [c[0] for c in max_cuts]
         return candidates
 
     def multi_level_swap(self, level, level2, params, include_sisters=False, insert=True):
