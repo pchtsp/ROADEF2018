@@ -225,11 +225,16 @@ class ImproveHeuristic(sol.Solution):
                          ))
         self.last_objective = new
         if new < old:
-            if not len(self.check_max_cut()):
-                if not len(self.check_waste_size()):
-                    log.info('Best solution updated to {}!'.format(round(new)))
-                    self.update_best_solution(self.trees)
-                    self.best_objective = new
+            # if not len(self.check_max_cut()):
+            #     if not len(self.check_waste_size()):
+            log.info('Best solution updated to {}!'.format(round(new)))
+            self.update_best_solution(self.trees)
+            self.best_objective = new
+            #     else:
+            #         log.info('problems with wastes')
+            # else:
+            #     a = 1
+            #     log.info('problems with max cuts')
 
         # if self.debug:
         #     self.hist_objective.append(old)
@@ -494,6 +499,7 @@ class ImproveHeuristic(sol.Solution):
         :param params:
         :return:
         """
+        log.debug('running waste cuts')
         fails = successes = 0
         defects = self.check_defects()
         for node, defect in defects:
@@ -529,6 +535,7 @@ class ImproveHeuristic(sol.Solution):
         # so that they incircle the defect
         # We first make a cut so the waste is in the first of the pieces.
         # Then we *should* make another cut so it lands in the second!
+        log.debug('running waste cuts_2')
         fails = successes = 0
         node_defect = [(n, d) for n, d in self.get_nodes_defects()
                         if nd.is_waste(n) and n.CUT == level]
@@ -570,9 +577,8 @@ class ImproveHeuristic(sol.Solution):
     def get_good_nodes_to_move(self):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
-        max_cuts = self.check_max_cut()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        candidates = rem + [d[0] for d in defects] + [c[0] for c in max_cuts] + items
+        candidates = rem + [d[0] for d in defects] + items
         return candidates
 
     def multi_level_swap(self, level, level2, params, include_sisters=False, insert=True):
@@ -999,7 +1005,7 @@ class ImproveHeuristic(sol.Solution):
                 fsc['cuts'] = 0, 0
                 if level == 1 and rn.random() < cuts_prob:
                     fsc['cuts'] = self.search_waste_cuts(1, params=params)
-                if rn.random() < cuts_prob:
+                if rn.random() < cuts_prob and level <= 3:
                     fsc['cuts2'] = self.search_waste_cuts_2(level, params=params)
                 # log.debug('DO: collapse left')
                 # fsc['collapse'] = self.collapse_to_left(level, params, max_wastes=max_wastes)
