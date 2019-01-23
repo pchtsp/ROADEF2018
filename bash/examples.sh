@@ -18,8 +18,9 @@ python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pc
 
 nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20190117 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > log.txt &
 
-nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190122 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+nohup python python/scripts/exec.py --all-cases --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190122 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
 
+nohup python python/scripts/exec.py --all-cases --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
 
 # tune
 cd R/ROADEF-R/tuning
