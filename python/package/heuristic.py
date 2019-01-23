@@ -570,9 +570,8 @@ class ImproveHeuristic(sol.Solution):
         rem = [n for tup in self.check_sequence(type_node_dict=self.type_node_dict) for n in tup]
         defects = self.check_defects()
         max_cuts = self.check_max_cut()
-        max_4cuts = self.check_num_cut4()
         items = [i for tree in self.trees[-2:] for i in nd.get_node_leaves(tree)]
-        candidates = rem + [d[0] for d in defects] + [c[0] for c in max_cuts] + items + [c[0] for c in max_4cuts]
+        candidates = rem + [d[0] for d in defects] + [c[0] for c in max_cuts] + items
         return candidates
 
     def multi_level_swap(self, level, level2, params, include_sisters=False, insert=True):

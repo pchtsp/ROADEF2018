@@ -308,14 +308,15 @@ class Solution(inst.Instance):
         levels = {}
         for tree in self.trees:
             levels.update(nd.assign_cut_numbers(tree, update=False))
-        return [(node, level) for node, level in levels.items() if level > 4]
+        return [(node, level) for node, level in levels.items() if level > 4 or\
+                (level == 4 and len(node.get_sisters()) > 1)]
 
-    def check_num_cut4(self):
-        levels = {}
-        for tree in self.trees:
-            levels.update(nd.assign_cut_numbers(tree, update=False))
-        return [(node, level, len(node.get_sisters())) for node, level in levels.items()
-                if level == 4 and len(node.get_sisters()) > 1]
+    # def check_num_cut4(self):
+    #     levels = {}
+    #     for tree in self.trees:
+    #         levels.update(nd.assign_cut_numbers(tree, update=False))
+    #     return [(node, level, len(node.get_sisters())) for node, level in levels.items()
+    #             if level == 4 and len(node.get_sisters()) > 1]
 
     def check_wrong_type(self):
         return [a for t in self.trees for a in nc.check_wrong_type(t)]
