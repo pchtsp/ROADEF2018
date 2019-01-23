@@ -78,11 +78,11 @@ def dominant_experiments():
     for exp_pos, exp in enumerate(experiments_names):
         case_pos = 0
 
-        if exp in solutions and feasibility[c][exp] == 0:
-            objectives[exp_pos][case_pos] = experiments[exp].calculate_objective()
-        else:
-            objectives[exp_pos][case_pos] = 9000000000
-        case_pos += 1
+        # if exp in solutions and feasibility[c][exp] == 0:
+        #     objectives[exp_pos][case_pos] = experiments[exp].calculate_objective()
+        # else:
+        #     objectives[exp_pos][case_pos] = 9000000000
+        # case_pos += 1
 
     return np.array(experiments_names)[is_pareto_dominated(objectives)]
 
@@ -199,7 +199,10 @@ def execute_checker(experiment, path_checker):
         a = subprocess.run([executable, case],
                        input="5\n0", universal_newlines=True,
                        cwd=path_checker, stdout=subprocess.PIPE)
-        results[case] = re.search(r'SOLUTION VALIDATED SUCCESSFULLY', a.stdout)
+        if re.search(r'SOLUTION VALIDATED SUCCESSFULLY', a.stdout):
+            results[case] = "CORRECT"
+        else:
+            results[case] = a.stdout
     return results
 
 
@@ -218,7 +221,9 @@ def get_objectives(experiment):
 def summary_table(experiment, path_out):
     objs = get_objectives(experiment)
     latex = pd.DataFrame.from_dict(objs, orient='index').reset_index().\
-        rename(columns={0: 'objective', 'index': 'instance'}).to_latex(bold_rows=True, index=False)
+        rename(columns={0: 'objective', 'index': 'instance'})\
+        .sort_values('instance')\
+        .to_latex(bold_rows=True, index=False)
     with open(path_out, 'w') as f:
         f.write(latex)
 
@@ -237,19 +242,31 @@ if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
     # graph(experiment='hp_20181210')
-    benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20190117', 'hp_20190116'])
-    experiment = 'hp_20190117'
-    experiment = 'test'
+    # benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20190117', 'clust_20190122'])
+    experiment = 'clust_20190124'
+    # experiment = 'test'
     # exp_paths = get_experiments_paths(pm.PATHS['results'])
     # experiment = 'len_20180718_venv_py'
     path_checker = pm.PATHS['checker']
-    # summary_table(experiment, pm.PATHS['root'] + 'docs/heuristics/results.tex')
-    # rrr = execute_checker(experiment, path_checker=path_checker)
-    rrr2 = check_experiment(experiment, 'A2')
-    case = 'A2'
-    A2sol = sol.Solution.from_io_files(path=pm.PATHS['results'] + experiment + '/' + case + '/', case_name=case)
+    summary_table(experiment, pm.PATHS['root'] + 'docs/abstract/results.tex')
+    rrr = execute_checker(experiment, path_checker=path_checker)
+    rrr2 = check_experiment(experiment)
+    sorted(k for k, v in rrr.items() if v!='CORRECT')
+    cases = sorted(k for k, v in rrr2.items() if v)
+    for case in cases:
+        hh = heur.ImproveHeuristic.from_io_files(path=pm.PATHS['results'] + experiment + '/' + case + '/', case_name=case)
+        t = hh.check_all()
+        if 'waste_size' in t:
+            print(t)
+
+    # rrr2 = check_experiment(experiment, 'A13')
+    case = 'A15'
+    A2sol = heur.ImproveHeuristic.from_io_files(path=pm.PATHS['results'] + experiment + '/' + case + '/', case_name=case)
     A2sol.check_all()
-    A2sol.calculate_objective()
+    # A2, A18, A7
+
+    # A2sol.graph_solution(path='/home/pchtsp/Dropbox/ROADEF2018/test/A2/')
+    # A2sol.calculate_objective()
     A2sol.graph_solution()
     # A2sol.graph_solution()
     # rrr = get_objectives()
