@@ -18,5 +18,12 @@ python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pc
 
 nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /home/pchtsp/Dropbox/ROADEF2018/ --results-dir hp_20190117 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > log.txt &
 
+nohup python python/scripts/exec.py --all-cases --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190122 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+
+# tune
 cd R/ROADEF-R/tuning
 /home/pchtsp/R/x86_64-pc-linux-gnu-library/3.4/irace/bin/irace
+
+# compile:
+setup.py build_ext --inplace
