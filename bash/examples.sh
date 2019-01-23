@@ -22,6 +22,31 @@ nohup python python/scripts/exec.py --all-cases --data-set A --path-root ./ --pa
 
 nohup python python/scripts/exec.py --all-cases --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
 
+# remake case A results
+nohup python python/scripts/exec.py --case-name A10 A11 A13 A14 A15 A18 A2 A7 A8 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+# reremake case A results
+nohup python python/scripts/exec.py --case-name A11 A13 A14 A15 A18 A2 A7 A8 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+# rereremake case A results
+nohup python python/scripts/exec.py --case-name A11 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+nohup python python/scripts/exec.py --case-name A2 A7 A8 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+nohup python python/scripts/exec.py --case-name A8 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_A8.txt &
+
+nohup python python/scripts/exec.py --case-name A7 --data-set A --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190123_2 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+nohup python python/scripts/exec.py --all-cases --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log.txt &
+
+nohup python python/scripts/exec.py --case-name B1 B2 B3 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_1.txt &
+
+nohup python python/scripts/exec.py --case-name B4 B5 B6 B7 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_2.txt &
+
+nohup python python/scripts/exec.py --case-name B8 B9 B10 B11 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\", \"num_processors\": 24}" > /tmp/f.peschiera/roadef2018/log_3.txt &
+
+nohup python python/scripts/exec.py --case-name B12 B13 B14 B15 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_4.txt &
+
 # tune
 cd R/ROADEF-R/tuning
 /home/pchtsp/R/x86_64-pc-linux-gnu-library/3.4/irace/bin/irace
@@ -42,4 +67,7 @@ cd python
 
 # move things
 scp pchtsp@port-peschiera:/home/pchtsp/Documents/projects/ROADEF2018/python/challenge_20190122.7z ./
-scp f.peschiera@serv-cluster1:/tmp/f.peschiera/roadef2018/clust_20190122 ./
+scp -r f.peschiera@serv-cluster1:/tmp/f.peschiera/roadef2018/clust_20190123_2 ./
+
+scp -r f.peschiera@serv-cluster1:/tmp/f.peschiera/roadef2018/clust_20190123_2/A2 ./clust_20190123_2
+scp -r f.peschiera@prise-srv3:/tmp/f.peschiera/roadef2018/clust_20190123_2/A11 ./clust_20190123_2
