@@ -225,10 +225,11 @@ class ImproveHeuristic(sol.Solution):
                          ))
         self.last_objective = new
         if new < old:
-            if not len(self.check_all()):
-                log.info('Best solution updated to {}!'.format(round(new)))
-                self.update_best_solution(self.trees)
-                self.best_objective = new
+            if not len(self.check_max_cut()):
+                if not len(self.check_waste_size()):
+                    log.info('Best solution updated to {}!'.format(round(new)))
+                    self.update_best_solution(self.trees)
+                    self.best_objective = new
 
         # if self.debug:
         #     self.hist_objective.append(old)
