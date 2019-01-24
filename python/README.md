@@ -11,12 +11,14 @@ Code is organized as follows:
 
 * **scripts**: python scripts done for executing model, heuristics, etc.
 * **package**: core code with models, data processing and main logic. Objects for data input and output.
+* **tests**: unit tests for specific parts of the heuristic.
+* **examples**: data for unit tests or to produce example images.
 
 ## Install dependencies
 
 ### Ubuntu:
 
-    sudo apt-get install python3 pip git python3-venv python3-devel
+    sudo apt-get install python3 pip git python3-venv python3-dev
 
 ### Windows
 
@@ -36,7 +38,7 @@ Linux:
 
     git clone git@github.com:pchtsp/ROADEF2018.git
     cd ROADEF2018/python
-    python3 -m venv venv
+    python -m venv venv
     source venv/bin/activate
     pip3 install -r requirements.txt
     python setup.py build_ext --inplace
@@ -58,16 +60,16 @@ Check: https://stackoverflow.com/a/32064281
 I Ubuntu you'd do something like the following:
 
     cd ROADEF2018/python
-    mkdir results
+    mkdir result
     source venv/bin/activate
-    python3 scripts/exec.py --case-name A1 --path-root /PATH/TO/PROJECT/ROADEF2018/ --path-results /PATH/TO/PROJECT/ROADEF2018/python/results/ --results-dir test_experiment1 --time-limit 10
+    python scripts/exec.py --case-name A1 --path-root /PATH/TO/PROJECT/ROADEF2018/ --path-results /PATH/TO/PROJECT/ROADEF2018/python/results/ --results-dir test_experiment1 --time-limit 10
 
 An alternative way to use it, the challenge standard, is the following:
 
     cd ROADEF2018/python
     mkdir results
     source venv/bin/activate
-    python3 scripts/exec.py -p INSTANCES_LOCATION/A1 -o PATH_TO_SOLUTIONS/A1_solution.csv -t 60
+    python scripts/exec.py -p INSTANCES_LOCATION/A1 -o PATH_TO_SOLUTIONS/A1_solution.csv -t 60
 
 This will solve the case A1 for 10 seconds and store the result and the log in the following directory: `/PATH/TO/PROJECT/ROADEF2018/python/results/test_experiment1/`. It's important to add the `/` at the end of the arguments!
 
