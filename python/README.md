@@ -30,15 +30,9 @@ Alternatively, one can manually download the latest python version and git. `pip
 
 Steps to set up development environment:
 
-Windows:
+Windows: Same as Linux but just change the forth line for: `venv\Scripts\activate`
 
-    git clone git@github.com:pchtsp/ROADEF2018.git
-    cd ROADEF2018\python
-    python3 -m venv venv
-    venv\Scripts\activate
-    pip3 install -r requirements.txt
-
-Ubuntu:
+Linux:
 
     git clone git@github.com:pchtsp/ROADEF2018.git
     cd ROADEF2018/python
@@ -91,3 +85,25 @@ Another option is to give the options as arguments. This is not possible for all
 
 I'm using PyInstaller, from the following url: https://docs.python-guide.org/shipping/freezing/
 
+In order to create a bundle, the instructions (work in windows as well as linux):
+
+    cd ROADEF2018/python
+    source venv/bin/activate
+    pyinstaller -y challengeSG.spec
+
+In windows just change the second line for: `venv\Scripts\activate`
+
+## Parameter optimization
+
+There was an unsuccessful attempt to use `irace` package in R to do the parameter optimization. The steps to run it are the following (only work in Linux). Some libraries need to be installed first, (irace is one). The path to irace needs to be checked using the file `getPath_irace.R`
+
+In R console:
+
+    install.packages('irace')
+    library("irace")
+    PATH_TO_IRACE_PACKAGE <- system.file(package = "irace")
+
+In bash:
+
+    cd R/ROADEF-R/tuning
+    PATH_TO_IRACE_PACKAGE/bin/irace
