@@ -26,7 +26,7 @@ This requires to have `choco` installed.
 
 Alternatively, one can manually download the latest python version and git. `pip` usually comes with python already.
 
-## Get the software
+## Get the software and build it
 
 Steps to set up development environment:
 
@@ -45,6 +45,7 @@ Ubuntu:
     python3 -m venv venv
     source venv/bin/activate
     pip3 install -r requirements.txt
+    python setup.py build_ext --inplace
 
 ## Additional instructions for installing requirements in Windows:
 
@@ -57,28 +58,6 @@ Check: https://stackoverflow.com/a/32064281
 * Scipy from wheel: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
 * cx_freeze in github version, not pip.
 * specific configuration for windows?
-
-## Deployment using pypy (only in Linux)
-
-An alternative to cpython is to use pypy which is a ported version of python for the JIT compiler, used for java and other languages. It's usually faster. What I had to do to get the virtual environment of this distribution is the following.
-
-For ubuntu I followed the following links: http://doc.pypy.org/en/latest/install.html and https://askubuntu.com/questions/441981/how-to-install-pypy3-on-ubuntu-for-nebies.
-
-For distributions that are not Ubuntu one needs to download: https://github.com/squeaky-pl/portable-pypy#portable-pypy-distribution-for-linux
-
-We want the *Latest Python 3.5 release*.
-
-<!-- pip install git+https://bitbucket.org/pypy/numpy.git -->
-
-We're going to create a virtualenv, following the last Linux-general link, under the *Using virtualenv* section:
-
-    git clone git@github.com:pchtsp/ROADEF2018.git
-    cd ROADEF2018/python
-    wget -qO- https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2 | tar -xj
-    pypy3.5-6.0.0-linux_x86_64-portable/bin/virtualenv-pypy venv
-    source venv/bin/activate
-    pip install git+https://bitbucket.org/pypy/numpy.git
-    pip install -r requirements.txt
 
 ## Test it's working
 
