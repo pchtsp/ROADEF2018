@@ -43,7 +43,7 @@ nohup python python/scripts/exec.py --case-name B1 B2 B3 --data-set B --path-roo
 
 nohup python python/scripts/exec.py --case-name B4 B5 B6 B7 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_2.txt &
 
-nohup python python/scripts/exec.py --case-name B8 B9 B10 B11 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\", \"num_processors\": 24}" > /tmp/f.peschiera/roadef2018/log_3.txt &
+nohup python python/scripts/exec.py --case-name B8 B9 B10 B11 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_3.txt &
 
 nohup python python/scripts/exec.py --case-name B12 B13 B14 B15 --data-set B --path-root ./ --path-results /tmp/f.peschiera/roadef2018/ --results-dir clust_20190124 --main-param "{\"timeLimit\": 3600, \"multiprocess\": \"True\"}" > /tmp/f.peschiera/roadef2018/log_4.txt &
 

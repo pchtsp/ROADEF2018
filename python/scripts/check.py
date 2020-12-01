@@ -242,14 +242,15 @@ if __name__ == "__main__":
     # pass
     # graph(experiment='clust1_20180718_venv_pypy', case='A16')
     # graph(experiment='hp_20181210')
-    # benchmarking('obj', experiments_filter=['hp_20181209', 'hp_20190117', 'clust_20190122'])
-    experiment = 'clust_20190124'
+    benchmarking('dif_jumbo', experiments_filter=['prise_20180918_venv', 'clust1_20180918_venv', 'clust_20190122'])
+    experiment = 'clust_20190122'
     # experiment = 'test'
     # exp_paths = get_experiments_paths(pm.PATHS['results'])
     # experiment = 'len_20180718_venv_py'
     path_checker = pm.PATHS['checker']
     summary_table(experiment, pm.PATHS['root'] + 'docs/abstract/results.tex')
     rrr2 = check_experiment(experiment)
+    rrr = execute_checker(experiment, path_checker)
     sorted(k for k, v in rrr.items() if v!='CORRECT')
     cases = sorted(k for k, v in rrr2.items() if v)
     for case in cases:

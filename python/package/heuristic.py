@@ -174,7 +174,6 @@ class ImproveHeuristic(sol.Solution):
         if len(candidates_eval) == 0:
             return False
         candidates_prob = sd.SuperDict({k: v[0] for k, v in candidates_eval.items()}).to_weights()
-        # TODO: do not iterate over values
         node2 = np.random.choice(a=candidates_prob.keys_l(), size=1, p=candidates_prob.values_l())[0]
         balance, wastes_to_edit, rot = candidates_eval[node2]
         # node2, balance = max(good_candidates.items(), key=lambda x: x[1])
@@ -418,7 +417,6 @@ class ImproveHeuristic(sol.Solution):
             wastes_prob = wastes_prob.to_weights()
             w_candidates = wastes_prob.keys_l()
             if len(w_candidates) > max_candidates:
-                # TODO: do not iterate over values
                 w_candidates = np.random.choice(a=wastes_prob.keys_l(), size=max_candidates,
                                                 replace=False, p=wastes_prob.values_l())
             # w_before_node = [w for w in w_candidates if
@@ -776,7 +774,7 @@ class ImproveHeuristic(sol.Solution):
         return change
 
     def try_change_tree(self, options, num_iterations, tolerance=0):
-        # start_def = len(self.check_defects())
+        # TODO: for tree creation, add random swaps with neighbor wastes
         params = options['heur_params']
         remake_opts = options['heur_remake']
         probs = remake_opts.get('num_trees', [0.7, 0.2, 0.1])
