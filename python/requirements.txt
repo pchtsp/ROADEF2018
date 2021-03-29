@@ -25,7 +25,7 @@ prompt-toolkit==1.0.15
 ptyprocess==0.6.0
 PuLP==1.6.8
 pycparser==2.18
-Pygments==2.2.0
+Pygments==2.7.4
 PyInstaller==3.4
 pyparsing==2.2.0
 PyQt5==5.10.1
